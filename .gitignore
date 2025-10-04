@@ -1,0 +1,11 @@
+
+
+
+build/
+.cache/
+.clangd
+
+src/main.c
+
+
+shakespere.txt
