@@ -28,57 +28,6 @@ static size_t fnv1a_hash(const void* data, size_t size) {
     return hash;
 }
 
-// MurmurHash3 - much faster and better distribution
-static size_t murmurhash3(const void* key, size_t size) 
-{
-    const uint32_t c1 = 0xcc9e2d51;
-    const uint32_t c2 = 0x1b873593;
-    const uint32_t r1 = 15;
-    const uint32_t r2 = 13;
-    const uint32_t m = 5;
-    const uint32_t n = 0xe6546b64;
-    
-    const uint8_t* data = (const uint8_t*)key;
-    const int nblocks = size / 4;
-    uint32_t h1 = 0x9747b28c; // seed
-    
-    // Body
-    const uint32_t* blocks = (const uint32_t*)(data + nblocks * 4);
-    for(int i = -nblocks; i; i++) {
-        uint32_t k1 = blocks[i];
-        
-        k1 *= c1;
-        k1 = (k1 << r1) | (k1 >> (32 - r1));
-        k1 *= c2;
-        
-        h1 ^= k1;
-        h1 = (h1 << r2) | (h1 >> (32 - r2));
-        h1 = h1 * m + n;
-    }
-    
-    // Tail
-    const uint8_t* tail = (const uint8_t*)(data + nblocks * 4);
-    uint32_t k1 = 0;
-    
-    switch(size & 3) {
-        case 3: k1 ^= tail[2] << 16;
-        case 2: k1 ^= tail[1] << 8;
-        case 1: k1 ^= tail[0];
-                k1 *= c1; k1 = (k1 << r1) | (k1 >> (32 - r1));
-                k1 *= c2; h1 ^= k1;
-    }
-    
-    // Finalization
-    h1 ^= size;
-    h1 ^= h1 >> 16;
-    h1 *= 0x85ebca6b;
-    h1 ^= h1 >> 13;
-    h1 *= 0xc2b2ae35;
-    h1 ^= h1 >> 16;
-    
-    return h1;
-}
-
 // default delete function (works for basic data types)
 static void default_delete(void* keyORval) {
     if (keyORval) {
@@ -368,6 +317,31 @@ int hashmap_get(const hashmap* map, const void* key, void* val)
     }
 }
 
+int hashmap_modify(hashmap* map, const void* key, val_modify_fn modify_fn, void* user_data)
+{
+    if (!map || !key || !modify_fn) {
+        printf("map modify: null parameter\n");
+        return -1;
+    }
+    
+    int found = 0;
+    int tombstone = -1;
+    size_t slot = find_slot(map, key, &found, &tombstone);
+    
+    if (!found) {
+        printf("map modify: key not found\n");
+        return -1;
+    }
+    
+    KV kv;
+    genVec_get(map->buckets, slot, &kv);
+    
+    // Call the modify function with the value pointer and user data
+    modify_fn(kv.val, user_data);
+    
+    return 0;
+}
+
 
 int hashmap_del(hashmap* map, const void* key)
 {
@@ -401,6 +375,19 @@ int hashmap_del(hashmap* map, const void* key)
         printf("map del: not found\n");
         return -1;
     }
+}
+
+int hashmap_has(const hashmap* map, const void* key)
+{
+    if (!map || !key) {
+        return 0;
+    }
+    
+    int found = 0;
+    int tombstone = -1;
+    find_slot(map, key, &found, &tombstone);
+    
+    return found;
 }
 
 void hashmap_print(hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print)
