@@ -5,7 +5,6 @@ build/
 .cache/
 .clangd
 
-src/main.c
 
 
 shakespeare.txt
