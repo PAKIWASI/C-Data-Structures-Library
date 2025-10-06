@@ -312,7 +312,6 @@ int hashmap_get(const hashmap* map, const void* key, void* val)
         return 0;
     }
     else {
-        printf("map get: not found\n");
         return -1;
     }
 }
