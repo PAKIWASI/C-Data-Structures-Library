@@ -227,9 +227,9 @@ int parse(void)
     printf("Unique words: %zu\n\n", map->size);
 
     int count;
-    String* str = string_from_cstr("romeo");
+    String* str = string_from_cstr("gay");
     if (hashmap_get(map, &str, &count) == 0) {
-        printf("count: %d", count);
+        printf("count of %s: %d",string_to_cstr(str), count);
     } else {
         printf("not found");
     }

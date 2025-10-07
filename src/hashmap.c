@@ -178,7 +178,7 @@ static void hashmap_maybe_resize(hashmap* map) {
 */
 
 hashmap* hashmap_create(size_t key_size, size_t val_size, custom_hash_fn hash_fn,
-                        kv_delete_fn key_del, kv_delete_fn val_del, key_compare_fn cmp)
+                        delete_fn key_del, delete_fn val_del, compare_fn cmp)
 {
     if (key_size == 0 || val_size == 0) {
         printf("map create: size cant be 0\n");
