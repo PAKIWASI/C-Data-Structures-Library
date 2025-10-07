@@ -30,7 +30,6 @@ typedef struct {
 } __attribute__((aligned(128))) hashmap;
 
 
-
 hashmap* hashmap_create(size_t key_size, size_t val_size, custom_hash_fn hash_fn,
                         delete_fn key_del, delete_fn val_del, compare_fn cmp);
 

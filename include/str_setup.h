@@ -6,7 +6,8 @@
 
 
 // ========== Hash function for String* ==========
-size_t murmurhash3_string_ptr(const void* key, size_t size) {
+size_t murmurhash3_string(const void* key, size_t size) 
+{
     (void)size;
     
     String* str= (String*)key;
@@ -61,20 +62,17 @@ size_t murmurhash3_string_ptr(const void* key, size_t size) {
 }
 
 // ========== Compare function for String* ==========
-int string_ptr_compare(const void* a, const void* b, size_t size) {
-    (void)size;
-    
-    String* str_a = (String*)a;
-    String* str_b = (String*)b;
-    
-    return string_compare(str_a, str_b);
+int string_custom_compare(const void* a, const void* b, size_t size) 
+{
+    return string_compare((String*)a, (String*)b); 
 }
 
 // ========== Delete function for String* ==========
-void string_ptr_delete(void* str_ptr) {
+void string_custom_delete(void* str_ptr) {
     String*  str = (String*)str_ptr;
     if (str && str->buffer) {
         //only destroy buffer and not String as hashmap stores String not String*
+        genVec_destroy(str->buffer);
         str->buffer = NULL;
     }
 }

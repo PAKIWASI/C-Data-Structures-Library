@@ -47,6 +47,24 @@ String* string_create(void) {
     return str;
 }
 
+
+void string_create_onstack(String* str, const char* cstr) 
+{
+    // the difference is that we dont use string_create(), so str is not heap initilised
+    if (!str) {
+        printf("str create stk: str is null\n");
+        return;
+    }
+
+    str->buffer = genVec_init(0, sizeof(char), NULL);
+    if (!str->buffer) {
+        printf("str create stk: buffer genvec failed\n");
+        return;
+    }
+    
+    string_append_cstr(str, cstr); 
+}
+
 String* string_from_cstr(const char* cstr) {
     if (!cstr) { 
         printf("str from cstr: cstr is null\n");

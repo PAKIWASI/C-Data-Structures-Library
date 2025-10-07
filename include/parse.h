@@ -95,8 +95,8 @@ char* clean_word(const char* token, char* output, size_t output_size) {
 int parse(void)
 {
     hashmap* map = hashmap_create(sizeof(String), sizeof(int), 
-                                 murmurhash3_string_ptr, string_ptr_delete, 
-                                 NULL, string_ptr_compare);
+                                 murmurhash3_string, string_custom_delete, 
+                                 NULL, string_custom_compare);
 
     // Basic delimiters - we'll handle punctuation more carefully
     const char* delim = " \n\t\r";
@@ -119,24 +119,18 @@ int parse(void)
                 // Clean and normalize the word
                 if (clean_word(token, cleaned, sizeof(cleaned))) {
 
-                    String* str_token = string_from_cstr(cleaned);
-
-                    //printf("%s\t", cleaned);
-                    
+                    String str;
+                    string_create_onstack(&str, cleaned);
                     int count;
-                    // Pass String by value (dereference the pointer)
-                    if (hashmap_get(map, str_token, &count) == 0) {
+                    if (hashmap_get(map, &str, &count) == 0) {
                         count++;
-                        hashmap_put(map, str_token, &count);
                     }
                     else {
                         count = 1;
-                        hashmap_put(map, str_token, &count);
                     }
-                    
-                    // Always destroy the temporary string
-                    string_destroy(str_token);
-                    
+                    hashmap_put(map, &str, &count);
+                    //hashmap now owns the string buffer so don't delete
+                                        
                     total_words++;
                 }
             }
@@ -149,16 +143,16 @@ int parse(void)
     printf("\nTotal words processed: %zu\n", total_words);
     printf("Unique words: %zu\n\n", map->size);
 
-    // Query example
-    String* str = string_from_cstr("gay");
+    String str;
+    string_create_onstack(&str, "ne'er");
     int count;
-    if (hashmap_get(map, str, &count) == 0) {
-        printf("count of %s: %d", string_to_cstr(str), count);
-    } else {
-        printf("not found");
+    if (hashmap_get(map, &str, &count) == 0) {
+        printf("Count of %s : %d", string_to_cstr(&str), count);
     }
-    
-    string_destroy(str);
+    else {
+        printf("not found\n");
+    }
+
     hashmap_destroy(map);    printf("\n");
     return fclose(f);
 }
