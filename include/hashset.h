@@ -37,5 +37,4 @@ int hashset_remove(hashset* set, const u8* elm);
 
 void hashset_print(const hashset* set, genVec_print_fn elm_print);
 
-size_t hashset_size(const hashset* set) { return set->size; }
 

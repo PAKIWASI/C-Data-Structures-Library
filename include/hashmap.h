@@ -46,5 +46,3 @@ int hashmap_has(const hashmap* map, const u8* key);
 
 void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print);
 
-size_t hashmap_size(const hashmap* map) { return map->size; }
-

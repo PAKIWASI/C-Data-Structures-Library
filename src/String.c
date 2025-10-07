@@ -15,15 +15,15 @@ static void ensure_null_terminated(String* str) {
     
     if (str->buffer->size == 0) {
         // empty buffer, just add null terminator
-        genVec_push(str->buffer, &null_term);
+        genVec_push(str->buffer, (u8*)&null_term);
     } else {
         // check if last character is already null terminator
         char last_char;
-        genVec_get(str->buffer, str->buffer->size - 1, &last_char);
+        genVec_get(str->buffer, str->buffer->size - 1, (u8*)&last_char);
         
         if (last_char != '\0') {
             // Last character is not null terminator, so append one
-            genVec_push(str->buffer, &null_term);
+            genVec_push(str->buffer, (u8*)&null_term);
         }
     }
 }
@@ -144,7 +144,7 @@ void string_append_cstr(String* str, const char* cstr) {
     size_t write_pos = str->buffer->size;
     if (write_pos > 0) {
         char last_char;
-        genVec_get(str->buffer, write_pos - 1, &last_char);
+        genVec_get(str->buffer, write_pos - 1, (u8*)&last_char);
         if (last_char == '\0') {
             write_pos--; // Overwrite the null terminator
             str->buffer->size--; // Temporarily reduce size
@@ -154,7 +154,7 @@ void string_append_cstr(String* str, const char* cstr) {
     // Append all characters at once would be more efficient,
     // but since we're using the generic vector, we'll append one by one
     for (size_t i = 0; i < cstr_len; i++) {
-        genVec_push(str->buffer, &cstr[i]);
+        genVec_push(str->buffer, (u8*)&cstr[i]);
     }
     
     // Ensure null termination
@@ -180,7 +180,7 @@ void string_append_char(String* str, char c) {
         genVec_pop(str->buffer, NULL);
     }
     
-    genVec_push(str->buffer, &c);
+    genVec_push(str->buffer, (u8*)&c);
     ensure_null_terminated(str);
 }
 
@@ -224,7 +224,7 @@ char string_at(const String* str, size_t i) {
     }
     
     char c;
-    genVec_get(str->buffer, i, &c);
+    genVec_get(str->buffer, i, (u8*)&c);
     return c;
 }
 
@@ -233,7 +233,7 @@ void string_set_char(String* str, size_t i, char c) {
         printf("str set char: str null or i out of bounds\n");
         return; 
     }
-    genVec_replace(str->buffer, i, &c);
+    genVec_replace(str->buffer, i, (u8*)&c);
 }
 
 int string_compare(const String* str1, const String* str2) {
