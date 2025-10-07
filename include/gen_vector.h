@@ -41,4 +41,6 @@ void genVec_remove(genVec* vec, size_t i);
 genVec* genVec_copy(genVec* src);
 void genVec_print(genVec* vec, genVec_print_fn fn);
 
+size_t genVec_size(genVec* vec) { return vec->size; }
+
 

@@ -27,9 +27,9 @@ static size_t fnv1a_hash(const u8* bytes, size_t size) {
 }
 
 // default delete function (works for basic data types)
-static void default_delete(u8* keyORval) {
-    if (keyORval) {
-        free(keyORval);
+static void default_delete(u8* elm) {
+    if (elm) {
+        free(elm);
     }
 }
 

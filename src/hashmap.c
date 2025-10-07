@@ -353,7 +353,7 @@ int hashmap_has(const hashmap* map, const u8* key)
     return found;
 }
 
-void hashmap_print(hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print)
+void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print)
 {
     if (!map || !key_print || !val_print) {
         printf("map print: map is null\n");

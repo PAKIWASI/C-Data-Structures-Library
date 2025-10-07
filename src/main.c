@@ -1,6 +1,6 @@
-#include "parse.h"
+#include "runner.h"
 
 int main(void)
 {
-    return parse(); 
+    return run(); 
 }

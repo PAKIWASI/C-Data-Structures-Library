@@ -5,9 +5,6 @@ build/
 .cache/
 .clangd
 
-src/hashset.c
-include/hashset.h
-
 
 
 shakespeare.txt
