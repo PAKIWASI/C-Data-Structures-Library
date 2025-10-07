@@ -35,7 +35,7 @@ static void kv_destroy(hashmap* map, const KV* kv)
 // Sets tombstone_index to first tombstone encountered (for insertion optimization)
 // if linear probing fails(find no empty), we insert at the first tombstone encountered
 // we use warp around, so when we hit end while probing, we go to the start of arr
-static size_t find_slot(const hashmap* map, const void* key,
+static size_t find_slot(const hashmap* map, const u8* key,
                         int* found, int* tombstone)
 {
     size_t index = map->hash_fn(key, map->key_size) % map->capacity;
@@ -46,7 +46,7 @@ static size_t find_slot(const hashmap* map, const void* key,
     KV kv;
     for (size_t x = 0; x < map->capacity; x++) {
         size_t i = (index + x) % map->capacity;   // warp around
-        genVec_get(map->buckets, i, &kv);
+        genVec_get(map->buckets, i, (u8*)&kv);
 
         switch (kv.state) {
             case EMPTY: // bucket empty, found 0 and return bucket as insertion location
@@ -86,7 +86,7 @@ static void hashmap_resize(hashmap* map, size_t new_capacity)
         .val = NULL,
         .state = EMPTY
     };
-    map->buckets = genVec_init_val(new_capacity, &kv, map->buckets->data_size, NULL);
+    map->buckets = genVec_init_val(new_capacity, (u8*)&kv, map->buckets->data_size, NULL);
     if (!map->buckets) {
         printf("map resize: new vec init failed\n");
         map->buckets = old_vec;
@@ -98,7 +98,7 @@ static void hashmap_resize(hashmap* map, size_t new_capacity)
 
     KV old_kv;
     for (size_t i = 0; i < old_vec->capacity; i++) {
-        genVec_get(old_vec, i, &old_kv);
+        genVec_get(old_vec, i, (u8*)&old_kv);
         
         if (old_kv.state == FILLED) {
             int found = 0;
@@ -113,7 +113,7 @@ static void hashmap_resize(hashmap* map, size_t new_capacity)
                 .state = FILLED
             };
 
-            genVec_replace(map->buckets, slot, &new_kv);
+            genVec_replace(map->buckets, slot, (u8*)&new_kv);
             map->size++;
         }
     }
@@ -162,7 +162,7 @@ hashmap* hashmap_create(size_t key_size, size_t val_size, custom_hash_fn hash_fn
     };
 
     // we dont give custom delete fn for kv as kv is stored directly and not a pointer
-    map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, &kv, sizeof(KV), NULL);
+    map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&kv, sizeof(KV), NULL);
     if (!map->buckets) {
         printf("map create: buckets init failed\n");
         free(map);
@@ -189,7 +189,7 @@ void hashmap_destroy(hashmap* map)
     KV kv;
     if (map->buckets) {
         for (size_t i = 0; i < map->capacity; i++) {
-            genVec_get(map->buckets, i, &kv);   
+            genVec_get(map->buckets, i, (u8*)&kv);   
             kv_destroy(map, &kv);
         }
         genVec_destroy(map->buckets);
@@ -199,7 +199,7 @@ void hashmap_destroy(hashmap* map)
 }
 
 
-int hashmap_put(hashmap* map, const void* key, const void* val)
+int hashmap_put(hashmap* map, const u8* key, const u8* val)
 {
     if (!map || !key || !val) {
         printf("map put: map/key/val is null\n");
@@ -215,7 +215,7 @@ int hashmap_put(hashmap* map, const void* key, const void* val)
     if (found) {
         // Key exists - update value
         KV kv;
-        genVec_get(map->buckets, slot, &kv);
+        genVec_get(map->buckets, slot, (u8*)&kv);
         
         if (kv.val) {
             map->val_del_fn(kv.val);
@@ -228,7 +228,7 @@ int hashmap_put(hashmap* map, const void* key, const void* val)
         }
         memcpy(kv.val, val, map->val_size);
         
-        genVec_replace(map->buckets, slot, &kv);
+        genVec_replace(map->buckets, slot, (u8*)&kv);
         
         return 0;
     } 
@@ -250,14 +250,14 @@ int hashmap_put(hashmap* map, const void* key, const void* val)
         memcpy(kv.key, key, map->key_size);
         memcpy(kv.val, val, map->val_size);
         
-        genVec_replace(map->buckets, slot, &kv);
+        genVec_replace(map->buckets, slot, (u8*)&kv);
         map->size++;  
         
         return 0;
     }
 }
 
-int hashmap_get(const hashmap* map, const void* key, void* val)
+int hashmap_get(const hashmap* map, const u8* key, u8* val)
 {
     if (!map || !key || !val) {
         printf("map get: map/key is null\n");
@@ -270,7 +270,7 @@ int hashmap_get(const hashmap* map, const void* key, void* val)
 
     if (found) {
         KV kv;
-        genVec_get(map->buckets, slot, &kv);
+        genVec_get(map->buckets, slot, (u8*)&kv);
         memcpy(val, kv.val, map->val_size);
 
         return 0;
@@ -280,7 +280,7 @@ int hashmap_get(const hashmap* map, const void* key, void* val)
     }
 }
 
-int hashmap_modify(hashmap* map, const void* key, val_modify_fn modify_fn, void* user_data)
+int hashmap_modify(hashmap* map, const u8* key, val_modify_fn modify_fn, u8* user_data)
 {
     if (!map || !key || !modify_fn) {
         printf("map modify: null parameter\n");
@@ -297,7 +297,7 @@ int hashmap_modify(hashmap* map, const void* key, val_modify_fn modify_fn, void*
     }
     
     KV kv;
-    genVec_get(map->buckets, slot, &kv);
+    genVec_get(map->buckets, slot, (u8*)&kv);
     
     // Call the modify function with the value pointer and user data
     modify_fn(kv.val, user_data);
@@ -306,7 +306,7 @@ int hashmap_modify(hashmap* map, const void* key, val_modify_fn modify_fn, void*
 }
 
 
-int hashmap_del(hashmap* map, const void* key)
+int hashmap_del(hashmap* map, const u8* key)
 {
     if (map->size == 0) { return -1; }
     if (!map || !key) {
@@ -320,7 +320,7 @@ int hashmap_del(hashmap* map, const void* key)
 
     if (found) {
         KV kv;
-        genVec_get(map->buckets, slot, &kv);
+        genVec_get(map->buckets, slot, (u8*)&kv);
         kv_destroy(map, &kv);
 
         KV newkv = {
@@ -328,7 +328,7 @@ int hashmap_del(hashmap* map, const void* key)
             .val = NULL,
             .state = TOMBSTONE
         };
-        genVec_replace(map->buckets, slot, &newkv);
+        genVec_replace(map->buckets, slot, (u8*)&newkv);
         map->size--;
 
         hashmap_maybe_resize(map);
@@ -340,7 +340,7 @@ int hashmap_del(hashmap* map, const void* key)
     }
 }
 
-int hashmap_has(const hashmap* map, const void* key)
+int hashmap_has(const hashmap* map, const u8* key)
 {
     if (!map || !key) {
         return 0;
@@ -363,7 +363,7 @@ void hashmap_print(hashmap* map, genVec_print_fn key_print, genVec_print_fn val_
     KV kv;
     printf("\t=========\n");
     for (size_t i = 0; i < map->capacity; i++) {
-        genVec_get(map->buckets, i, &kv);
+        genVec_get(map->buckets, i, (u8*)&kv);
         if (kv.state == FILLED) {
             printf("\t");
             key_print(kv.key);

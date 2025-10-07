@@ -122,13 +122,13 @@ int parse(void)
                     String str;
                     string_create_onstack(&str, cleaned);
                     int count;
-                    if (hashmap_get(map, &str, &count) == 0) {
+                    if (hashmap_get(map, (u8*)&str, (u8*)&count) == 0) {
                         count++;
                     }
                     else {
                         count = 1;
                     }
-                    hashmap_put(map, &str, &count);
+                    hashmap_put(map, (u8*)&str, (u8*)&count);
                     //hashmap now owns the string buffer so don't delete
                                         
                     total_words++;
@@ -146,7 +146,7 @@ int parse(void)
     String str;
     string_create_onstack(&str, "ne'er");
     int count;
-    if (hashmap_get(map, &str, &count) == 0) {
+    if (hashmap_get(map, (u8*)&str, (u8*)&count) == 0) {
         printf("Count of %s : %d", string_to_cstr(&str), count);
     }
     else {

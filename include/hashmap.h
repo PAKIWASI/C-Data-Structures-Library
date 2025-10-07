@@ -5,12 +5,12 @@
 
 
 
-typedef void (*val_modify_fn)(void* val, const void* delta);                // imp for hashmap_modify
+typedef void (*val_modify_fn)(u8* val, const u8* delta);                // imp for hashmap_modify
 
 
 typedef struct {
-    void* key;   // KV holds pointers to key, val data
-    void* val;
+    u8* key;   // KV holds pointers to key, val data
+    u8* val;
     STATE state;
 } __attribute__((aligned(32))) KV;
 
@@ -35,15 +35,15 @@ hashmap* hashmap_create(size_t key_size, size_t val_size, custom_hash_fn hash_fn
 
 void hashmap_destroy(hashmap* map);
 
-int hashmap_put(hashmap* map, const void* key, const void* val);
+int hashmap_put(hashmap* map, const u8* key, const u8* val);
 
-int hashmap_get(const hashmap* map, const void* key, void* val);
+int hashmap_get(const hashmap* map, const u8* key, u8* val);
 
-int hashmap_del(hashmap* map, const void* key);
+int hashmap_del(hashmap* map, const u8* key);
 
-int hashmap_modify(hashmap* map, const void* key, val_modify_fn modify_fn, void* user_data);
+int hashmap_modify(hashmap* map, const u8* key, val_modify_fn modify_fn, u8* user_data);
 
-int hashmap_has(const hashmap* map, const void* key);
+int hashmap_has(const hashmap* map, const u8* key);
 
 void hashmap_print(hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print);
 
