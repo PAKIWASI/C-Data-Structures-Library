@@ -13,10 +13,10 @@ static void kv_destroy(hashmap* map, const KV* kv)
 {
     if (!kv) { return; }
 
-    if (kv->key) {
+    if (kv->key && map->key_del_fn) {
         map->key_del_fn(kv->key); 
     }
-    if (kv->val) {
+    if (kv->val && map->val_del_fn) {
         map->val_del_fn(kv->val);
     }
 
@@ -128,12 +128,17 @@ static void hashmap_maybe_resize(hashmap* map) {
     double load_factor = (double)map->size / (double)map->capacity;
     
     if (load_factor > LOAD_FACTOR_GROW) {
-        hashmap_resize(map, map->capacity * 2);
+        size_t new_cap = next_prime(map->capacity);
+        hashmap_resize(map, new_cap);
     }
-    // shrink when too empty
+    // Shrink when too empty
     else if (load_factor < LOAD_FACTOR_SHRINK && map->capacity > HASHMAP_INIT_CAPACITY) 
     {
-        hashmap_resize(map, map->capacity / 2);
+        size_t new_cap = prev_prime(map->capacity);
+        // Don't shrink below initial capacity
+        if (new_cap >= HASHMAP_INIT_CAPACITY) {
+            hashmap_resize(map, new_cap);
+        }
     }
 }
 
@@ -175,8 +180,8 @@ hashmap* hashmap_create(size_t key_size, size_t val_size, custom_hash_fn hash_fn
     map->val_size = val_size;
 
     map->hash_fn = hash_fn ? hash_fn : fnv1a_hash;
-    map->key_del_fn = key_del ? key_del : default_delete; 
-    map->val_del_fn = val_del ? val_del : default_delete;
+    map->key_del_fn = key_del; 
+    map->val_del_fn = val_del;
     map->compare_fn = cmp ? cmp : default_compare;
 
     return map;
@@ -213,21 +218,23 @@ int hashmap_put(hashmap* map, const u8* key, const u8* val)
     size_t slot = find_slot(map, key, &found, &tombstone);
     
     if (found) {
-        // Key exists - update value
         KV kv;
         genVec_get(map->buckets, slot, (u8*)&kv);
         
-        if (kv.val) {
-            map->val_del_fn(kv.val);
-        }
-        
-        kv.val = malloc(map->val_size);
-        if (!kv.val) {
+        u8* new_val = malloc(map->val_size);
+        if (!new_val) {
             printf("map put: val malloc failed\n");
             return -1;
         }
-        memcpy(kv.val, val, map->val_size);
         
+        memcpy(new_val, val, map->val_size);
+        
+        // Free old value only after successful allocation
+        if (kv.val && map->val_del_fn) {
+            map->val_del_fn(kv.val);
+        }
+        
+        kv.val = new_val;
         genVec_replace(map->buckets, slot, (u8*)&kv);
         
         return 0;
@@ -299,6 +306,10 @@ int hashmap_modify(hashmap* map, const u8* key, val_modify_fn modify_fn, u8* use
     KV kv;
     genVec_get(map->buckets, slot, (u8*)&kv);
     
+    if (!kv.val) {
+        printf("map modify: val is null\n");
+        return -1;
+    }
     // Call the modify function with the value pointer and user data
     modify_fn(kv.val, user_data);
     
@@ -308,11 +319,11 @@ int hashmap_modify(hashmap* map, const u8* key, val_modify_fn modify_fn, u8* use
 
 int hashmap_del(hashmap* map, const u8* key)
 {
-    if (map->size == 0) { return -1; }
     if (!map || !key) {
         printf("map del: map/key is null\n");
         return -1;
     }
+    if (map->size == 0) { return -1; }
 
     int found = 0;
     int tombstone = -1;

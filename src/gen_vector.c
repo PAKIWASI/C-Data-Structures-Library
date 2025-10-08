@@ -90,7 +90,6 @@ void genVec_destroy(genVec* vec) {
     free(vec);
 }
 
-//TODO: does this leak memory????
 void genVec_clear(genVec* vec) {
     if (!vec) {
         printf("clear: vector is null\n");
@@ -172,9 +171,6 @@ int genVec_pop(genVec* vec, u8* popped) {
     if (popped) { //only if buffer provided
         memcpy(popped, last_elm, vec->data_size);
     }
-    //TODO: do i do if or else if?? i think i need to delte the elm from vec as we copy it to pop 
-    // but what if that elm is actually a pointer?? then popped will get the mem address of the data it's pointing to 
-    // deleting will be wrong in that case
     else if (vec->del_fn) {
         vec->del_fn(last_elm);  // (if it's a pointer, like String*)
     }
@@ -207,11 +203,7 @@ void genVec_get(const genVec* vec, size_t i, u8* out) {
 
 void genVec_insert(genVec* vec, size_t i, const u8* data)
 {
-    if (i == vec->size) {
-        genVec_push(vec, data);
-        return;
-    }
-    if (!vec || !data || !vec->data) {
+    if (!vec || !data) {
         printf("insert: vec or data or vec-data is null\n");
         return;
     }
@@ -219,16 +211,14 @@ void genVec_insert(genVec* vec, size_t i, const u8* data)
         printf("insert: index out of bounds\n");
         return;
     }
+    if (i == vec->size) {
+        genVec_push(vec, data);
+        return;
+    }
 
     // Check if we need to allocate or grow
     if (vec->size >= vec->capacity || !vec->data) 
         { genVec_grow(vec); }
-
-    /*
-     * 1, 2, 3, 4, 5
-     * i = 1
-     * 5 - 1 = 4
-    */
 
     // Calculate the number of elements to shift to right
     size_t elements_to_shift = vec->size - i;
@@ -243,6 +233,44 @@ void genVec_insert(genVec* vec, size_t i, const u8* data)
     memcpy(src, data, vec->data_size);
 
     vec->size++;  
+}
+
+
+void genVec_insert_multi(genVec* vec, size_t i, const u8* data, size_t num_data)
+{
+    if (!vec || !data || num_data == 0) 
+    {
+        printf("insertM: vec or data or vec-data is null\n");
+        return;
+    }
+    if (i > vec->size) {
+        printf("insertM: index out of bounds\n");
+        return;
+    }
+
+    // Calculate the number of elements to shift to right
+    size_t elements_to_shift = vec->size - i;
+
+    vec->size += num_data;
+
+    genVec_reserve(vec, vec->size);
+    if (!vec->data) {
+        printf("insertM: genvec reserve failed\n");
+        vec->size -= num_data;
+        return;
+    }
+
+    // the place where we want to insert
+    u8* src = vec->data + (i * vec->data_size);
+    if (elements_to_shift > 0) {
+        // Shift elements right by num_data units to right 
+        u8* dest = vec->data + ((i + num_data) * vec->data_size);
+
+        memmove(dest, src, elements_to_shift * vec->data_size);  // using memmove for overlapping regions
+    }
+
+    //src pos is now free to insert (it's data copied to next location)
+    memcpy(src, data, num_data * vec->data_size);
 }
 
 void genVec_remove(genVec* vec, size_t i) {
@@ -343,6 +371,14 @@ genVec* genVec_copy(genVec* src) {
         printf("copy: genVec init failed\n");
         return NULL;
     }
+    if (src->size == 0) {
+        return vec;
+    }
+    if (!src->data || !vec->data) {
+        genVec_destroy(vec);
+        printf("copy: ivalid data pointers\n");
+        return NULL;
+    }
 
     memcpy(vec->data, src->data, src->size * src->data_size);
     vec->size = src->size;
@@ -379,8 +415,7 @@ void genVec_grow(genVec* vec) {
     }
 
     size_t new_cap;
-    if (vec->capacity == 0) { new_cap = 1; }
-    else if (vec->capacity < 4) { new_cap = vec->capacity + 1; }
+    if (vec->capacity < 4) { new_cap = vec->capacity + 1; }
     else {
         new_cap = (size_t)((double)vec->capacity * GROWTH); 
     }

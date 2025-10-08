@@ -34,6 +34,7 @@ int genVec_pop(genVec* vec, u8* popped);
 void genVec_get(const genVec* vec, size_t i, u8* out);
 void genVec_replace(genVec* vec, size_t i, const u8* data);
 void genVec_insert(genVec* vec, size_t i, const u8* data);
+void genVec_insert_multi(genVec* vec, size_t i, const u8* data, size_t num_data);
 void genVec_remove(genVec* vec, size_t i);
 void genVec_front(const genVec* vec, u8* out);
 void genVec_back(const genVec* vec, u8* out);
@@ -43,10 +44,10 @@ genVec* genVec_copy(genVec* src);
 void genVec_print(const genVec* vec, genVec_print_fn fn);
 
 static inline size_t genVec_size(const genVec* vec) {
-    return vec->size;
+    return vec ? vec->size : 0;
 }
 
 static inline int genVec_empty(const genVec* vec) {
-    return vec->size == 0;
+    return vec ? vec->size == 0 : 0;
 }
 

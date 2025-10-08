@@ -167,7 +167,7 @@ hashset* hashset_create(size_t elm_size, custom_hash_fn hash_fn,
     set->elm_size = elm_size;
 
     set->hash_fn = hash_fn ? hash_fn : fnv1a_hash;
-    set->elm_del_fn = elm_del ? elm_del : default_delete;
+    set->elm_del_fn = elm_del;
     set->cmp_fn = cmp_fn ? cmp_fn : default_compare;
 
     return set;

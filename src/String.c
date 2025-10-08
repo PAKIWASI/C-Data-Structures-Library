@@ -110,28 +110,23 @@ void string_destroy(String* str) {
     }
 }
 
-size_t string_len(const String* str) {
-    if (!str || !str->buffer) { 
-        printf("str len: str is null or buffer is null\n");
-        return 0; 
+// cant free the stack allocated string, but buffer is heap. So seperate delete 
+void string_destroy_fromstk(String str) {
+    if (str.buffer) {
+        genVec_destroy(str.buffer);
     }
-    // Length is size - 1 (excluding null terminator)
-    return str->buffer->size > 0 ? str->buffer->size - 1 : 0;
-}
-
-int string_empty(const String* str) {
-    return string_len(str) == 0;
 }
 
 const char* string_to_cstr(const String* str) {
     if (!str || !str->buffer || str->buffer->size == 0) { 
-        printf("str to cstr: null or empty\n");
         return ""; 
     }
-    return (const char*)str->buffer->data; // last char is '\0' so return till that
+    
+    return (const char*)str->buffer->data;
 }
 
-void string_append_cstr(String* str, const char* cstr) {
+void string_append_cstr(String* str, const char* cstr) 
+{
     if (!str || !cstr || !str->buffer) { 
         printf("str append cstr: invalid parameters\n");
         return; 
@@ -151,11 +146,7 @@ void string_append_cstr(String* str, const char* cstr) {
         }
     }
     
-    // Append all characters at once would be more efficient,
-    // but since we're using the generic vector, we'll append one by one
-    for (size_t i = 0; i < cstr_len; i++) {
-        genVec_push(str->buffer, (u8*)&cstr[i]);
-    }
+    genVec_insert_multi(str->buffer, write_pos, (const u8*)cstr, cstr_len);
     
     // Ensure null termination
    ensure_null_terminated(str); 
@@ -184,27 +175,69 @@ void string_append_char(String* str, char c) {
     ensure_null_terminated(str);
 }
 
+void string_insert_char(String* str, size_t i, char c)
+{
+    if (!str) {
+        printf("str insert char: str is null\n");
+        return;
+    } 
+    if (i >= string_len(str)) {
+        string_append_char(str, c); // this will ensure null term at end
+        return;
+    } 
+    
+    genVec_insert(str->buffer, i, (u8*)&c); 
+    ensure_null_terminated(str);
+}
+
+
+void string_insert_cstr(String* str, size_t i, const char* cstr)
+{
+    if (!str) {
+        printf("str insert cstr: str is null\n");
+        return;
+    }
+    if (i >= string_len(str)) {
+        string_append_cstr(str, cstr); // null term garenteed
+        return;
+    }
+    
+    genVec_insert_multi(str->buffer, i, (u8*)cstr, strlen(cstr));
+    ensure_null_terminated(str);
+}
+
+void string_insert_string(String* str, size_t i, String* other)
+{
+    if (!str || !other) {
+        printf("str insert str: parameters null\n");
+        return;
+    }
+    if (i >= string_len(str)) {
+        string_append_string(str, other);
+        return;
+    }
+    
+    // is this right???
+    genVec_insert_multi(str->buffer, i, other->buffer->data, strlen(string_to_cstr(other)));
+    ensure_null_terminated(str);
+}
+
 
 void string_remove_char(String* str, size_t i) {
     if (!str || !str->buffer) { 
         printf("str remove char: str or buffer null\n");
         return; 
     }
-    
-    size_t len = string_len(str);
-    if (i >= len) { 
-        printf("str remove char: index %zu out of bounds (len=%zu)\n", i, len);
-        return; 
+    if (i >= string_len(str)) {
+        printf("str remove char: index out of bounds\n");
+        return;
     }
     
     // Remove the character at index i
     genVec_remove(str->buffer, i);
     
     // The null terminator should still be there, but im scared
-    if (str->buffer->size == 0 || 
-        (str->buffer->size > 0 && ((char*)str->buffer->data)[str->buffer->size - 1] != '\0')) {
-        ensure_null_terminated(str);
-    }
+    ensure_null_terminated(str);
 }
 
 void string_clear(String* str) {
@@ -261,29 +294,40 @@ int string_find_char(const String* str, char c) {
     return found ? found - cstr : -1;
 }
 
-int string_find_cstr(const String* str, const char* substring) {
-    if (!str || !substring) { return -1; }
+int string_find_cstr(const String* str, const char* substr) {
+    if (!str || !substr) { return -1; }
     
     const char* cstr = string_to_cstr(str);
-    const char* found = strstr(cstr, substring);
+    const char* found = strstr(cstr, substr);
     return found ? found - cstr : -1;
 }
 
-String* string_substr(const String* str, size_t start, size_t length) {
+String* string_substr(const String* str, size_t start, size_t length) 
+{
     if (!str || start >= string_len(str)) { return NULL; }
     
     String* result = string_create();
     if (!result) { return NULL; }
     
     size_t end = start + length;
-    if (end > string_len(str)) {
-        end = string_len(str);
+    size_t str_len = string_len(str);
+    if (end > str_len) {
+        end = str_len;
     }
     
-    for (size_t i = start; i < end; i++) {
-        string_append_char(result, string_at(str, i));
+    size_t actual_len = end - start;
+    if (actual_len > 0) {
+        // Remove null terminator from result
+        if (result->buffer->size > 0) {
+            result->buffer->size--;
+        }
+        
+        // Insert substring all at once
+        const char* src = string_to_cstr(str) + start;
+        genVec_insert_multi(result->buffer, 0, (const u8*)src, actual_len);
+        
+        ensure_null_terminated(result);
     }
-    
     return result;
 }
 
