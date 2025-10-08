@@ -45,7 +45,8 @@ genVec* genVec_init(size_t n, size_t data_size, genVec_delete_fn del_fn) {
     return vec;
 }
 
-genVec* genVec_init_val(size_t n, const u8* val, size_t data_size, genVec_delete_fn del_fn) {
+genVec* genVec_init_val(size_t n, const u8* val, size_t data_size, genVec_delete_fn del_fn) 
+{
     if (val == NULL) {
         printf("val can't be null\n");
         return NULL;
@@ -89,6 +90,7 @@ void genVec_destroy(genVec* vec) {
     free(vec);
 }
 
+//TODO: does this leak memory????
 void genVec_clear(genVec* vec) {
     if (!vec) {
         printf("clear: vector is null\n");
@@ -152,6 +154,7 @@ void genVec_push(genVec* vec, const u8* data)
 
     u8* next_to_last = vec->data + (vec->size * vec->data_size); 
     memcpy(next_to_last, data, vec->data_size);
+
     vec->size++;
 }
 
@@ -169,6 +172,9 @@ int genVec_pop(genVec* vec, u8* popped) {
     if (popped) { //only if buffer provided
         memcpy(popped, last_elm, vec->data_size);
     }
+    //TODO: do i do if or else if?? i think i need to delte the elm from vec as we copy it to pop 
+    // but what if that elm is actually a pointer?? then popped will get the mem address of the data it's pointing to 
+    // deleting will be wrong in that case
     else if (vec->del_fn) {
         vec->del_fn(last_elm);  // (if it's a pointer, like String*)
     }
@@ -181,7 +187,7 @@ int genVec_pop(genVec* vec, u8* popped) {
     return 0;
 }
 
-void genVec_get(genVec* vec, size_t i, u8* out) {
+void genVec_get(const genVec* vec, size_t i, u8* out) {
     if (!vec) {
         printf("get: vec is null\n");
         return;
@@ -199,56 +205,44 @@ void genVec_get(genVec* vec, size_t i, u8* out) {
     memcpy(out, elm, vec->data_size);
 }
 
-
-void genVec_replace(genVec* vec, size_t i, const u8* data) {
-    if (!vec) {
-        printf("replace: vec is null\n");
-        return;
-    } 
-    if (i >= vec->size) {
-        printf("replace: index of of bounds\n");
+void genVec_insert(genVec* vec, size_t i, const u8* data)
+{
+    if (i == vec->size) {
+        genVec_push(vec, data);
         return;
     }
-    if (!data) {
-        printf("replace: need a valid data variable\n");
-        return;
-    }   
-
-    u8* to_replace = vec->data + (i * vec->data_size); 
-
-    if (vec->del_fn) {
-        vec->del_fn(to_replace);
-    }
-
-    memcpy(to_replace, data, vec->data_size);
-}
-
-void genVec_front(genVec* vec, u8* out) {
-    if (!vec) {
-        printf("front: vec is null\n");
+    if (!vec || !data || !vec->data) {
+        printf("insert: vec or data or vec-data is null\n");
         return;
     }
-    if (vec->size == 0) {
-        printf("front: vec is empty\n");
+    if (i > vec->size) {
+        printf("insert: index out of bounds\n");
         return;
     }
-    
-    memcpy(out, vec->data, vec->data_size);
-}
 
+    // Check if we need to allocate or grow
+    if (vec->size >= vec->capacity || !vec->data) 
+        { genVec_grow(vec); }
 
-void genVec_back(genVec* vec, u8* out) {
-    if (!vec) {
-        printf("front: vec is null\n");
-        return;
-    }
-    if (vec->size == 0) {
-        printf("front: vec is empty\n");
-        return;
-    }
-    
-    u8* last_elm = vec->data + ((vec->size - 1) * vec->data_size);
-    memcpy(out, last_elm, vec->data_size);
+    /*
+     * 1, 2, 3, 4, 5
+     * i = 1
+     * 5 - 1 = 4
+    */
+
+    // Calculate the number of elements to shift to right
+    size_t elements_to_shift = vec->size - i;
+    // the place where we want to insert
+    u8* src = vec->data + (i * vec->data_size);
+
+    // Shift elements right by one unit
+    u8* dest = vec->data + ((i + 1) * vec->data_size);
+    memmove(dest, src, elements_to_shift * vec->data_size);  // Use memmove for overlapping regions
+
+    //src pos is now free to insert (it's data copied to next location)
+    memcpy(src, data, vec->data_size);
+
+    vec->size++;  
 }
 
 void genVec_remove(genVec* vec, size_t i) {
@@ -283,6 +277,60 @@ void genVec_remove(genVec* vec, size_t i) {
 }
 
 
+
+void genVec_replace(genVec* vec, size_t i, const u8* data) {
+    if (!vec) {
+        printf("replace: vec is null\n");
+        return;
+    } 
+    if (i >= vec->size) {
+        printf("replace: index of of bounds\n");
+        return;
+    }
+    if (!data) {
+        printf("replace: need a valid data variable\n");
+        return;
+    }   
+
+    u8* to_replace = vec->data + (i * vec->data_size); 
+
+    if (vec->del_fn) {
+        vec->del_fn(to_replace);
+    }
+
+    memcpy(to_replace, data, vec->data_size);
+}
+
+void genVec_front(const genVec* vec, u8* out) {
+    if (!vec) {
+        printf("front: vec is null\n");
+        return;
+    }
+    if (vec->size == 0) {
+        printf("front: vec is empty\n");
+        return;
+    }
+    
+    memcpy(out, vec->data, vec->data_size);
+}
+
+
+void genVec_back(const genVec* vec, u8* out) {
+    if (!vec) {
+        printf("back: vec is null\n");
+        return;
+    }
+    if (vec->size == 0) {
+        printf("back: vec is empty\n");
+        return;
+    }
+    
+    u8* last_elm = vec->data + ((vec->size - 1) * vec->data_size);
+    memcpy(out, last_elm, vec->data_size);
+}
+
+
+
 // this is a shallow copy if elements are pointers
 genVec* genVec_copy(genVec* src) {
     if (!src) {
@@ -302,7 +350,7 @@ genVec* genVec_copy(genVec* src) {
     return vec;
 }
 
-void genVec_print(genVec* vec, genVec_print_fn fn) { 
+void genVec_print(const genVec* vec, genVec_print_fn fn) { 
     if (!vec) {
         printf("print: vec is null\n");
         return;

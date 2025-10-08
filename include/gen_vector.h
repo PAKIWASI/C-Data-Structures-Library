@@ -9,7 +9,7 @@ typedef uint8_t u8;
 //user provided
 typedef int (*genVec_compare_fn)(const u8* a, const u8* b);
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef void (*genVec_delete_fn)(const u8* elm);
+typedef void (*genVec_delete_fn)(u8* elm);
 
 
 typedef struct {
@@ -27,17 +27,26 @@ genVec* genVec_init_val(size_t n, const u8* val, size_t data_size, genVec_delete
 void genVec_destroy(genVec* vec);
 void genVec_clear(genVec* vec);
 void genVec_reserve(genVec* vec, size_t new_capacity);
+
 //operations
 void genVec_push(genVec* vec, const u8* data);
 int genVec_pop(genVec* vec, u8* popped);
-void genVec_get(genVec* vec, size_t i, u8* out);
+void genVec_get(const genVec* vec, size_t i, u8* out);
 void genVec_replace(genVec* vec, size_t i, const u8* data);
-void genVec_front(genVec* vec, u8* out);
-void genVec_back(genVec* vec, u8* out);
+void genVec_insert(genVec* vec, size_t i, const u8* data);
 void genVec_remove(genVec* vec, size_t i);
-//TODO: iterators
+void genVec_front(const genVec* vec, u8* out);
+void genVec_back(const genVec* vec, u8* out);
 
 //utility
 genVec* genVec_copy(genVec* src);
-void genVec_print(genVec* vec, genVec_print_fn fn);
+void genVec_print(const genVec* vec, genVec_print_fn fn);
+
+static inline size_t genVec_size(const genVec* vec) {
+    return vec->size;
+}
+
+static inline int genVec_empty(const genVec* vec) {
+    return vec->size == 0;
+}
 

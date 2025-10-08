@@ -1,6 +1,6 @@
 #include "parse.h"
 
-int main(void)
+int main(void) 
 {
     return parse(); 
 }
