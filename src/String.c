@@ -8,23 +8,14 @@
 
 
 // Private helper to ensure null termination
-static void ensure_null_terminated(String* str) {
+static inline void ensure_null_terminated(String* str) {
     if (!str || !str->buffer) { return; }
-
-    const char null_term = '\0';
     
-    if (str->buffer->size == 0) {
-        // empty buffer, just add null terminator
+    size_t size = str->buffer->size;
+    if (size == 0 || ((char*)str->buffer->data)[size - 1] != '\0') 
+    {
+        const char null_term = '\0';
         genVec_push(str->buffer, (u8*)&null_term);
-    } else {
-        // check if last character is already null terminator
-        char last_char;
-        genVec_get(str->buffer, str->buffer->size - 1, (u8*)&last_char);
-        
-        if (last_char != '\0') {
-            // Last character is not null terminator, so append one
-            genVec_push(str->buffer, (u8*)&null_term);
-        }
     }
 }
 
@@ -111,9 +102,9 @@ void string_destroy(String* str) {
 }
 
 // cant free the stack allocated string, but buffer is heap. So seperate delete 
-void string_destroy_fromstk(String str) {
-    if (str.buffer) {
-        genVec_destroy(str.buffer);
+void string_destroy_fromstk(String* str) {
+    if (str->buffer) {
+        genVec_destroy(str->buffer);
     }
 }
 

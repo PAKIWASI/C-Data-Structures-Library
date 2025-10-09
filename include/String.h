@@ -15,7 +15,7 @@ String* string_from_cstr(const char* cstr);
 String* string_from_string(const String* other);
 void string_reserve(String* str, size_t capacity); 
 void string_destroy(String* str);
-void string_destroy_fromstk(String str);
+void string_destroy_fromstk(String* str);
 
 // Basic properties
 static inline size_t string_len(const String* str) {
