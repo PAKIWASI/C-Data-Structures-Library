@@ -144,7 +144,7 @@ int parse(void)
     printf("Unique words: %zu\n\n", map->size);
 
     String str;
-    string_create_onstack(&str, "hamlet");
+    string_create_onstack(&str, "romeo");
     int count;
     if (hashmap_get(map, (u8*)&str, (u8*)&count) == 0) {
         printf("Count of %s : %d", string_to_cstr(&str), count);
@@ -153,6 +153,7 @@ int parse(void)
         printf("not found\n");
     }
 
+    string_destroy_fromstk(&str);
     hashmap_destroy(map);    
     printf("\n");
     return fclose(f);
