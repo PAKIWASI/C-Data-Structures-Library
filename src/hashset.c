@@ -122,12 +122,17 @@ static void hashset_maybe_resize(hashset* set) {
     double load_factor = (double)set->size / (double)set->capacity;
     
     if (load_factor > LOAD_FACTOR_GROW) {
-        hashset_resize(set, set->capacity * 2);
+        size_t new_cap = next_prime(set->capacity);
+        hashset_resize(set, new_cap);
     }
-    // shrink when too empty
+    // Shrink when too empty
     else if (load_factor < LOAD_FACTOR_SHRINK && set->capacity > HASHMAP_INIT_CAPACITY) 
     {
-        hashset_resize(set, set->capacity / 2);
+        size_t new_cap = prev_prime(set->capacity);
+        // Don't shrink below initial capacity
+        if (new_cap >= HASHMAP_INIT_CAPACITY) {
+            hashset_resize(set, new_cap);
+        }
     }
 }
 

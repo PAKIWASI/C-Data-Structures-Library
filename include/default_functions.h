@@ -16,7 +16,7 @@ typedef uint8_t u8;
 ====================DEFAULT FUNCTIONS====================
 */
 // 32-bit FNV-1a (default hash)
-static size_t fnv1a_hash(const u8* bytes, size_t size) {
+size_t fnv1a_hash(const u8* bytes, size_t size) {
     uint32_t hash = 2166136261U;  // FNV offset basis
 
     for (size_t i = 0; i < size; i++) {
@@ -29,7 +29,7 @@ static size_t fnv1a_hash(const u8* bytes, size_t size) {
 
 
 // Default compare function
-static int default_compare(const u8* a, const u8* b, size_t size) 
+int default_compare(const u8* a, const u8* b, size_t size) 
 {
     return memcmp(a, b, size);
 }
@@ -43,7 +43,7 @@ static const size_t PRIMES[] = {
 static const size_t PRIMES_COUNT = sizeof(PRIMES) / sizeof(PRIMES[0]);
 
 // Find the next prime number larger than current
-static size_t next_prime(size_t current) {
+size_t next_prime(size_t current) {
     for (size_t i = 0; i < PRIMES_COUNT; i++) {
         if (PRIMES[i] > current) {
             return PRIMES[i];
@@ -57,7 +57,7 @@ static size_t next_prime(size_t current) {
 }
 
 // Find the previous prime number smaller than current
-static size_t prev_prime(size_t current) {
+size_t prev_prime(size_t current) {
     // Search backwards through prime table
     for (int i = PRIMES_COUNT - 1; i >= 0; i--) {
         if (PRIMES[i] < current) {
