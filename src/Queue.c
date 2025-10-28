@@ -45,6 +45,18 @@ void queue_destroy(Queue* q)
     free(q);
 }
 
+void queue_clear(Queue* q)
+{
+    if (!q) {
+        printf("queue clear: queue null\n");
+        return;
+    }
+
+    q->size = 0;
+    q->head = 0;
+    q->tail = 0;
+}
+
 
 void enqueue(Queue* q, const u8* x)
 {
