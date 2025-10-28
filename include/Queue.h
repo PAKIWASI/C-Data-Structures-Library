@@ -7,8 +7,8 @@ typedef struct { // Circular Queue
     genVec* arr;
     size_t head;     // dequeue (head++)
     size_t tail;     // enqueue   (head + size) % capacity
+    size_t size;
 } __attribute__((aligned(32))) Queue;
-
 
 
 Queue* queue_create(size_t n, size_t data_size, genVec_delete_fn del_fn);
@@ -20,7 +20,7 @@ void dequeue(Queue* q, u8* out);
 void queue_peek(Queue* q, u8* peek);
 
 static inline size_t queue_size(Queue* q) {
-    return genVec_size(q->arr);
+    return q->size;
 }
 
 void queue_print(Queue* q, genVec_print_fn print_fn);
