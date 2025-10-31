@@ -5,7 +5,7 @@
 
 typedef struct { // Circular Queue
     genVec* arr;
-    size_t head;     // dequeue (head++)
+    size_t head;     // dequeue (head + 1) % capacity
     size_t tail;     // enqueue   (head + size) % capacity
     size_t size;
 } __attribute__((aligned(32))) Queue;

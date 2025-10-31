@@ -98,8 +98,8 @@ void genVec_clear(genVec* vec) {
 
     if (vec->del_fn) {
         for (size_t i = 0; i < vec->size; i++) {
-        u8* element = vec->data + (i * vec->data_size);
-        vec->del_fn(element);
+            u8* element = vec->data + (i * vec->data_size);
+            vec->del_fn(element);
         }
     }
 
@@ -201,6 +201,20 @@ void genVec_get(const genVec* vec, size_t i, u8* out) {
     memcpy(out, elm, vec->data_size);
 }
 
+const u8* genVec_get_ptr(const genVec* vec, size_t i)
+{
+    if (!vec) {
+        printf("get ptr: vec is null\n");
+        return NULL;
+    }
+    if (i >= vec->size) {
+        printf("get ptr: index out of bounds\n");
+        return NULL;
+    }
+
+    return vec->data + (i * vec->data_size);
+}
+
 void genVec_insert(genVec* vec, size_t i, const u8* data)
 {
     if (!vec || !data) {
@@ -251,9 +265,9 @@ void genVec_insert_multi(genVec* vec, size_t i, const u8* data, size_t num_data)
     // Calculate the number of elements to shift to right
     size_t elements_to_shift = vec->size - i;
 
-    vec->size += num_data;
+    vec->size += num_data; // no of new elements in chunk
 
-    genVec_reserve(vec, vec->size);
+    genVec_reserve(vec, vec->size); // reserve with new size
     if (!vec->data) {
         printf("insertM: genvec reserve failed\n");
         vec->size -= num_data;
@@ -303,7 +317,6 @@ void genVec_remove(genVec* vec, size_t i) {
     if (vec->size <= (size_t)((double)vec->capacity * SHRINK_AT)) 
         { genVec_shrink(vec); }
 }
-
 
 
 void genVec_replace(genVec* vec, size_t i, const u8* data) {
@@ -360,7 +373,7 @@ void genVec_back(const genVec* vec, u8* out) {
 
 
 // this is a shallow copy if elements are pointers
-genVec* genVec_copy(genVec* src) {
+genVec* genVec_copy(const genVec* src) {
     if (!src) {
         printf("copy: src is null\n");
         return NULL;

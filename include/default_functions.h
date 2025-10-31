@@ -59,7 +59,7 @@ static size_t next_prime(size_t current) {
 // Find the previous prime number smaller than current
 static size_t prev_prime(size_t current) {
     // Search backwards through prime table
-    for (int i = PRIMES_COUNT - 1; i >= 0; i--) {
+    for (size_t i = PRIMES_COUNT - 1; i >= 0; i--) {
         if (PRIMES[i] < current) {
             return PRIMES[i];
         }

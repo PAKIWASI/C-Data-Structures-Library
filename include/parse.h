@@ -119,6 +119,7 @@ int parse(void)
                 // Clean and normalize the word
                 if (clean_word(token, cleaned, sizeof(cleaned))) 
                 {
+                    printf("%s\t", cleaned);
                     String str;
                     string_create_onstack(&str, cleaned);
                     int count;
@@ -144,7 +145,7 @@ int parse(void)
     printf("Unique words: %zu\n\n", map->size);
 
     String str;
-    string_create_onstack(&str, "romeo");
+    string_create_onstack(&str, "gay");
     int count;
     if (hashmap_get(map, (u8*)&str, (u8*)&count) == 0) {
         printf("Count of %s : %d", string_to_cstr(&str), count);

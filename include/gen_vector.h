@@ -43,6 +43,8 @@ void genVec_push(genVec* vec, const u8* data);
 int genVec_pop(genVec* vec, u8* popped);
 // get a copy of the elm at index i in buffer out
 void genVec_get(const genVec* vec, size_t i, u8* out);
+// get a pointer to the data at index i
+const u8* genVec_get_ptr(const genVec* vec, size_t i);
 // repace elm at index i with data, deleting old elm
 void genVec_replace(genVec* vec, size_t i, const u8* data);
 // insert at data index i, shifting elm to the right
@@ -59,7 +61,7 @@ void genVec_back(const genVec* vec, u8* out);
 //utility
 
 // make a copy of the vector, CRITICAL: if elm are pointers, then it's a shallow copy
-genVec* genVec_copy(genVec* src);
+genVec* genVec_copy(const genVec* src);
 // print the elms to stdout, using a print function fn
 void genVec_print(const genVec* vec, genVec_print_fn fn);
 

@@ -42,8 +42,8 @@ String* string_create(void) {
 void string_create_onstack(String* str, const char* cstr) 
 {
     // the difference is that we dont use string_create(), so str is not heap initilised
-    if (!str) {
-        printf("str create stk: str is null\n");
+    if (!str || ! cstr) {
+        printf("str create stk: str/cstr null\n");
         return;
     }
 

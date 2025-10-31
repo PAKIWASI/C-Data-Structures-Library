@@ -37,7 +37,7 @@ size_t murmurhash3_string(const u8* key, size_t size)
     }
     
     // Tail - handle remaining bytes
-    const uint8_t* tail = (const uint8_t*)(data + nblocks * 4);
+    const uint8_t* tail = (const uint8_t*)(data + (nblocks * 4));
     uint32_t k1 = 0;
     
     switch (len & 3) {
@@ -64,6 +64,7 @@ size_t murmurhash3_string(const u8* key, size_t size)
 // ========== Compare function for String* ==========
 int string_custom_compare(const u8* a, const u8* b, size_t size) 
 {
+    (void)size;
     return string_compare((String*)a, (String*)b); 
 }
 
