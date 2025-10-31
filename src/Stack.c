@@ -8,6 +8,10 @@
 
 Stack* stack_create(size_t n, size_t data_size, genVec_delete_fn del_fn)
 {
+    if (!data_size || !del_fn) {
+        printf("stk create: invalid parameters\n");
+        return NULL;
+    }
     Stack* stk = malloc(sizeof(Stack));
     if (!stk) {
         printf("stk create: malloc failed\n");
@@ -81,3 +85,5 @@ void stack_print(Stack* stk, genVec_print_fn print_fn)
 
     genVec_print(stk->arr,print_fn);
 }
+
+

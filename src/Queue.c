@@ -14,6 +14,9 @@ static void queue_grow(Queue* q);
 
 Queue* queue_create(size_t n, size_t data_size, genVec_delete_fn del_fn)
 {
+    if (!n || !data_size || !del_fn) {
+        printf("queue create : invalid parameters\n");
+    }
     Queue* q = malloc(sizeof(Queue));
     if (!q) {
         printf("queue create: malloc failed\n");
@@ -22,7 +25,7 @@ Queue* queue_create(size_t n, size_t data_size, genVec_delete_fn del_fn)
 
     u8* dummy = malloc(sizeof(data_size));
     q->arr = genVec_init_val(n, dummy, data_size, del_fn);
-    free(dummy); // TODO: check this!
+    free(dummy);
     if (!q->arr) {
         printf("queue create: vec init failed\n");
         free(q);
@@ -40,7 +43,9 @@ void queue_destroy(Queue* q)
 {
     if (!q) { return; }
 
-    genVec_destroy(q->arr);
+    if (q->arr) {
+        genVec_destroy(q->arr);
+    }
 
     free(q);
 }
