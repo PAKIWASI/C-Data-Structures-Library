@@ -98,7 +98,6 @@ u8 bitVec_test(bitVec* bvec, size_t i)
     }
     
     if (i >= bvec->size) { 
-        printf("bvec test: index out of bounds\n");
         return -1;
     }
 

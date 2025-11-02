@@ -1,36 +1,28 @@
-#include "hashmap.h"
-#include "hashset.h"
-#include "helper_functions.h"
-#include "str_setup.h"
 
 
+#include "bit_vector.h"
 int main(void)
 {
-    map = hashmap_create(sizeof(String), sizeof(int), murmurhash3_string, string_custom_delete, NULL, NULL);
+    bitVec* bvec = bitVec_create();    
 
-    map_put_strToInt("hello", 1);
-    map_put_strToInt("world", 10);
-    map_put_strToInt("!!!", 3);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
 
-    hashmap_print(map, str_print, int_print);
+    bitVec_pop(bvec);
+    bitVec_pop(bvec);
 
-    hashmap_destroy(map);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
+    bitVec_push(bvec);
 
-    set = hashset_create(sizeof(int), NULL, NULL, NULL);
+    bitVec_print(bvec, 0);
+    bitVec_print(bvec, 1);
 
-    set_insert_int(1);
-    set_insert_int(2);
-    set_insert_int(3);
-    set_insert_int(4);
-
-    hashset_print(set, int_print);
-
-    if (set_has_int(100)) {
-        printf("set has 4\n");
-    } else {
-        printf("set does not have 4\n");
-    }
-
-    hashset_destroy(set);
-    return 0;
+    bitVec_destroy(bvec);
 }

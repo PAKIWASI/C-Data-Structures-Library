@@ -1,14 +1,15 @@
 #pragma once
 
 #include "String.h"
+#include "bit_vector.h"
 #include "gen_vector.h"
 
 
 typedef struct {
     genVec* arr;
-    genVec* flags; // to check filled or not (1 elm = 8 bits -> info for 8 arr elements)
+    bitVec* flags; // for each i: 0 -> empty, 1-> set , // TODO: may be used for size tracking??
     size_t size;
-    genVec_compare_fn cmp_fn;
+    genVec_compare_fn cmp_fn; // for < or > operations (= can be done by bitcmp)
 } __attribute__((aligned(32))) BST; 
 
 
@@ -17,16 +18,18 @@ void bst_destroy(BST* bst);
 
 void bst_insert(BST* bst, const u8* val);
 void bst_remove(BST* bst, const u8* val);
-int bst_search(BST* bst, const u8* val);
+int bst_search(const BST* bst, const u8* val);
 
 void bst_balance(BST* bst);     // TODO: how to do this???
-void bst_subtree(BST* bst, const u8* root, String* out, genVec_to_string to_str);
+String* bst_subtree(const BST* bst, const u8* root, genVec_to_string to_str);
 
-void bst_preorder(BST* bst, String* out, genVec_to_string to_str);
-void bst_inorder(BST* bst, String* out, genVec_to_string to_str);
-void bst_postorder(BST* bst, String* out, genVec_to_string to_str);
-void bst_bfs(BST* bst, String* out, genVec_to_string to_str);
-void bst_print(BST* bst, genVec_print_fn print);
+String* bst_preorder(const BST* bst, genVec_to_string to_str);
+String* bst_inorder(const BST* bst, genVec_to_string to_str);
+String* bst_postorder(const BST* bst, genVec_to_string to_str);
+String* bst_bfs(const BST* bst, genVec_to_string to_str);
+
+// visual tree
+void bst_print(const BST* bst, genVec_print_fn print);
 
 /*
 class BST {

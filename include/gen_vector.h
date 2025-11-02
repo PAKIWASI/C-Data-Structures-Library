@@ -8,7 +8,7 @@ typedef uint8_t u8;
 
 //user provided
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef int (*genVec_compare_fn)(const u8* a, const u8* b);
+typedef u8 (*genVec_compare_fn)(const u8* a, const u8* b);
 typedef void (*genVec_delete_fn)(u8* elm);
 typedef const char* (*genVec_to_string)(const u8* elm);
 
@@ -40,7 +40,7 @@ void genVec_reserve(genVec* vec, size_t new_capacity);
 // push to the back of the vec
 void genVec_push(genVec* vec, const u8* data);
 // pop from the back of the vec, OPTIONAL: if popped provided, copy data to it
-int genVec_pop(genVec* vec, u8* popped);
+void genVec_pop(genVec* vec, u8* popped);
 // get a copy of the elm at index i in buffer out
 void genVec_get(const genVec* vec, size_t i, u8* out);
 // get a pointer to the data at index i
@@ -71,7 +71,7 @@ static inline size_t genVec_size(const genVec* vec) {
 }
 
 // boolean to query empty
-static inline int genVec_empty(const genVec* vec) {
+static inline u8 genVec_empty(const genVec* vec) {
     return vec ? vec->size == 0 : 0;
 }
 

@@ -157,14 +157,14 @@ void genVec_push(genVec* vec, const u8* data)
     vec->size++;
 }
 
-int genVec_pop(genVec* vec, u8* popped) {
+void genVec_pop(genVec* vec, u8* popped) {
     if (!vec) {
         printf("pop: vec is null\n");
-        return -1;
+        return;
     }
     if (vec->size == 0) {
         printf("pop: vec is empty\n");
-        return -1;
+        return;
     }
     
     u8* last_elm = vec->data + ((vec->size - 1) * vec->data_size);
@@ -179,8 +179,6 @@ int genVec_pop(genVec* vec, u8* popped) {
 
     if (vec->size <= (size_t)((double)vec->capacity * SHRINK_AT)) 
         { genVec_shrink(vec); }
-
-    return 0;
 }
 
 void genVec_get(const genVec* vec, size_t i, u8* out) {
