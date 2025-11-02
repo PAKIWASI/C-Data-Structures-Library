@@ -116,3 +116,37 @@ void str_print(const u8* elm) {
     string_print(str);
 }
 
+
+
+u8 int_cmp(const u8* a, const u8* b) // 1 if a > b, 0 if a < b, 255 if a = b
+{
+    int x = *(int*) a;
+    int y = *(int*) b;
+
+    if (x > y) { return 1; }
+    else if (x < y) { return 0; }
+    else { return -1; }
+}
+
+String* int_to_str(const u8* elm)
+{
+    int num = *(int*)elm;
+    String* str = string_create();
+    if (num == 0) {
+        string_append_char(str, '0');
+        return str;
+    }
+
+    if (num < 0) {
+        string_append_char(str, '-');
+        num *= -1;
+    }
+
+    while ( num > 0 ) {
+        int a = num % 10; // get last digit
+        string_append_char(str, a - '0');
+        num /= 10;
+    } 
+
+    return str;
+}

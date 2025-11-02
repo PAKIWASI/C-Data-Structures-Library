@@ -10,7 +10,6 @@ typedef uint8_t u8;
 typedef void (*genVec_print_fn)(const u8* elm);
 typedef u8 (*genVec_compare_fn)(const u8* a, const u8* b);
 typedef void (*genVec_delete_fn)(u8* elm);
-typedef const char* (*genVec_to_string)(const u8* elm);
 
 
 typedef struct {

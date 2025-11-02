@@ -5,15 +5,19 @@
 #include "gen_vector.h"
 
 
+typedef String* (*to_string_fn)(const u8* elm);
+
+
 typedef struct {
     genVec* arr;
     bitVec* flags; // for each i: 0 -> empty, 1-> set , // TODO: may be used for size tracking??
     size_t size;
     genVec_compare_fn cmp_fn; // for < or > operations (= can be done by bitcmp)
-} __attribute__((aligned(32))) BST; 
+    to_string_fn to_str;
+} __attribute__((aligned(64))) BST; 
 
 
-BST* bst_create(size_t data_size, genVec_compare_fn cmp, genVec_delete_fn del);
+BST* bst_create(size_t data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del);
 void bst_destroy(BST* bst);
 
 void bst_insert(BST* bst, const u8* val);
@@ -21,15 +25,15 @@ void bst_remove(BST* bst, const u8* val);
 int bst_search(const BST* bst, const u8* val);
 
 void bst_balance(BST* bst);     // TODO: how to do this???
-String* bst_subtree(const BST* bst, const u8* root, genVec_to_string to_str);
+String* bst_subtree(const BST* bst, const u8* root);
 
-String* bst_preorder(const BST* bst, genVec_to_string to_str);
-String* bst_inorder(const BST* bst, genVec_to_string to_str);
-String* bst_postorder(const BST* bst, genVec_to_string to_str);
-String* bst_bfs(const BST* bst, genVec_to_string to_str);
+String* bst_preorder(const BST* bst);
+String* bst_inorder(const BST* bst);
+String* bst_postorder(const BST* bst);
+String* bst_bfs(const BST* bst);
 
 // visual tree
-void bst_print(const BST* bst, genVec_print_fn print);
+void bst_print(const BST* bst);
 
 /*
 class BST {

@@ -1,28 +1,24 @@
+#include "BST.h"
+
+#include "String.h"
+#include "helper_functions.h"
 
 
-#include "bit_vector.h"
+void insert(BST* bst, int val) {
+    bst_insert(bst, cast(val));
+}
+
 int main(void)
 {
-    bitVec* bvec = bitVec_create();    
+    BST* bst = bst_create(sizeof(int), int_cmp, int_to_str, NULL);
 
-    bitVec_push(bvec);
-    bitVec_push(bvec);
-    bitVec_push(bvec);
-    bitVec_push(bvec);
-    bitVec_push(bvec);
-    bitVec_push(bvec);
-    bitVec_push(bvec);
-    bitVec_push(bvec);
+    insert(bst, 1);
+    insert(bst, 2);
+    insert(bst, 3);
 
-    bitVec_pop(bvec);
-    bitVec_pop(bvec);
-
-    bitVec_push(bvec);
-    bitVec_push(bvec);
-    bitVec_push(bvec);
-
-    bitVec_print(bvec, 0);
-    bitVec_print(bvec, 1);
-
-    bitVec_destroy(bvec);
+    String* out = bst_preorder(bst);
+    string_print(out);
+    
+    string_destroy(out);
+    bst_destroy(bst);
 }
