@@ -48,14 +48,10 @@ void bitVec_set(bitVec* bvec, size_t i)
     size_t bit_index = i % 8; // which bit in the byte
     
     // Ensure capacity
-    while (byte_index >= genVec_size(bvec->arr)) {
+    while (byte_index >= bvec->arr->size) {
         u8 zero = 0;
         genVec_push(bvec->arr, &zero);
     }
-
-    if (i + 1 > bvec->size) { // we set a higher bit
-        bvec->size = i + 1;
-    }     
 
     u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index);
     *byte |= (1 << bit_index);  // Set the bit
@@ -64,6 +60,10 @@ void bitVec_set(bitVec* bvec, size_t i)
     // we or it with the arr so the 1 is set
     // we set the bits till the pos where we want 1
     // rest are 0, rhs of 1 is implicitly set, lhs of 1 is explici by <<
+
+    if (i + 1 > bvec->size) { // bits upto ith are considered allocated
+        bvec->size = i + 1;  // ith bit is 1 (set)
+    }  
 }
 
 // Clear bit i (set to 0)
@@ -73,28 +73,20 @@ void bitVec_clear(bitVec* bvec, size_t i)
         printf("bvec clear: bvec/arr is null\n");
         return;
     }
-    
-    size_t byte_index = i / 8;
-    size_t bit_index = i % 8;
-    
-    if (byte_index >= genVec_size(bvec->arr)) { 
+        
+    if (i >= bvec->size) { 
         printf("bvec clear: index out of bounds\n");
         return;
     }
 
-    if (i == bvec->size - 1) { // if it is the last bit we set
-        bvec->size--;        
-        if (bvec->size % 8 == 0) {
-            genVec_pop(bvec->arr, NULL);
-        }
-    }
-    
+    size_t byte_index = i / 8;
+    size_t bit_index = i % 8;
+
     u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index);
     *byte &= ~(1 << bit_index);  // Clear the bit
     // we create a new 8 bit arr with left shift 
     // it has 0 at the pos we want to clear (the not puts 0 there and 1 everywhere else)
     // we and it with the arr so 0 is cleared
-    
 }
 
 // Test bit i (returns 1 or 0)
@@ -105,14 +97,14 @@ u8 bitVec_test(bitVec* bvec, size_t i)
         return -1; // returns 255 (overflow)
     }
     
-    size_t byte_index = i / 8;
-    size_t bit_index = i % 8;
-    
-    if (byte_index >= genVec_size(bvec->arr)) { 
+    if (i >= bvec->size) { 
         printf("bvec test: index out of bounds\n");
         return -1;
     }
-    
+
+    size_t byte_index = i / 8;
+    size_t bit_index = i % 8;
+
     //u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index); 
     return (*genVec_get_ptr(bvec->arr, byte_index) >> bit_index) & 1;  // copy of dereferenced byte data returned
      // create new arr, move needed bit to LSB
@@ -127,32 +119,42 @@ void bitVec_toggle(bitVec* bvec, size_t i)
         return;
     }
     
+    if (i >= bvec->size) { // you can only toggle a previously set bit
+        printf("bvec toggle: arr out of bounds\n");
+        return;
+    }
+
     size_t byte_index = i / 8;
     size_t bit_index = i % 8;
-    
-    while (byte_index >= genVec_size(bvec->arr)) {
-        u8 zero = 0;
-        genVec_push(bvec->arr, &zero);
-    }
 
     u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index);
     *byte ^= (1 << bit_index); // lvalue so byte is modified
     // xor with 1 toggles the bit 
     // while with 0 it does nothing
+}
 
-    // Update size after toggling
-    u8 test = bitVec_test(bvec, i);
-    if (test && test != 255) {  // If bit is now 1
-        if (i + 1 > bvec->size) {
-            bvec->size = i + 1;
-        }
-    } else {  // If bit is now 0
-        if (i == bvec->size - 1) {
-            bvec->size--;
-            if (bvec->size % 8 == 0) {
-                genVec_pop(bvec->arr, NULL);
-            }
-        }
+
+void bitVec_push(bitVec* bvec)
+{
+    if (!bvec || !bvec->arr) {
+        printf("bvec push: bvec/arr is null\n");
+        return;
+    }
+
+    bitVec_set(bvec, bvec->size); 
+}
+
+
+void bitVec_pop(bitVec* bvec)
+{
+    if (!bvec || !bvec->arr) {
+        printf("bvec pop: bvec/arr is null\n");
+        return;
+    }
+
+    bvec->size--;
+    if (bvec->size % 8 == 0) {
+        genVec_pop(bvec->arr, NULL);
     }
 }
 
@@ -167,11 +169,16 @@ void bitVec_print(bitVec *bvec, size_t byteI)
         printf("bitvec print: arr out of bounds\n");
         return;
     }
+    
+    u8 bits_to_print = 8;
+    // If this is the last byte, only print the valid bits
+    if (byteI == bvec->arr->size - 1) {
+        size_t remaining = bvec->size % 8;
+        bits_to_print = (remaining == 0) ? 8 : remaining;
+    }
 
-    for (int i = 0; i < 8; i++) {
-        // right shift to move needed bit to LSB (right most)
-        // for bit 0 (MSB), we right shift by 7 to LSB and test with & 1
-        // shift creates temp val
+    for (u8 i = 0; i < bits_to_print; i++) {
+        // we print from 0th bit to 7th bit (there are no lsb, msb)
         printf("%d", ((*genVec_get_ptr(bvec->arr, byteI)) >> i) & 1);// we lose data from right
     }
     printf("\n");

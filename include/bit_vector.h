@@ -6,7 +6,7 @@
 
 typedef struct {
     genVec* arr;
-    size_t size;
+    size_t size;        // no of set bits
 } __attribute__((aligned(16))) bitVec;
 
 
@@ -33,6 +33,8 @@ static inline size_t bitVec_size_bits(bitVec* bvec) {
     return bvec->size;
 }
 
+// get the no of BYTES in the vector
 static inline size_t bitVec_size_bytes(bitVec* bvec) {
-    return bvec->arr->size;
+    return genVec_size(bvec->arr);
 }
+
