@@ -1,10 +1,12 @@
 #include "BST.h"
 #include "String.h"
 #include "bit_vector.h"
+#include "gen_vector.h"
 
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 
 
 #define PARENT(i)  (((i) - 1) / 2)
@@ -13,11 +15,10 @@
 
 
 // PRIVATE HELPER FUNCTIONS
-static void bst_insert_helper(BST* bst, const u8* val, size_t i);
 static void bst_preorder_helper(const BST* bst, size_t i, String* out);
 static void bst_inorder_helper(const BST* bst, size_t i, String* out);
 static void bst_postorder_helper(const BST* bst, size_t i, String* out);
-static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos);
+static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags);
 
 
 
@@ -74,10 +75,33 @@ void bst_insert(BST* bst, const u8* val)
         printf("bst insert: parameters null\n");
         return;
     }
-    
-    bst_insert_helper(bst, val, 0);
 
+    u8 flags = 0; // 1 -> a = b
+    size_t index = bst_search_helper(bst, val, 0, &flags);
+
+    if (flags) {   // value exits
+        return;
+    }
+
+    genVec_reserve_val(bst->arr, index + 1, val); // reserve size with values = val
+    // the ith pos will have the correct val and flag
+    bitVec_set(bst->flags, index); // set ith index to 1 while prev (unallocated) set to 0
+    
+    
     bst->size++;
+}
+
+
+u8 bst_search(const BST* bst, const u8* val)
+{
+    if (!bst || !val) {
+        printf("bst search: parameters null\n");
+        return -1; // 255 error
+    }
+
+    u8 found = 0;
+    bst_search_helper(bst, val, 0, &found);
+    return found;
 }
 
 String* bst_preorder(const BST* bst)
@@ -97,7 +121,7 @@ String* bst_preorder(const BST* bst)
 String* bst_inorder(const BST* bst)
 {
     if (!bst) {
-        printf("bst preorder: parameters null\n");
+        printf("bst inorder: parameters null\n");
         return NULL;
     }
 
@@ -111,6 +135,8 @@ String* bst_inorder(const BST* bst)
 String* bst_postorder(const BST* bst)
 {
     if (!bst) {
+        printf("bst postorder: parameters null\n");
+        return NULL;
     }
 
     String* out = string_create();
@@ -123,42 +149,9 @@ String* bst_postorder(const BST* bst)
 
 // PRIVATE FUNCTION IMPLEMENTATION
 
-static void bst_insert_helper(BST* bst, const u8* val, size_t i)
-{
-    // Check if index is beyond current array size
-    if (i >= bst->arr->size) {
-        genVec_push(bst->arr, val);
-        bitVec_push(bst->flags);
-        bitVec_set(bst->flags, i);
-        return;
-    }
-    
-    // Check if slot is empty
-    if (!bitVec_test(bst->flags, i)) {
-        genVec_replace(bst->arr, i, val);  
-        bitVec_set(bst->flags, i);
-        return;
-    }
-    
-    // Slot occupied - compare and recurse
-    u8 cmp = bst->cmp_fn(val, genVec_get_ptr(bst->arr, i));
-    
-    if (cmp == 0) {
-        bst_insert_helper(bst, val, L_CHILD(i));
-    } else if (cmp == 1) {
-        bst_insert_helper(bst, val, R_CHILD(i));
-    }
-    // If cmp == 255 (equal), do nothing (no duplicates)
-
-    // REWRITE
-    size_t index = bst_search_helper(bst, val, 0);
-
-    if (index < bst->size && bst->cmp_fn())
-}
-
 static void bst_preorder_helper(const BST* bst, size_t i, String* out)
 {       // end of arr or root i not set
-    if (i >= bst->size || !bitVec_test(bst->flags, i)) {
+    if (i >= bst->arr->size || !bitVec_test(bst->flags, i)) {
         return;
     }
 
@@ -172,7 +165,7 @@ static void bst_preorder_helper(const BST* bst, size_t i, String* out)
 
 static void bst_inorder_helper(const BST* bst, size_t i, String* out)
 {       // end of arr or root i not set
-    if (i >= bst->size || !bitVec_test(bst->flags, i)) {
+    if (i >= bst->arr->size || !bitVec_test(bst->flags, i)) {
         return;
     }
 
@@ -188,7 +181,7 @@ static void bst_inorder_helper(const BST* bst, size_t i, String* out)
 
 static void bst_postorder_helper(const BST* bst, size_t i, String* out)
 {       // end of arr or root i not set
-    if (i >= bst->size || !bitVec_test(bst->flags, i)) {
+    if (i >= bst->arr->size || !bitVec_test(bst->flags, i)) {
         return;
     }
 
@@ -200,21 +193,23 @@ static void bst_postorder_helper(const BST* bst, size_t i, String* out)
     string_destroy(str);
 }
 
-static size_t search_helper(const BST* bst, const u8* val, size_t pos) 
+static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags) 
 {
-    // Check if index is beyond current array size
-    if (pos >= bst->arr->size) {
-        return pos;
+    // Check if slot is empty (either beyond array or flag not set)
+    if (pos >= bst->arr->size || !bitVec_test(bst->flags, pos)) {
+        *flags = 0;
+        return pos; // found empty slot for insertion
     }
     
     // Slot occupied - compare and recurse
     u8 cmp = bst->cmp_fn(val, genVec_get_ptr(bst->arr, pos));  // 1 if a > b, 0 if a < b, 255 if a = b
     
     if (cmp == 0) { // a < b 
-        return search_helper(bst, val, L_CHILD(pos));
+        return bst_search_helper(bst, val, L_CHILD(pos), flags);
     } else if (cmp == 1) { // a > b
-        return search_helper(bst, val, R_CHILD(pos));
+        return bst_search_helper(bst, val, R_CHILD(pos), flags);
     } else { // cmp = 255 // a = b
+        *flags = 1;
         return pos; 
     }
 }

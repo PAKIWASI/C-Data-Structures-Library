@@ -1,5 +1,6 @@
 #include "gen_vector.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,6 +133,23 @@ void genVec_reserve(genVec* vec, size_t new_capacity)
     
     vec->data = new_data;
     vec->capacity = new_capacity;
+}
+
+void genVec_reserve_val(genVec* vec, size_t new_capacrity, const u8* val)
+{
+    if (!vec) {
+        printf("reserve val: vec is null\n");
+        return;
+    }
+
+    genVec_reserve(vec, new_capacrity);
+    
+    // TODO: check the bounds
+    for (size_t i = vec->size; i < new_capacrity; i++) {
+        genVec_push(vec, val);
+    }
+
+    vec->size = new_capacrity;
 }
 
 void genVec_push(genVec* vec, const u8* data) 

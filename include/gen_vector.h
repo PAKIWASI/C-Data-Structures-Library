@@ -33,6 +33,8 @@ void genVec_destroy(genVec* vec);
 void genVec_clear(genVec* vec);
 // grow vector to new_capacity, keeping previous elms
 void genVec_reserve(genVec* vec, size_t new_capacity);
+// grow vector to new_capacrity and size with new vals = val
+void genVec_reserve_val(genVec* vec, size_t new_capacrity, const u8* val);
 
 //operations
 

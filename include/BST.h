@@ -10,7 +10,7 @@ typedef String* (*to_string_fn)(const u8* elm);
 
 typedef struct {
     genVec* arr;
-    bitVec* flags; // for each i: 0 -> empty, 1-> set , // TODO: may be used for size tracking??
+    bitVec* flags; // for each i: 0 -> empty, 1-> set ,
     size_t size;
     genVec_compare_fn cmp_fn; // for < or > operations (= can be done by bitcmp)
     to_string_fn to_str;
@@ -22,7 +22,7 @@ void bst_destroy(BST* bst);
 
 void bst_insert(BST* bst, const u8* val);
 void bst_remove(BST* bst, const u8* val);
-int bst_search(const BST* bst, const u8* val);
+u8 bst_search(const BST* bst, const u8* val);
 
 void bst_balance(BST* bst);     // TODO: how to do this???
 String* bst_subtree(const BST* bst, const u8* root);

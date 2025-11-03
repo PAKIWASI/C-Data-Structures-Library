@@ -132,21 +132,38 @@ String* int_to_str(const u8* elm)
 {
     int num = *(int*)elm;
     String* str = string_create();
+    
     if (num == 0) {
         string_append_char(str, '0');
         return str;
     }
-
+    
+    int is_negative = 0;
     if (num < 0) {
-        string_append_char(str, '-');
-        num *= -1;
+        is_negative = 1;
+        num = -num;  // Make positive
     }
-
-    while ( num > 0 ) {
-        int a = num % 10; // get last digit
-        string_append_char(str, a - '0');
+    
+    // Build digits in reverse order
+    String* temp = string_create();
+    while (num > 0) {
+        int digit = num % 10;
+        string_append_char(temp, '0' + digit);  // Fixed: '0' + digit, not digit - '0'
         num /= 10;
-    } 
-
+    }
+    
+    // Add negative sign if needed
+    if (is_negative) {
+        string_append_char(str, '-');
+    }
+    
+    // Reverse the digits
+    size_t len = string_len(temp);
+    for (int i = len - 1; i >= 0; i--) {
+        string_append_char(str, string_at(temp, i));
+    }
+    
+    string_destroy(temp);
     return str;
 }
+
