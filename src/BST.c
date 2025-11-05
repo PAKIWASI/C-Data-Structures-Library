@@ -25,6 +25,7 @@ static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* f
 static void bst_remove_helper(BST* bst, const size_t* index);
 static size_t bst_find_min_helper(const BST* bst, size_t index);
 static size_t bst_find_max_helper(const BST* bst, size_t index);
+static void bst_balance_helper(BST* bst, genVec* inorder, size_t l, size_t r);
 
 
 
@@ -113,7 +114,6 @@ void bst_remove(BST* bst, const u8* val)
     bst->size--;
 }
 
-
 u8 bst_search(const BST* bst, const u8* val)
 {
     if (!bst || !val) {
@@ -157,13 +157,18 @@ void bst_balance(BST* bst)
         return;
     }
 
-    genVec vec;
-    genVec_init_stk(bst->size, bst->arr->data_size, bst->arr->del_fn, &vec);
+    genVec inorder;
+    genVec_init_stk(bst->size, bst->arr->data_size, bst->arr->del_fn, &inorder);
 
-    bst_inorder_arr(bst, 0, &vec);
+    bst_inorder_arr(bst, 0, &inorder);
 
+    for (size_t i = 0; i < bst->arr->size; i++) {
+        bitVec_clear(bst->flags, i);
+    }
 
-    genVec_destroy_stk(&vec);
+    bst_balance_helper(bst, &inorder, 0, inorder.size);
+
+    genVec_destroy_stk(&inorder);
 }
 
 String* bst_preorder(const BST* bst)
@@ -375,4 +380,21 @@ static size_t bst_find_max_helper(const BST* bst, size_t index)
     }     
     return -1; // LONG_MAX returned -> error
 }
+
+static void bst_balance_helper(BST* bst, genVec* inorder, size_t l, size_t r)
+{
+    if (l > r) { return; }  // base case: no elms
+
+    size_t m = l + ((r - l) / 2);
+
+    // Insert middle element (it will find correct position in tree)
+    bst_insert(bst, genVec_get_ptr(inorder, m));
+    
+    // Recursively build left and right subtrees
+    if (m > 0) {  // Prevent underflow when mid = 0
+        bst_balance_helper(bst, inorder, l, r - 1);
+    }
+    bst_balance_helper(bst, inorder, l + 1, r);
+}
+
 
