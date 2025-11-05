@@ -1,7 +1,10 @@
 #include "BST.h"
 #include "Queue.h"
+#include "bit_vector.h"
+#include "gen_vector.h"
 #include "helper_functions.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 
 
@@ -17,6 +20,8 @@ static void bst_inorder_helper(const BST* bst, size_t i, String* out);
 static void bst_postorder_helper(const BST* bst, size_t i, String* out);
 static void bst_bfs_helper(const BST* bst, String* out);
 static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags);
+static void bst_remove_helper(BST* bst, const size_t* index);
+static size_t bst_find_min(const BST* bst, size_t index);
 
 
 
@@ -74,10 +79,10 @@ void bst_insert(BST* bst, const u8* val)
         return;
     }
 
-    u8 flags = 0; // 1 -> a = b
-    size_t index = bst_search_helper(bst, val, 0, &flags);
+    u8 found = 0; // 1 -> a = b
+    size_t index = bst_search_helper(bst, val, 0, &found);
 
-    if (flags) {   // value exits
+    if (found) {   // value exits
         return;
     }
 
@@ -85,8 +90,24 @@ void bst_insert(BST* bst, const u8* val)
     // the ith pos will have the correct val and flag
     bitVec_set(bst->flags, index); // set ith index to 1 while prev (unallocated) set to 0
     
-    
     bst->size++;
+}
+
+void bst_remove(BST* bst, const u8* val)
+{
+    if (!bst || !val) {
+        printf("bst val: parameters null\n");
+        return;
+    }
+
+    u8 found = 0;
+    size_t index = bst_search_helper(bst, val, 0, &found);
+    
+    if (!found) { return; }
+
+    bst_remove_helper(bst, &index);
+
+    bst->size--;
 }
 
 
@@ -253,4 +274,38 @@ static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* f
     }
 }
 
+static void bst_remove_helper(BST* bst, const size_t* index)
+{
+    size_t l = L_CHILD(*index);
+    size_t r = R_CHILD(*index);
+
+    u8 has_l = l < bst->arr->size && bitVec_test(bst->flags, l);
+    u8 has_r = r < bst->arr->size && bitVec_test(bst->flags, r);
+
+    if (!has_l && !has_r) { // no children
+        bitVec_clear(bst->flags, *index); 
+    } else if (!has_l) { // only right child
+        genVec_replace(bst->arr, *index, genVec_get_ptr(bst->arr, r));   
+        bst_remove_helper(bst, &r);
+    } else if (!has_r) { // only left child
+        genVec_replace(bst->arr, *index, genVec_get_ptr(bst->arr, l));   
+        bst_remove_helper(bst, &l);
+    } else { // has both left and right children
+        // get the min in the right subtree
+        size_t min_r = bst_find_min(bst, r);
+        genVec_replace(bst->arr, *index, genVec_get_ptr(bst->arr, min_r));
+        bst_remove_helper(bst, &min_r);   
+    }
+}
+
+static size_t bst_find_min(const BST* bst, size_t index)
+{
+    while (index < bst->arr->size && bitVec_test(bst->flags, index)) {
+        if (L_CHILD(index) >= bst->arr->size || !bitVec_test(bst->flags, L_CHILD(index))) 
+            { return index; }
+
+        index = L_CHILD(index);
+    }     
+    return -1; // LONG_MAX returned -> error
+}
 
