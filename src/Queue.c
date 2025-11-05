@@ -14,7 +14,7 @@ static void queue_grow(Queue* q);
 
 Queue* queue_create(size_t n, size_t data_size, genVec_delete_fn del_fn)
 {
-    if (!n || !data_size || !del_fn) {
+    if (!n || !data_size) {
         printf("queue create : invalid parameters\n");
     }
     Queue* q = malloc(sizeof(Queue));

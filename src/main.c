@@ -36,5 +36,10 @@ int main(void)
     string_destroy(str);
     printf("\n");
 
+    str = bst_bfs(bst);
+    string_print(str);
+    string_destroy(str);
+    printf("\n");
+
     bst_destroy(bst);
 }

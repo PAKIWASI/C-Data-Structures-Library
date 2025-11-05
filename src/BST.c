@@ -1,10 +1,7 @@
 #include "BST.h"
-#include "String.h"
-#include "bit_vector.h"
-#include "gen_vector.h"
+#include "Queue.h"
+#include "helper_functions.h"
 
-#include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -18,6 +15,7 @@
 static void bst_preorder_helper(const BST* bst, size_t i, String* out);
 static void bst_inorder_helper(const BST* bst, size_t i, String* out);
 static void bst_postorder_helper(const BST* bst, size_t i, String* out);
+static void bst_bfs_helper(const BST* bst, String* out);
 static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags);
 
 
@@ -146,6 +144,17 @@ String* bst_postorder(const BST* bst)
     return out;
 }
 
+String* bst_bfs(const BST* bst)
+{
+    if (!bst) {
+        printf("bst bfs: bst is null\n");
+        return NULL;
+    }
+
+    String* out = string_create();
+    bst_bfs_helper(bst, out);
+    return out;
+}
 
 // PRIVATE FUNCTION IMPLEMENTATION
 
@@ -155,9 +164,9 @@ static void bst_preorder_helper(const BST* bst, size_t i, String* out)
         return;
     }
 
-    String* str = bst->to_str(genVec_get_ptr(bst->arr, i));
-    string_append_string(out, str);
-    string_destroy(str);
+    String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
+    string_append_string(out, temp);
+    string_destroy(temp);
 
     bst_preorder_helper(bst, L_CHILD(i), out);
     bst_preorder_helper(bst, R_CHILD(i), out);
@@ -172,9 +181,9 @@ static void bst_inorder_helper(const BST* bst, size_t i, String* out)
 
     bst_inorder_helper(bst, L_CHILD(i), out);
 
-    String* str = bst->to_str(genVec_get_ptr(bst->arr, i));
-    string_append_string(out, str);
-    string_destroy(str);
+    String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
+    string_append_string(out, temp);
+    string_destroy(temp);
 
     bst_inorder_helper(bst, R_CHILD(i), out);
 }
@@ -188,9 +197,39 @@ static void bst_postorder_helper(const BST* bst, size_t i, String* out)
     bst_postorder_helper(bst, L_CHILD(i), out);
     bst_postorder_helper(bst, R_CHILD(i), out);
 
-    String* str = bst->to_str(genVec_get_ptr(bst->arr, i));
-    string_append_string(out, str);
-    string_destroy(str);
+    String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
+    string_append_string(out, temp);
+    string_destroy(temp);
+}
+
+
+static void bst_bfs_helper(const BST* bst, String* out)
+{
+    if (bst->size == 0) { return; }
+    // we can store the index of the bst node
+    Queue* q = queue_create(bst->size, sizeof(size_t), NULL);
+    size_t index = 0;
+    enqueue(q, cast(index));
+
+    while (!queue_empty(q)) {
+        size_t i = 0;
+        dequeue(q, cast(i));
+
+        String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
+        string_append_string(out, temp);
+        string_destroy(temp);
+
+        size_t l = L_CHILD(i);
+        if (l < bst->arr->size && bitVec_test(bst->flags, l)) {
+            enqueue(q, cast(l));
+        }
+        size_t r = R_CHILD(i);
+        if (r < bst->arr->size && bitVec_test(bst->flags, r)) {
+            enqueue(q, cast(r));
+        }
+    }
+
+    queue_destroy(q);
 }
 
 static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags) 

@@ -14,17 +14,17 @@
 // ================== VECTOR =====================
 
 // INT
-void vec_push_int(genVec* vec, int x) {
+static inline void vec_push_int(genVec* vec, int x) {
     genVec_push(vec, cast(x));
 }
 
-int vec_pop_int(genVec* vec) {
+static inline int vec_pop_int(genVec* vec) {
     int a;
     genVec_pop(vec, cast(a));
     return a;
 }
 
-int vec_get_int(genVec* vec, size_t i) {
+static inline int vec_get_int(genVec* vec, size_t i) {
     int a;
     genVec_get(vec, i, cast(a));
     return a;
@@ -35,13 +35,13 @@ int vec_get_int(genVec* vec, size_t i) {
 
 
 // STRING
-void vec_push_str(genVec* vec, const char* cstr) {
+static inline void vec_push_str(genVec* vec, const char* cstr) {
     String str;
     string_create_onstack(&str, cstr);
     genVec_push(vec, cast(str));
 }
 
-const char* vec_pop_str(genVec* vec) {
+static inline const char* vec_pop_str(genVec* vec) {
     String str;
     genVec_pop(vec, cast(str));
     const char* popped = string_to_cstr(&str);
@@ -49,7 +49,7 @@ const char* vec_pop_str(genVec* vec) {
     return popped;
 }
 
-const char* vec_get_str(genVec* vec, size_t i) {
+static inline const char* vec_get_str(genVec* vec, size_t i) {
     String str;
     genVec_get(vec, i, cast(str));
     const char* cstr = string_to_cstr(&str);
@@ -62,13 +62,13 @@ const char* vec_get_str(genVec* vec, size_t i) {
 
 
 // STRING -> INT
-void map_put_strToInt(hashmap* map, const char* key, int val) {
+static inline void map_put_strToInt(hashmap* map, const char* key, int val) {
     String str;
     string_create_onstack(&str, key);
     hashmap_put(map, cast(str), cast(val));
 }
 
-int map_get_strToInt(hashmap* map, const char* key) {
+static inline int map_get_strToInt(hashmap* map, const char* key) {
     String str;
     string_create_onstack(&str, key);
     int a;
@@ -77,7 +77,7 @@ int map_get_strToInt(hashmap* map, const char* key) {
     return a;
 }
 
-int map_has_strToInt(hashmap* map, const char* key) {
+static inline int map_has_strToInt(hashmap* map, const char* key) {
     String str;
     string_create_onstack(&str, key);
     int res = hashmap_has(map, cast(str));
@@ -92,33 +92,33 @@ int map_has_strToInt(hashmap* map, const char* key) {
 
 
 // INT
-void set_insert_int(hashset* set, int x) {
+static inline void set_insert_int(hashset* set, int x) {
     hashset_insert(set, cast(x));
 }
 
-int set_has_int(hashset* set, int x) {
+static inline int set_has_int(hashset* set, int x) {
     return hashset_has(set, cast(x));
 }
 
-void set_remove_int(hashset* set, int x) {
+static inline void set_remove_int(hashset* set, int x) {
     hashset_remove(set, cast(x));
 }
 
 
 // ======================= PRINT FUNCTIONS ============================
 
-void int_print(const u8* elm) {
+static inline void int_print(const u8* elm) {
     printf("%d", *(int*)elm);
 }
 
-void str_print(const u8* elm) {
+static inline void str_print(const u8* elm) {
     String* str = (String*)elm;
     string_print(str);
 }
 
 
 
-u8 int_cmp(const u8* a, const u8* b) // 1 if a > b, 0 if a < b, 255 if a = b
+static inline u8 int_cmp(const u8* a, const u8* b) // 1 if a > b, 0 if a < b, 255 if a = b
 {
     int x = *(int*) a;
     int y = *(int*) b;
@@ -128,7 +128,7 @@ u8 int_cmp(const u8* a, const u8* b) // 1 if a > b, 0 if a < b, 255 if a = b
     else { return -1; }
 }
 
-String* int_to_str(const u8* elm)
+static inline String* int_to_str(const u8* elm)
 {
     int num = *(int*)elm;
     String* str = string_create();

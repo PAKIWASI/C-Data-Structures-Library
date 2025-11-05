@@ -23,6 +23,10 @@ static inline size_t queue_size(Queue* q) {
     return q->size;
 }
 
+static inline u8 queue_empty(Queue* q) {
+    return q->size == 0;
+}
+
 void queue_print(Queue* q, genVec_print_fn print_fn);
 
 
