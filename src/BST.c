@@ -21,7 +21,8 @@ static void bst_postorder_helper(const BST* bst, size_t i, String* out);
 static void bst_bfs_helper(const BST* bst, String* out);
 static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags);
 static void bst_remove_helper(BST* bst, const size_t* index);
-static size_t bst_find_min(const BST* bst, size_t index);
+static size_t bst_find_min_helper(const BST* bst, size_t index);
+static size_t bst_find_max_helper(const BST* bst, size_t index);
 
 
 
@@ -121,6 +122,30 @@ u8 bst_search(const BST* bst, const u8* val)
     u8 found = 0;
     bst_search_helper(bst, val, 0, &found);
     return found;
+}
+
+void bst_find_min(const BST* bst, u8* min)
+{
+    if (!bst || !min) {
+        printf("bst find min: parameters null\n");
+        return;
+    }
+
+    size_t index = bst_find_min_helper(bst, 0);
+
+    genVec_get(bst->arr, index, min);
+}
+
+void bst_find_max(const BST* bst, u8* max)
+{
+    if (!bst || !max) {
+        printf("bst find min: parameters null\n");
+        return;
+    }
+
+    size_t index = bst_find_max_helper(bst, 0);
+
+    genVec_get(bst->arr, index, max);
 }
 
 String* bst_preorder(const BST* bst)
@@ -292,19 +317,30 @@ static void bst_remove_helper(BST* bst, const size_t* index)
         bst_remove_helper(bst, &l);
     } else { // has both left and right children
         // get the min in the right subtree
-        size_t min_r = bst_find_min(bst, r);
+        size_t min_r = bst_find_min_helper(bst, r);
         genVec_replace(bst->arr, *index, genVec_get_ptr(bst->arr, min_r));
         bst_remove_helper(bst, &min_r);   
     }
 }
 
-static size_t bst_find_min(const BST* bst, size_t index)
+static size_t bst_find_min_helper(const BST* bst, size_t index)
 {
     while (index < bst->arr->size && bitVec_test(bst->flags, index)) {
         if (L_CHILD(index) >= bst->arr->size || !bitVec_test(bst->flags, L_CHILD(index))) 
             { return index; }
 
         index = L_CHILD(index);
+    }     
+    return -1; // LONG_MAX returned -> error
+}
+
+static size_t bst_find_max_helper(const BST* bst, size_t index)
+{
+    while (index < bst->arr->size && bitVec_test(bst->flags, index)) {
+        if (R_CHILD(index) >= bst->arr->size || !bitVec_test(bst->flags, R_CHILD(index))) 
+            { return index; }
+
+        index = R_CHILD(index);
     }     
     return -1; // LONG_MAX returned -> error
 }
