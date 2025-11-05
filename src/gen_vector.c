@@ -1,6 +1,5 @@
 #include "gen_vector.h"
 
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +45,30 @@ genVec* genVec_init(size_t n, size_t data_size, genVec_delete_fn del_fn) {
     return vec;
 }
 
+void genVec_init_stk(size_t n, size_t data_size, genVec_delete_fn del_fn, genVec* vec)
+{
+    if (data_size == 0) { 
+        printf("init stk: data_size can't be 0\n");
+        return; 
+    }
+    if (!vec) { 
+        printf("init stk: vec null\n");
+        return; 
+    }
+
+    // Only allocate memory if n > 0, otherwise data can be NULL
+    vec->data = (n > 0) ? malloc(data_size * n) : NULL;
+    if (n > 0 && !vec->data) {
+        printf("init stk: data init failed\n");
+        return;
+    }
+    
+    vec->size = 0;
+    vec->capacity = n;
+    vec->data_size = data_size;
+    vec->del_fn = del_fn; // NULL if no del_fn
+}
+
 genVec* genVec_init_val(size_t n, const u8* val, size_t data_size, genVec_delete_fn del_fn) 
 {
     if (val == NULL) {
@@ -70,11 +93,9 @@ genVec* genVec_init_val(size_t n, const u8* val, size_t data_size, genVec_delete
     return vec;
 }
 
-void genVec_destroy(genVec* vec) {
-    if (!vec) {
-        printf("del: vector is null\n");
-        return;
-    }
+void genVec_destroy(genVec* vec) 
+{
+    if (!vec) { return; }
     
     if (vec->del_fn) {
         // Custom cleanup for each element
@@ -89,6 +110,25 @@ void genVec_destroy(genVec* vec) {
         vec->data = NULL;
     }
     free(vec);
+}
+
+void genVec_destroy_stk(genVec* vec)
+{
+    if (!vec) { return; }
+    
+    if (vec->del_fn) {
+        // Custom cleanup for each element
+        for (size_t i = 0; i < vec->size; i++) {
+            u8* element = vec->data + (i * vec->data_size);
+            vec->del_fn(element);
+        }
+    }
+    
+    if (vec->data) {
+        free(vec->data);
+        vec->data = NULL;
+    }
+    // dont free vec as on stk
 }
 
 void genVec_clear(genVec* vec) {

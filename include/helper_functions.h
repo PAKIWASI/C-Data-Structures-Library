@@ -39,13 +39,13 @@ static inline void vec_push_str(genVec* vec, const char* cstr) {
     String str;
     string_create_onstack(&str, cstr);
     genVec_push(vec, cast(str));
+    string_destroy_fromstk(&str);
 }
 
 static inline const char* vec_pop_str(genVec* vec) {
-    String str;
-    genVec_pop(vec, cast(str));
-    const char* popped = string_to_cstr(&str);
-    string_destroy_fromstk(&str);
+    String str;                                    
+    genVec_pop(vec, cast(str));             // WARNING: 
+    const char* popped = string_to_cstr(&str);  // TODO: this is so fucking wrong
     return popped;
 }
 

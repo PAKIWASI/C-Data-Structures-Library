@@ -1,5 +1,6 @@
 #include "BST.h"
 #include "Queue.h"
+#include "String.h"
 #include "bit_vector.h"
 #include "gen_vector.h"
 #include "helper_functions.h"
@@ -18,6 +19,7 @@
 static void bst_preorder_helper(const BST* bst, size_t i, String* out);
 static void bst_inorder_helper(const BST* bst, size_t i, String* out);
 static void bst_postorder_helper(const BST* bst, size_t i, String* out);
+static void bst_inorder_arr(const BST* bst, size_t i, genVec* out);
 static void bst_bfs_helper(const BST* bst, String* out);
 static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags);
 static void bst_remove_helper(BST* bst, const size_t* index);
@@ -148,6 +150,22 @@ void bst_find_max(const BST* bst, u8* max)
     genVec_get(bst->arr, index, max);
 }
 
+void bst_balance(BST* bst) 
+{
+    if (!bst) {
+        printf("bst balace: bst is null\n");
+        return;
+    }
+
+    genVec vec;
+    genVec_init_stk(bst->size, bst->arr->data_size, bst->arr->del_fn, &vec);
+
+    bst_inorder_arr(bst, 0, &vec);
+
+
+    genVec_destroy_stk(&vec);
+}
+
 String* bst_preorder(const BST* bst)
 {
     if (!bst) {
@@ -202,7 +220,7 @@ String* bst_bfs(const BST* bst)
     return out;
 }
 
-// PRIVATE FUNCTION IMPLEMENTATION
+//                      PRIVATE FUNCTION IMPLEMENTATION
 
 static void bst_preorder_helper(const BST* bst, size_t i, String* out)
 {       // end of arr or root i not set
@@ -212,6 +230,7 @@ static void bst_preorder_helper(const BST* bst, size_t i, String* out)
 
     String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
     string_append_string(out, temp);
+    string_append_char(out, ' ');
     string_destroy(temp);
 
     bst_preorder_helper(bst, L_CHILD(i), out);
@@ -224,11 +243,11 @@ static void bst_inorder_helper(const BST* bst, size_t i, String* out)
         return;
     }
 
-
     bst_inorder_helper(bst, L_CHILD(i), out);
 
     String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
     string_append_string(out, temp);
+    string_append_char(out, ' ');
     string_destroy(temp);
 
     bst_inorder_helper(bst, R_CHILD(i), out);
@@ -245,9 +264,20 @@ static void bst_postorder_helper(const BST* bst, size_t i, String* out)
 
     String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
     string_append_string(out, temp);
+    string_append_char(out, ' ');
     string_destroy(temp);
 }
 
+static void bst_inorder_arr(const BST* bst, size_t i, genVec* out)
+{
+    if (i >= bst->arr->size || !bitVec_test(bst->flags, i)) {
+        return;
+    }
+
+    bst_inorder_arr(bst, L_CHILD(i), out);
+    genVec_push(out, genVec_get_ptr(bst->arr, i));
+    bst_inorder_arr(bst, R_CHILD(i), out);
+}
 
 static void bst_bfs_helper(const BST* bst, String* out)
 {
@@ -263,6 +293,7 @@ static void bst_bfs_helper(const BST* bst, String* out)
 
         String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
         string_append_string(out, temp);
+        string_append_char(out, ' ');
         string_destroy(temp);
 
         size_t l = L_CHILD(i);

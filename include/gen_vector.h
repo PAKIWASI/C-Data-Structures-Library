@@ -25,10 +25,14 @@ typedef struct {
 
 // init empty vector of size = n, del_fn needed if data is complex(pointer to some other data) otherwise NULL
 genVec* genVec_init(size_t n, size_t data_size, genVec_delete_fn del_fn);
+// init a vector on stack with the data on the heap
+void genVec_init_stk(size_t n, size_t data_size, genVec_delete_fn del_fn, genVec* vec);
 // init empty vector of size = n, each elm with val = val, del_fn needed if data is complex(pointer to some other data) otherwise NULL
 genVec* genVec_init_val(size_t n, const u8* val, size_t data_size, genVec_delete_fn del_fn);
 // destroy vec, using previously provided del_fn
 void genVec_destroy(genVec* vec);
+// destroy the stack version of the vector
+void genVec_destroy_stk(genVec* vec);
 // delete all elm in vector, shrink to 0
 void genVec_clear(genVec* vec);
 // grow vector to new_capacity, keeping previous elms

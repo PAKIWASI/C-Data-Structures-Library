@@ -37,7 +37,7 @@ String* bst_bfs(const BST* bst);
 // visual tree
 void bst_print(const BST* bst);
 
-/*
+/*              balance
     1. collect_inorder()     → values = [1,2,3,4,5,6,7]
     2. Clear flags           → tree is now empty
     3. Insert values[mid=3]  → inserts 4 (the middle value)
