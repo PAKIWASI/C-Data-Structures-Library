@@ -66,5 +66,8 @@ int main(void)
     string_destroy(str);
     printf("\n");
 
+
     bst_destroy(bst);
 }
+
+

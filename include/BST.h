@@ -45,3 +45,4 @@ void bst_print(const BST* bst);
     5. Recurse right [4..6]  → inserts 6 (middle of [5,6,7])
     6. Continue recursively  → fills in 1,3,5,7
 */
+

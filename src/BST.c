@@ -114,6 +114,7 @@ void bst_remove(BST* bst, const u8* val)
     bst->size--;
 }
 
+
 u8 bst_search(const BST* bst, const u8* val)
 {
     if (!bst || !val) {
@@ -150,22 +151,31 @@ void bst_find_max(const BST* bst, u8* max)
     genVec_get(bst->arr, index, max);
 }
 
+// TODO: this is wrong
 void bst_balance(BST* bst) 
 {
     if (!bst) {
-        printf("bst balace: bst is null\n");
+        printf("bst balance: bst is null\n");
         return;
     }
 
+    if (bst->size == 0) { return; }
+
+    // Collect inorder traversal
     genVec inorder;
     genVec_init_stk(bst->size, bst->arr->data_size, bst->arr->del_fn, &inorder);
-
     bst_inorder_arr(bst, 0, &inorder);
 
-    for (size_t i = 0; i < bst->arr->size; i++) {
-        bitVec_clear(bst->flags, i);
-    }
+    // COMPLETELY clear the current tree
+    genVec_destroy(bst->arr);
+    bitVec_destroy(bst->flags);
+    
+    // Create new empty structures
+    bst->arr = genVec_init(0, inorder.data_size, inorder.del_fn);
+    bst->flags = bitVec_create();
+    bst->size = 0;
 
+    // Build balanced tree
     bst_balance_helper(bst, &inorder, 0, inorder.size);
 
     genVec_destroy_stk(&inorder);
@@ -381,20 +391,23 @@ static size_t bst_find_max_helper(const BST* bst, size_t index)
     return -1; // LONG_MAX returned -> error
 }
 
+// WARN: this is wrong???
 static void bst_balance_helper(BST* bst, genVec* inorder, size_t l, size_t r)
 {
-    if (l > r) { return; }  // base case: no elms
+    if (l >= r) { 
+        return;  // base case: no elements in range [l, r)
+    }
 
     size_t m = l + ((r - l) / 2);
 
-    // Insert middle element (it will find correct position in tree)
+    // Insert middle element 
     bst_insert(bst, genVec_get_ptr(inorder, m));
+
+    // Recursively build left subtree [l, m)
+    bst_balance_helper(bst, inorder, l, m);
     
-    // Recursively build left and right subtrees
-    if (m > 0) {  // Prevent underflow when mid = 0
-        bst_balance_helper(bst, inorder, l, r - 1);
-    }
-    bst_balance_helper(bst, inorder, l + 1, r);
+    // Recursively build right subtree [m + 1, r)
+    bst_balance_helper(bst, inorder, m + 1, r);
 }
 
 
