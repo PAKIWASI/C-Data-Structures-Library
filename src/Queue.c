@@ -130,11 +130,9 @@ void queue_print(Queue* q, genVec_print_fn print_fn)
     printf("[ ");
     if (h < q->arr->size && q->size != 0) {
         do {
-            u8* out = malloc(q->arr->data_size);
-            genVec_get(q->arr, h, out);
+            const u8* out = genVec_get_ptr(q->arr, h);
             print_fn(out);
             printf(" ");
-              free(out);
             h = (h + 1) % q->arr->capacity;
         }
         while (h != q->tail);
@@ -161,10 +159,7 @@ static void queue_grow(Queue* q) {
 
     // Move wrapped elements from [0, head) to [old_cap, old_cap + head)
     for (size_t i = 0; i < q->head; i++) {
-        u8* elm = malloc(q->arr->data_size);
-        genVec_get(q->arr, i, elm);
-        genVec_replace(q->arr, old_cap + i, elm);
-        free(elm);
+        genVec_replace(q->arr, old_cap + i, genVec_get_ptr(q->arr, i));
     }
     
     // Update tail to point to the new end of the queue

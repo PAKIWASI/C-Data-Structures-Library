@@ -5,11 +5,6 @@
 
 
 
-typedef struct {
-    u8* elm;
-    STATE state;
-} __attribute__((aligned(16))) ELM;
-
 
 typedef struct {
     genVec* buckets; // of ELM
@@ -29,11 +24,11 @@ hashset* hashset_create(size_t elm_size, custom_hash_fn hash_fn,
 
 void hashset_destroy(hashset* set);
 
-int hashset_insert(hashset* set, const u8* elm);
+u8 hashset_insert(hashset* set, const u8* elm);
 
-int hashset_has(const hashset* set, const u8* elm);
+u8 hashset_has(const hashset* set, const u8* elm);
 
-int hashset_remove(hashset* set, const u8* elm);
+u8 hashset_remove(hashset* set, const u8* elm);
 
 void hashset_print(const hashset* set, genVec_print_fn elm_print);
 
