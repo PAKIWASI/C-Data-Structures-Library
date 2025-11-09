@@ -4,5 +4,5 @@
 
 int main(void)
 {
-    return test_genVec_2();
+    return test_genVec_3();
 }

@@ -8,9 +8,10 @@
 
 
 
+
+// TEST 1: simple vector init with basic datatype
 int test_genVec_1(void)
 {
-    // TEST 1: simple vector init with basic datatype
     genVec* vec1 = genVec_init(3, sizeof(double), NULL);
 
     vec_push_double(vec1, 1);
@@ -54,8 +55,19 @@ int test_genVec_1(void)
 
     genVec_clear(vec1);
 
-    genVec_reserve_val(vec1, 29, cast(d));
+    genVec_reserve_val(vec1, 5, cast(d));
 
+    vec_replace_double(vec1, 2, 0.4234); 
+    printf("%f\n", vec_get_double(vec1, 2));
+
+    genVec_print(vec1, double_print);
+
+    vec_insert_double(vec1, 4, 74747.7);
+
+    genVec_print(vec1, double_print);
+
+    double arr[10] = {0};
+    genVec_insert_multi(vec1, genVec_size(vec1), (const u8*)arr, 10);
     genVec_print(vec1, double_print);
 
     genVec_destroy(vec1);
@@ -63,36 +75,20 @@ int test_genVec_1(void)
     return 0;
 }
 
-void vec_push_str(genVec* vec, const char* cstr) {
-    String str;
-    string_create_onstack(&str, cstr);
-    genVec_push(vec, cast(str));
-    // if destroy from stk : buffer gets deleted
-}
 
-String* vec_pop_str(genVec* vec) {
-    String* str = string_create();
-    genVec_pop(vec, (u8*)str);
-    return str;
-}
-
-const char* vec_get_str(genVec* vec, size_t i) {
-    return string_to_cstr((String*)genVec_get_ptr(vec, i)); 
-}
-
+// TEST 2: vec on stack with string data
 int test_genVec_2(void)
 {
-    // TEST 2: vec on stack with string data
     genVec vec;
     genVec_init_stk(10, sizeof(String), string_custom_delete, &vec);
 
-    vec_push_str(&vec, "hello"); 
-    vec_push_str(&vec, "workd"); 
-    vec_push_str(&vec, "fjdfdf"); 
-    vec_push_str(&vec, "he"); 
-    vec_push_str(&vec, "llo"); 
-    vec_push_str(&vec, ""); 
-    vec_push_str(&vec, "wtf"); 
+    vec_push_cstr(&vec, "hello"); 
+    vec_push_cstr(&vec, "workd"); 
+    vec_push_cstr(&vec, "fjdfdf"); 
+    vec_push_cstr(&vec, "he"); 
+    vec_push_cstr(&vec, "llo"); 
+    vec_push_cstr(&vec, ""); 
+    vec_push_cstr(&vec, "wtf"); 
 
     genVec_print(&vec, str_print);
 
@@ -112,11 +108,78 @@ int test_genVec_2(void)
     string_destroy(s1);
     printf("\n");
 
-    printf("%s\n", vec_get_str(&vec, 1));
+    printf("%s\n", vec_get_cstr(&vec, 1));
+
+    string_print((const String*)genVec_front(&vec));
+    printf("\n");
+    string_print((const String*)genVec_back(&vec));
+    printf("\n");
     
-    genVec_destroy_stk(&vec);
+    // shallow print (points to same data)
+    genVec* copy = genVec_copy(&vec);
+
+    string_append_cstr((String*)genVec_get_ptr(copy, 0), "world");
+
+    genVec_print(&vec, str_print);
+    genVec_print(copy, str_print);
+
+    //genVec_destroy_stk(&vec);  // double free
+    genVec_destroy(copy); // data destroyed
 
     return 0;
 }
 
 
+// Custom delete function for vector elements that are themselves vectors
+void vec_custom_del(u8* elm) {
+    genVec* vec = (genVec*)elm;
+    genVec_destroy_stk(vec); // Use destroy_stk since we used init_stk
+}
+
+// Print function for vector of vectors
+void vecvec_print(const u8* elm) 
+{
+    genVec* vec = (genVec*)elm;
+
+    printf("[ ");
+    for (size_t i = 0; i < genVec_size(vec); i++) {
+        const u8* element = genVec_get_ptr(vec, i);
+        int_print(element);
+        printf(" ");
+    }
+    printf("]\n");
+}
+
+// Corrected test function
+int test_genVec_3(void)
+{
+    genVec vec;
+    genVec_init_stk(10, sizeof(genVec), vec_custom_del, &vec);
+    
+    // Create first inner vector on stack
+    genVec v1;
+    genVec_init_stk(3, sizeof(int), NULL, &v1);
+    int values1[] = {5, 6, 7};
+    for (int i = 0; i < 3; i++) {
+        genVec_push(&v1, (u8*)&values1[i]);
+    }
+    
+    // Create second inner vector on stack  
+    genVec v2;
+    genVec_init_stk(3, sizeof(int), NULL, &v2);
+    int values2[] = {1, 2, 3};
+    for (int i = 0; i < 3; i++) {
+        genVec_push(&v2, (u8*)&values2[i]);
+    }
+    
+    // Push the vectors to the outer vector
+    genVec_push(&vec, (u8*)&v1);
+    genVec_push(&vec, (u8*)&v2);
+    
+    // Print the structure
+    genVec_print(&vec, vecvec_print);
+    
+    // Cleanup - this will call vec_custom_del on each element
+    genVec_destroy_stk(&vec);
+    return 0;
+}

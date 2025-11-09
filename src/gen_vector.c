@@ -398,32 +398,35 @@ void genVec_replace(genVec* vec, size_t i, const u8* data) {
     memcpy(to_replace, data, vec->data_size);
 }
 
-void genVec_front(const genVec* vec, u8* out) {
+u8* genVec_front(const genVec* vec) {
     if (!vec) {
         printf("front: vec is null\n");
-        return;
+        return NULL;
     }
     if (vec->size == 0) {
         printf("front: vec is empty\n");
-        return;
+        return NULL;
     }
     
-    memcpy(out, vec->data, vec->data_size);
+    //memcpy(out, vec->data, vec->data_size);
+    return vec->data;
+
 }
 
 
-void genVec_back(const genVec* vec, u8* out) {
+u8* genVec_back(const genVec* vec) {
     if (!vec) {
         printf("back: vec is null\n");
-        return;
+        return NULL;
     }
     if (vec->size == 0) {
         printf("back: vec is empty\n");
-        return;
+        return NULL;
     }
     
-    u8* last_elm = vec->data + ((vec->size - 1) * vec->data_size);
-    memcpy(out, last_elm, vec->data_size);
+    //u8* last_elm = vec->data + ((vec->size - 1) * vec->data_size);
+    //memcpy(out, last_elm, vec->data_size);
+    return vec->data + ((vec->size - 1) * vec->data_size);
 }
 
 

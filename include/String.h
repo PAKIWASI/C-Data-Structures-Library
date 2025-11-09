@@ -10,7 +10,7 @@ typedef struct {
 
 // Construction/Destruction
 String* string_create(void);
-void string_create_onstack(String* str, const char* cstr);
+void string_create_onstk(String* str, const char* cstr);
 String* string_from_cstr(const char* cstr);
 String* string_from_string(const String* other);
 void string_reserve(String* str, size_t capacity); 

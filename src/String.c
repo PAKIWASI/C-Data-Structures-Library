@@ -39,7 +39,7 @@ String* string_create(void) {
 }
 
 
-void string_create_onstack(String* str, const char* cstr) 
+void string_create_onstk(String* str, const char* cstr) 
 {
     // the difference is that we dont use string_create(), so str is not heap initilised
     if (!str || ! cstr) {

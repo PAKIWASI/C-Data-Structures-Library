@@ -5,6 +5,7 @@
 #include "hashmap.h"
 #include "hashset.h"
 
+#include <stddef.h>
 #include <stdio.h>
 
 
@@ -15,7 +16,6 @@
 // ================== VECTOR MACROS =====================
 
 // Generic vector operations for basic types
-#define VEC_PUSH(vec, val) genVec_push((vec), cast(val))
 
 #define VEC_POP(vec, type) ({ \
     type _tmp; \
@@ -23,11 +23,9 @@
     _tmp; \
 })
 
-#define VEC_GET(vec, idx, type) ({ \
-    type _tmp; \
-    genVec_get((vec), (idx), cast(_tmp)); \
-    _tmp; \
-})
+#define VEC_PUSH(vec, val) genVec_push((vec), cast(val))
+
+#define VEC_GET(vec, idx) genVec_get_ptr((vec), (idx)); 
 
 #define VEC_REPLACE(vec, idx, val) genVec_replace((vec), (idx), cast(val))
 
@@ -46,11 +44,15 @@ static inline int vec_pop_int(genVec* vec) {
 }
 
 static inline int vec_get_int(genVec* vec, size_t i) {
-    return VEC_GET(vec, i, int);
+    return *(int*)VEC_GET(vec, i);
 }
 
 static inline void vec_replace_int(genVec* vec, size_t i, int x) {
     VEC_REPLACE(vec, i, x);
+}
+
+static inline void vec_insert_int(genVec* vec, size_t i, int x) {
+    VEC_INSERT(vec, i, x);
 }
 
 // FLOAT
@@ -63,7 +65,15 @@ static inline float vec_pop_float(genVec* vec) {
 }
 
 static inline float vec_get_float(genVec* vec, size_t i) {
-    return VEC_GET(vec, i, float);
+    return *(float*)VEC_GET(vec, i);
+}
+
+static inline void vec_replace_float(genVec* vec, size_t i, float x) {
+    VEC_REPLACE(vec, i, x);
+}
+
+static inline void vec_insert_float(genVec* vec, size_t i, float x) {
+    VEC_INSERT(vec, i, x);
 }
 
 // DOUBLE
@@ -76,7 +86,14 @@ static inline double vec_pop_double(genVec* vec) {
 }
 
 static inline double vec_get_double(genVec* vec, size_t i) {
-    return VEC_GET(vec, i, double);
+    return *(double*)VEC_GET(vec, i);
+}
+
+static inline void vec_replace_double(genVec* vec, size_t i, double x) {
+    VEC_REPLACE(vec, i, x);
+}
+static inline void vec_insert_double(genVec* vec, size_t i, double x) {
+    VEC_INSERT(vec, i, x);
 }
 
 // CHAR
@@ -89,30 +106,54 @@ static inline char vec_pop_char(genVec* vec) {
 }
 
 static inline char vec_get_char(genVec* vec, size_t i) {
-    return VEC_GET(vec, i, char);
+    return *(char*)VEC_GET(vec, i);
 }
 
+static inline void vec_replace_char(genVec* vec, size_t i, char x) {
+    VEC_REPLACE(vec, i, x);
+}
 
-/*
-// STRING (vector of strings)
-static inline void vec_push_str(genVec* vec, const char* cstr) {
+static inline void vec_insert_char(genVec* vec, size_t i, char x) {
+    VEC_INSERT(vec, i, x);
+}
+
+// STRING
+static inline void vec_push_cstr(genVec* vec, const char* cstr) {
     String str;
-    string_create_onstack(&str, cstr);
+    string_create_onstk(&str, cstr);
     genVec_push(vec, cast(str));
+    // if destroy from stk : buffer gets deleted
 }
 
+// have to call delete on the string
 static inline String* vec_pop_str(genVec* vec) {
     String* str = string_create();
     genVec_pop(vec, (u8*)str);
     return str;
 }
 
-static inline String* vec_get_str(genVec* vec, size_t i) {
-    String* str = string_create();
-    genVec_get(vec, i, (u8*)str);
-    return str;
+// getting pointer to the raw data
+static inline const char* vec_get_cstr(genVec* vec, size_t i) {
+    return string_to_cstr((String*)genVec_get_ptr(vec, i)); 
 }
-*/
+
+static inline void vec_repace_str(genVec* vec, size_t i, String* str) {
+    genVec_replace(vec, i, (u8*)str);
+}
+
+static inline void vec_replace_cstr(genVec* vec, size_t i, const char* cstr) {
+    String* str = string_from_cstr(cstr);
+    genVec_replace(vec, i, (u8*)str);
+}
+
+static inline void vec_insert_str(genVec* vec, size_t i, String* str) {
+    genVec_replace(vec, i, (u8*)str);
+}
+
+static inline void vec_insert_cstr(genVec* vec, size_t i, const char* cstr) {
+    String* str = string_from_cstr(cstr);
+    genVec_replace(vec, i, (u8*)str);
+}
 
 // ================== HASHMAP MACROS =====================
 
@@ -151,14 +192,14 @@ static inline void map_del_intToInt(hashmap* map, int key) {
 // STRING -> INT
 static inline void map_put_strToInt(hashmap* map, const char* key, int val) {
     String str;
-    string_create_onstack(&str, key);
+    string_create_onstk(&str, key);
     hashmap_put(map, cast(str), cast(val));
     string_destroy_fromstk(&str); // WARN: 
 }
 
 static inline int map_get_strToInt(hashmap* map, const char* key) {
     String str;
-    string_create_onstack(&str, key);
+    string_create_onstk(&str, key);
     int a;
     hashmap_get(map, cast(str), cast(a));
     string_destroy_fromstk(&str);
@@ -167,7 +208,7 @@ static inline int map_get_strToInt(hashmap* map, const char* key) {
 
 static inline int map_has_strToInt(hashmap* map, const char* key) {
     String str;
-    string_create_onstack(&str, key);
+    string_create_onstk(&str, key);
     int res = hashmap_has(map, cast(str));
     string_destroy_fromstk(&str);
     return res;
@@ -175,7 +216,7 @@ static inline int map_has_strToInt(hashmap* map, const char* key) {
 
 static inline void map_del_strToInt(hashmap* map, const char* key) {
     String str;
-    string_create_onstack(&str, key);
+    string_create_onstk(&str, key);
     hashmap_del(map, cast(str));
     string_destroy_fromstk(&str);
 }
@@ -184,8 +225,8 @@ static inline void map_del_strToInt(hashmap* map, const char* key) {
 static inline void map_put_strToStr(hashmap* map, const char* key, const char* val) {
     String kstr;
     String vstr;
-    string_create_onstack(&kstr, key);
-    string_create_onstack(&vstr, val);
+    string_create_onstk(&kstr, key);
+    string_create_onstk(&vstr, val);
     hashmap_put(map, cast(kstr), cast(vstr));
     string_destroy_fromstk(&kstr);
     string_destroy_fromstk(&vstr);
@@ -194,7 +235,7 @@ static inline void map_put_strToStr(hashmap* map, const char* key, const char* v
 static inline const char* map_get_strToStr(hashmap* map, const char* key) {
     String kstr;
     String vstr;
-    string_create_onstack(&kstr, key);
+    string_create_onstk(&kstr, key);
     hashmap_get(map, cast(kstr), cast(vstr));
     string_destroy_fromstk(&kstr);
     return string_to_cstr(&vstr);
@@ -241,14 +282,14 @@ static inline void set_remove_char(hashset* set, char x) {
 // STRING
 static inline void set_insert_str(hashset* set, const char* cstr) {
     String str;
-    string_create_onstack(&str, cstr);
+    string_create_onstk(&str, cstr);
     hashset_insert(set, cast(str));
     string_destroy_fromstk(&str);
 }
 
 static inline int set_has_str(hashset* set, const char* cstr) {
     String str;
-    string_create_onstack(&str, cstr);
+    string_create_onstk(&str, cstr);
     int res = hashset_has(set, cast(str));
     string_destroy_fromstk(&str);
     return res;
@@ -256,7 +297,7 @@ static inline int set_has_str(hashset* set, const char* cstr) {
 
 static inline void set_remove_str(hashset* set, const char* cstr) {
     String str;
-    string_create_onstack(&str, cstr);
+    string_create_onstk(&str, cstr);
     hashset_remove(set, cast(str));
     string_destroy_fromstk(&str);
 }
