@@ -33,7 +33,7 @@ size_t murmurhash3_string(const u8* key, size_t size)
         
         h1 ^= k1;
         h1 = (h1 << 13) | (h1 >> 19);
-        h1 = h1 * 5 + 0xe6546b64;
+        h1 = (h1 * 5) + 0xe6546b64;
     }
     
     // Tail - handle remaining bytes
@@ -48,6 +48,8 @@ size_t murmurhash3_string(const u8* key, size_t size)
                 k1 = (k1 << 15) | (k1 >> 17);
                 k1 *= c2;
                 h1 ^= k1;
+        default:
+           break; 
     }
     
     // Finalization

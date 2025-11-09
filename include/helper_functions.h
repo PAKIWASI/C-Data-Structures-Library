@@ -8,7 +8,8 @@
 #include <stdio.h>
 
 
-#define cast(x) ((u8*)(&x))
+#define cast(x)     ((u8*)(&x))
+#define castStk(x)  ((u8*)(x))
 
 
 // ================== VECTOR MACROS =====================

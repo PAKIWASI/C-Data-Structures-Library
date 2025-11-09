@@ -3,6 +3,7 @@
 #include "helper_functions.h"
 #include "str_setup.h"
 
+#include <stddef.h>
 
 
 
@@ -69,8 +70,19 @@ void vec_push_str(genVec* vec, const char* cstr) {
     // if destroy from stk : buffer gets deleted
 }
 
+String* vec_pop_str(genVec* vec) {
+    String* str = string_create();
+    genVec_pop(vec, (u8*)str);
+    return str;
+}
+
+const char* vec_get_str(genVec* vec, size_t i) {
+    return string_to_cstr((String*)genVec_get_ptr(vec, i)); 
+}
+
 int test_genVec_2(void)
 {
+    // TEST 2: vec on stack with string data
     genVec vec;
     genVec_init_stk(10, sizeof(String), string_custom_delete, &vec);
 
@@ -80,6 +92,7 @@ int test_genVec_2(void)
     vec_push_str(&vec, "he"); 
     vec_push_str(&vec, "llo"); 
     vec_push_str(&vec, ""); 
+    vec_push_str(&vec, "wtf"); 
 
     genVec_print(&vec, str_print);
 
@@ -89,7 +102,21 @@ int test_genVec_2(void)
 
     genVec_print(&vec, str_print);
 
+    String* s1 = vec_pop_str(&vec);
+    string_print(s1);
+    string_destroy(s1);
+    printf("\n");
+
+    s1 = vec_pop_str(&vec);
+    string_print(s1);
+    string_destroy(s1);
+    printf("\n");
+
+    printf("%s\n", vec_get_str(&vec, 1));
+    
     genVec_destroy_stk(&vec);
 
     return 0;
 }
+
+
