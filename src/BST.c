@@ -1,8 +1,5 @@
 #include "BST.h"
 #include "Queue.h"
-#include "String.h"
-#include "bit_vector.h"
-#include "gen_vector.h"
 #include "helper_functions.h"
 
 #include <stddef.h>

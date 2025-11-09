@@ -1,7 +1,8 @@
-#include "parse.h"
+#include "./tests/test_genVec.h"
+
 
 
 int main(void)
 {
-    return parse();
+    return test_genVec_2();
 }

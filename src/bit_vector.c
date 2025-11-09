@@ -47,7 +47,7 @@ void bitVec_set(bitVec* bvec, size_t i)
     size_t byte_index = i / 8; // which byte (elm) 
     size_t bit_index = i % 8; // which bit in the byte
     
-    // Ensure capacity
+    // Ensure byte capacity
     while (byte_index >= bvec->arr->size) {
         u8 zero = 0;
         genVec_push(bvec->arr, &zero);
