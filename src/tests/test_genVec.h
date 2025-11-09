@@ -156,29 +156,22 @@ int test_genVec_3(void)
     genVec vec;
     genVec_init_stk(10, sizeof(genVec), vec_custom_del, &vec);
     
-    // Create first inner vector on stack
-    genVec v1;
-    genVec_init_stk(3, sizeof(int), NULL, &v1);
-    int values1[] = {5, 6, 7};
-    for (int i = 0; i < 3; i++) {
-        genVec_push(&v1, (u8*)&values1[i]);
+    for (int i = 0; i < 10; i++) {
+        genVec v;
+        genVec_init_stk(5, sizeof(int), NULL, &v);
+        for (int j = 0; j < 5; j++) {
+            genVec_push(&v, cast(j));
+        }
+        genVec_push(&vec, cast(v));
     }
-    
-    // Create second inner vector on stack  
-    genVec v2;
-    genVec_init_stk(3, sizeof(int), NULL, &v2);
-    int values2[] = {1, 2, 3};
-    for (int i = 0; i < 3; i++) {
-        genVec_push(&v2, (u8*)&values2[i]);
-    }
-    
-    // Push the vectors to the outer vector
-    genVec_push(&vec, (u8*)&v1);
-    genVec_push(&vec, (u8*)&v2);
     
     // Print the structure
     genVec_print(&vec, vecvec_print);
     
+    genVec* arr = (genVec*)genVec_get_ptr(&vec, 1);
+    vec_push_ints(arr, 1,2,3,4,5,5,6);
+    genVec_print(&vec, vecvec_print);
+
     // Cleanup - this will call vec_custom_del on each element
     genVec_destroy_stk(&vec);
     return 0;

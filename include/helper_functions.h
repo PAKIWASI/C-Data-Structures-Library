@@ -10,7 +10,7 @@
 
 
 #define cast(x)     ((u8*)(&x))
-#define castStk(x)  ((u8*)(x))
+#define castptr(x)  ((u8*)(x))
 
 
 // ================== VECTOR MACROS =====================
@@ -31,6 +31,14 @@
 
 #define VEC_INSERT(vec, idx, val) genVec_insert((vec), (idx), cast(val))
 
+#define VEC_PUSH_MULTI(vec, type, ...) \
+    do { \
+        type temp[] = {__VA_ARGS__}; \
+        for (size_t i = 0; i < sizeof(temp)/sizeof(temp[0]); i++) { \
+            genVec_push(vec, (u8*)&temp[i]); \
+        } \
+    } while(0)
+
 
 // ================== SPECIFIC TYPE HELPERS =====================
 
@@ -38,6 +46,8 @@
 static inline void vec_push_int(genVec* vec, int x) {
     VEC_PUSH(vec, x);
 }
+
+#define vec_push_ints(vec, ...) VEC_PUSH_MULTI(vec, int, __VA_ARGS__)
 
 static inline int vec_pop_int(genVec* vec) {
     return VEC_POP(vec, int);
@@ -116,6 +126,7 @@ static inline void vec_replace_char(genVec* vec, size_t i, char x) {
 static inline void vec_insert_char(genVec* vec, size_t i, char x) {
     VEC_INSERT(vec, i, x);
 }
+
 
 // STRING
 static inline void vec_push_cstr(genVec* vec, const char* cstr) {
