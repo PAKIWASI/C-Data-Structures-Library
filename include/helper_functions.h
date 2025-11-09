@@ -148,8 +148,10 @@ static inline const char* vec_get_cstr(genVec* vec, size_t i) {
     return string_to_cstr((String*)genVec_get_ptr(vec, i)); 
 }
 
-static inline void vec_repace_str(genVec* vec, size_t i, String* str) {
-    genVec_replace(vec, i, (u8*)str);
+static inline String* vec_get_str(genVec* vec, size_t i) {
+    String* str = string_create();
+    genVec_get(vec, i, (u8*)str);
+    return str;
 }
 
 static inline void vec_replace_cstr(genVec* vec, size_t i, const char* cstr) {
@@ -157,10 +159,7 @@ static inline void vec_replace_cstr(genVec* vec, size_t i, const char* cstr) {
     genVec_replace(vec, i, (u8*)str);
 }
 
-static inline void vec_insert_str(genVec* vec, size_t i, String* str) {
-    genVec_replace(vec, i, (u8*)str);
-}
-
+// inserting String* is a 1-liner
 static inline void vec_insert_cstr(genVec* vec, size_t i, const char* cstr) {
     String* str = string_from_cstr(cstr);
     genVec_replace(vec, i, (u8*)str);
@@ -205,7 +204,6 @@ static inline void map_put_strToInt(hashmap* map, const char* key, int val) {
     String str;
     string_create_onstk(&str, key);
     hashmap_put(map, cast(str), cast(val));
-    string_destroy_fromstk(&str); // WARN: 
 }
 
 static inline int map_get_strToInt(hashmap* map, const char* key) {
@@ -239,8 +237,6 @@ static inline void map_put_strToStr(hashmap* map, const char* key, const char* v
     string_create_onstk(&kstr, key);
     string_create_onstk(&vstr, val);
     hashmap_put(map, cast(kstr), cast(vstr));
-    string_destroy_fromstk(&kstr);
-    string_destroy_fromstk(&vstr);
 }
 
 static inline const char* map_get_strToStr(hashmap* map, const char* key) {
@@ -248,7 +244,6 @@ static inline const char* map_get_strToStr(hashmap* map, const char* key) {
     String vstr;
     string_create_onstk(&kstr, key);
     hashmap_get(map, cast(kstr), cast(vstr));
-    string_destroy_fromstk(&kstr);
     return string_to_cstr(&vstr);
 }
 
@@ -295,7 +290,6 @@ static inline void set_insert_str(hashset* set, const char* cstr) {
     String str;
     string_create_onstk(&str, cstr);
     hashset_insert(set, cast(str));
-    string_destroy_fromstk(&str);
 }
 
 static inline int set_has_str(hashset* set, const char* cstr) {

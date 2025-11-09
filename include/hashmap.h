@@ -5,9 +5,6 @@
 
 
 
-typedef void (*val_modify_fn)(u8* val, const u8* delta);                // imp for hashmap_modify
-
-
 
 typedef struct {
     genVec* buckets;    // of KV 

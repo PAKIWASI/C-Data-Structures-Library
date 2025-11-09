@@ -121,7 +121,7 @@ int parse(void)
                 {
                     printf("%s\t", cleaned);
                     String str;
-                    string_create_onstack(&str, cleaned);
+                    string_create_onstk(&str, cleaned);
                     int count;
                     if (hashmap_get(map, (u8*)&str, (u8*)&count) == 0) {
                         count++;
@@ -145,7 +145,7 @@ int parse(void)
     printf("Unique words: %zu\n\n", map->size);
 
     String str;
-    string_create_onstack(&str, "gay");
+    string_create_onstk(&str, "gay");
     int count;
     if (hashmap_get(map, (u8*)&str, (u8*)&count) == 0) {
         printf("Count of %s : %d", string_to_cstr(&str), count);
