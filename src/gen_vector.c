@@ -374,17 +374,20 @@ void genVec_remove(genVec* vec, size_t i) {
         { genVec_shrink(vec); }
 }
 
-// TODO: new func (in progress)
-void genVe_remove_range(genVec* vec, size_t l, size_t r)
+void genVec_remove_range(genVec* vec, size_t l, size_t r)
 {
     if (!vec) {
         printf("remove range: vec is null\n");
         return;
     }
 
-    if (l >= vec->size || r >= vec->size) {
+    if (l >= vec->size) {
         printf("remove range: index out of range\n");
         return;
+    }
+
+    if (r >= vec->size) {
+        r = vec->size - 1;
     }
 
     if (vec->del_fn) {

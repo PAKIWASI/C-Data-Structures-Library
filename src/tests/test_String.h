@@ -59,6 +59,19 @@ int test_String_2(void)
     string_insert_cstr(s1, i, " whar");
     
     string_print(s1);
+    printf("\n");
+
+    string_remove_range(s1, string_find_cstr(s1, " whar"), string_find_cstr(s1, " ullah"));
+    string_insert_char(s1, string_find_char(s1, 'u'), ' ');
+
+    string_print(s1);
+    printf("\n");
+
+    string_remove_range(s1, 1, 1);
+    string_print(s1);
+    printf("\n");
+
+
 
     string_destroy(s1);
     return 0;

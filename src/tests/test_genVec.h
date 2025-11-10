@@ -71,7 +71,7 @@ int test_genVec_1(void)
     genVec_print(vec1, double_print);
 
     // test new remove range function
-    genVe_remove_range(vec1, 1, 4);
+    genVec_remove_range(vec1, 1, 4);
     
     genVec_print(vec1, double_print);
 
@@ -129,7 +129,7 @@ int test_genVec_2(void)
     genVec_print(copy, str_print);
 
     // test new remove range
-    genVe_remove_range(copy, 1, 1);
+    genVec_remove_range(copy, 1, 1);
     genVec_print(copy, str_print);
 
     //genVec_destroy_stk(&vec);  // double free

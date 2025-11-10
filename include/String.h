@@ -42,7 +42,7 @@ void string_insert_cstr(String* str, size_t i, const char* cstr);
 void string_insert_string(String* str, size_t i, String* other);
 char string_pop_char(String* str);
 void string_remove_char(String* str, size_t i);
-//void string_remove_range(String* str, size_t l, size_t r);
+void string_remove_range(String* str, size_t l, size_t r);
 void string_clear(String* str);
 
 // Access

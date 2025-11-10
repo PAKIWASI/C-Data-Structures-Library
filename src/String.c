@@ -248,6 +248,24 @@ void string_remove_char(String* str, size_t i) {
     ensure_null_terminated(str);
 }
 
+void string_remove_range(String* str, size_t l, size_t r)
+{
+    if (!str) {
+        printf("str remove range: str is null\n");
+        return;
+    }
+
+    if (l >= string_len(str)) {
+        printf("str remove range: index out of bounds\n");
+        return;
+    }
+
+    genVec_remove_range(str->buffer, l, r);
+
+// upper func sets r to len - 1 so null terminator will be removed
+    ensure_null_terminated(str);
+}
+
 void string_clear(String* str) {
     if (!str) { 
         printf("str clear: str null\n");
