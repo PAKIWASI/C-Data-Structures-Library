@@ -1,8 +1,8 @@
-#include "./tests/test_genVec.h"
+#include "./tests/test_String.h"
 
 
 
 int main(void)
 {
-    return test_genVec_3();
+    return test_String_2();
 }

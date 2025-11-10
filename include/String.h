@@ -8,6 +8,7 @@ typedef struct {
     genVec* buffer;  // Vector of chars - the actual string data
 } String;
 
+
 // Construction/Destruction
 String* string_create(void);
 void string_create_onstk(String* str, const char* cstr);
@@ -25,9 +26,11 @@ static inline size_t string_len(const String* str) {
     // Subtract 1 for null terminator if present
     return (size > 0) ? size - 1 : 0;
 }
-static inline int string_empty(const String* str) {
+static inline u8 string_empty(const String* str) {
     return string_len(str) == 0;
 }
+
+// get ptr to the cstr buffer
 const char* string_to_cstr(const String* str);
 
 // Modification
@@ -37,7 +40,9 @@ void string_append_char(String* str, char c);
 void string_insert_char(String* str, size_t i, char c);
 void string_insert_cstr(String* str, size_t i, const char* cstr);
 void string_insert_string(String* str, size_t i, String* other);
+char string_pop_char(String* str);
 void string_remove_char(String* str, size_t i);
+//void string_remove_range(String* str, size_t l, size_t r);
 void string_clear(String* str);
 
 // Access
@@ -50,8 +55,8 @@ int string_equals(const String* str1, const String* str2);
 int string_equals_cstr(const String* str, const char* cstr);
 
 // Search
-int string_find_char(const String* str, char c);
-int string_find_cstr(const String* str, const char* substr);
+size_t string_find_char(const String* str, char c);
+size_t string_find_cstr(const String* str, const char* substr);
 
 // Substring
 String* string_substr(const String* str, size_t start, size_t length);

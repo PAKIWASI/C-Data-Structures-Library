@@ -176,3 +176,4 @@ int test_genVec_3(void)
     genVec_destroy_stk(&vec);
     return 0;
 }
+

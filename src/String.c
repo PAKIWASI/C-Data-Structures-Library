@@ -12,7 +12,7 @@ static inline void ensure_null_terminated(String* str) {
     if (!str || !str->buffer) { return; }
     
     size_t size = str->buffer->size;
-    if (size == 0 || ((char*)str->buffer->data)[size - 1] != '\0') 
+    if (size == 0 || (str->buffer->data)[size - 1] != '\0') 
     {
         const char null_term = '\0';
         genVec_push(str->buffer, (u8*)&null_term);
@@ -166,6 +166,24 @@ void string_append_char(String* str, char c) {
     ensure_null_terminated(str);
 }
 
+char string_pop_char(String* str)
+{
+    if (!str) {
+        printf("str pop char: str null\n");
+        return '\0';
+    }
+    
+    // Remove null terminator temporarily
+    if (str->buffer->size > 0) {
+        genVec_pop(str->buffer, NULL);
+    }
+    
+    char c;
+    genVec_pop(str->buffer, (u8*)&c);
+    ensure_null_terminated(str);
+    return c;
+}
+
 void string_insert_char(String* str, size_t i, char c)
 {
     if (!str) {
@@ -208,9 +226,8 @@ void string_insert_string(String* str, size_t i, String* other)
         return;
     }
     
-    // is this right???
-    genVec_insert_multi(str->buffer, i, other->buffer->data, strlen(string_to_cstr(other)));
-    ensure_null_terminated(str);
+    // TODO: check this
+    string_insert_cstr(str, i, string_to_cstr(other));
 }
 
 
@@ -277,21 +294,23 @@ int string_equals_cstr(const String* str, const char* cstr) {
     return strcmp(string_to_cstr(str), cstr) == 0;
 }
 
-int string_find_char(const String* str, char c) {
+size_t string_find_char(const String* str, char c) {
     if (!str) { return -1; }
     
     const char* cstr = string_to_cstr(str);
     const char* found = strchr(cstr, c);
+    // found points to index we want and cstr points to 0th pos
     return found ? found - cstr : -1;
 }
 
-int string_find_cstr(const String* str, const char* substr) {
+size_t string_find_cstr(const String* str, const char* substr) {
     if (!str || !substr) { return -1; }
     
     const char* cstr = string_to_cstr(str);
     const char* found = strstr(cstr, substr);
     return found ? found - cstr : -1;
 }
+
 
 String* string_substr(const String* str, size_t start, size_t length) 
 {

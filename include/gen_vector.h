@@ -58,6 +58,8 @@ void genVec_insert(genVec* vec, size_t i, const u8* data);
 void genVec_insert_multi(genVec* vec, size_t i, const u8* data, size_t num_data);
 // remove elm at index i, deleting the elm and shifting arr to left
 void genVec_remove(genVec* vec, size_t i);
+// remove elms in the range of l, r (included)
+void genVe_remove_range(genVec* vec, size_t l, size_t r);
 // get the 0th index elm in buffer out
 u8* genVec_front(const genVec* vec);
 // get the elm at the back of the vec in buffer out

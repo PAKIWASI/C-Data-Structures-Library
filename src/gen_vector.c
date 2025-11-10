@@ -374,6 +374,29 @@ void genVec_remove(genVec* vec, size_t i) {
         { genVec_shrink(vec); }
 }
 
+void genVe_remove_range(genVec* vec, size_t l, size_t r)
+{
+    if (!vec) {
+        printf("remove range: vec is null\n");
+        return;
+    }
+
+    if (l >= vec->size || r >= vec->size) {
+        printf("remove range: index out of range\n");
+        return;
+    }
+
+    if (vec->del_fn) {
+        for (size_t i = l; i <= r; i++) {
+            u8* elm = vec->data + (i * vec->data_size);
+            vec->del_fn(elm);
+        }
+    }
+
+    size_t elms_to_shift = vec->size - (r - l + 1);
+
+}
+
 
 void genVec_replace(genVec* vec, size_t i, const u8* data) {
     if (!vec) {
