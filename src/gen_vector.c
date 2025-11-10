@@ -374,6 +374,7 @@ void genVec_remove(genVec* vec, size_t i) {
         { genVec_shrink(vec); }
 }
 
+// TODO: new func (in progress)
 void genVe_remove_range(genVec* vec, size_t l, size_t r)
 {
     if (!vec) {
@@ -393,8 +394,14 @@ void genVe_remove_range(genVec* vec, size_t l, size_t r)
         }
     }
 
-    size_t elms_to_shift = vec->size - (r - l + 1);
+    size_t elms_to_shift = vec->size - (r + 1);
 
+     // move from r + 1 to l
+    u8* dest = vec->data + (l * vec->data_size); 
+    u8* src = vec->data + ((r + 1) * vec->data_size);
+    memmove(dest, src, elms_to_shift * vec->data_size);  // Use memmove for overlapping regions
+
+    vec->size -= (r - l + 1);
 }
 
 

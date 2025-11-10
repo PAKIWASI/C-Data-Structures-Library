@@ -70,6 +70,11 @@ int test_genVec_1(void)
     genVec_insert_multi(vec1, genVec_size(vec1), (const u8*)arr, 10);
     genVec_print(vec1, double_print);
 
+    // test new remove range function
+    genVe_remove_range(vec1, 1, 4);
+    
+    genVec_print(vec1, double_print);
+
     genVec_destroy(vec1);
 
     return 0;
@@ -121,6 +126,10 @@ int test_genVec_2(void)
     string_append_cstr((String*)genVec_get_ptr(copy, 0), "world");
 
     genVec_print(&vec, str_print);
+    genVec_print(copy, str_print);
+
+    // test new remove range
+    genVe_remove_range(copy, 1, 1);
     genVec_print(copy, str_print);
 
     //genVec_destroy_stk(&vec);  // double free
