@@ -71,8 +71,6 @@ int test_String_2(void)
     string_print(s1);
     printf("\n");
 
-
-
     string_destroy(s1);
     return 0;
 }
