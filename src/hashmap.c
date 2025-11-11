@@ -2,6 +2,7 @@
 #include "gen_vector.h"
 
 #include <stdio.h>
+#include <time.h>
 
 #include "default_functions.h"
 
@@ -290,34 +291,26 @@ u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
     }
 }
 
-
-u8 hashmap_modify(hashmap* map, const u8* key, val_modify_fn modify_fn, u8* user_data)
+u8* hashmap_get_ptr(hashmap* map, const u8* key)
 {
-    if (!map || !key || !modify_fn) {
-        printf("map modify: null parameter\n");
-        return -1;
+    if (!map || !key) {
+        printf("map get ptr: parameters null\n");
+        return NULL;
     }
     
     u8 found = 0;
     int tombstone = -1;
     size_t slot = find_slot(map, key, &found, &tombstone);
-    
-    if (!found) {
-        printf("map modify: key not found\n");
-        return -1;
+
+    if (found) {
+        return ((const KV*)genVec_get_ptr(map->buckets, slot))->val;
+    } 
+    else {
+        return NULL;
     }
-    
-    const KV* kv = (const KV*)genVec_get_ptr(map->buckets, slot);
-    
-    if (!kv->val) {
-        printf("map modify: val is null\n");
-        return -1;
-    }
-    // Call the modify function with the value pointer and user data
-    modify_fn(kv->val, user_data);
-    
-    return 0;
 }
+
+
 
 u8 hashmap_del(hashmap* map, const u8* key)
 {

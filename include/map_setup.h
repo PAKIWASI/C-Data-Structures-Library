@@ -16,4 +16,3 @@ typedef enum {
 typedef void (*delete_fn)(u8* key); //optional (for string*, arrays, structs as keys, vals)
 typedef size_t (*custom_hash_fn)(const u8* key, size_t size);     // optional (for a specific usecase)
 typedef int (*compare_fn)(const u8* a, const u8* b, size_t size);   // optional: for compare operations
-typedef void (*val_modify_fn)(u8* val, const u8* delta);                // imp for hashmap_modify

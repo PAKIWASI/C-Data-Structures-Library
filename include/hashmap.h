@@ -30,9 +30,9 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val);
 
 u8 hashmap_get(const hashmap* map, const u8* key, u8* val);
 
-u8 hashmap_del(hashmap* map, const u8* key);
+u8* hashmap_get_ptr(hashmap* map, const u8* key);
 
-u8 hashmap_modify(hashmap* map, const u8* key, val_modify_fn modify_fn, u8* user_data);
+u8 hashmap_del(hashmap* map, const u8* key);
 
 u8 hashmap_has(const hashmap* map, const u8* key);
 

@@ -37,7 +37,24 @@ int test_hashmap_1(void)
     map_put_intToInt(map, 27, 1);
     map_put_intToInt(map, 28, 1);
 
+    hashmap_print(map, int_print, int_print);
 
+    map_del_intToInt(map, 4);
+    map_del_intToInt(map, 4);
+    map_del_intToInt(map, 7);
+    map_del_intToInt(map, 10);
+    map_del_intToInt(map, 20);
+    map_del_intToInt(map, 21);
+    map_del_intToInt(map, 22);
+    map_del_intToInt(map, 2);
+
+    map_put_intToInt(map, 20, 10);
+    map_put_intToInt(map, 1, 100);
+
+    hashmap_print(map, int_print, int_print);
+
+    int a = 0;
+    *hashmap_get_ptr(map, cast(a)) += 200;
 
     hashmap_print(map, int_print, int_print);
 
