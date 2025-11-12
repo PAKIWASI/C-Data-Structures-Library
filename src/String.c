@@ -19,7 +19,8 @@ static inline void ensure_null_terminated(String* str) {
     }
 }
 
-String* string_create(void) {
+String* string_create(void) 
+{
     String* str = malloc(sizeof(String));
     if (!str) { 
         printf("str create: malloc failed\n");

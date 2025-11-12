@@ -38,3 +38,4 @@ u8 hashmap_has(const hashmap* map, const u8* key);
 
 void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print);
 
+

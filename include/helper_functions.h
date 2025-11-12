@@ -239,12 +239,36 @@ static inline void map_put_strToStr(hashmap* map, const char* key, const char* v
     hashmap_put(map, cast(kstr), cast(vstr));
 }
 
-static inline const char* map_get_strToStr(hashmap* map, const char* key) {
+static inline String* map_get_strToStr(hashmap* map, const char* key) {
     String kstr;
-    String vstr;
     string_create_onstk(&kstr, key);
-    hashmap_get(map, cast(kstr), cast(vstr));
-    return string_to_cstr(&vstr);
+    String* vstr = string_create();
+    hashmap_get(map, cast(kstr), (u8*)vstr);
+    string_destroy_fromstk(&kstr);
+    return vstr;
+}
+
+static inline u8* map_get_ptr_strtoStr(hashmap* map, const char* key) {
+    String kstr;
+    string_create_onstk(&kstr, key);
+    u8* res = hashmap_get_ptr(map, cast(kstr));
+    string_destroy_fromstk(&kstr);
+    return res;
+}
+
+static inline void map_del_strToStr(hashmap* map, const char* key) {
+    String kstr;
+    string_create_onstk(&kstr, key);
+    hashmap_del(map, cast(kstr));
+    string_destroy_fromstk(&kstr);
+}
+
+static inline u8 map_has_strToStr(hashmap* map, const char* key) {
+    String kstr;
+    string_create_onstk(&kstr, key);
+    u8 res = hashmap_has(map, cast(kstr));
+    string_destroy_fromstk(&kstr);
+    return res;
 }
 
 
@@ -331,6 +355,19 @@ static inline void str_print(const u8* elm) {
     string_print(str);
 }
 
+// Print function for vector of vectors
+static inline void vecvecint_print(const u8* elm) 
+{
+    genVec* vec = (genVec*)elm;
+
+    printf("[ ");
+    for (size_t i = 0; i < genVec_size(vec); i++) {
+        const u8* element = genVec_get_ptr(vec, i);
+        int_print(element);
+        printf(" ");
+    }
+    printf("]\n");
+}
 
 // ======================= COMPARE FUNCTIONS ============================
 

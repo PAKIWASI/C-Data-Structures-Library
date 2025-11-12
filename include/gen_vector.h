@@ -38,11 +38,12 @@ void genVec_clear(genVec* vec);
 // grow vector to new_capacity, keeping previous elms
 void genVec_reserve(genVec* vec, size_t new_capacity);
 // grow vector to new_capacrity and size with new vals = val
+// SHOULD ONLY BE USED FOR BASIC DATATYPES (POINTERS ARE SHALLOW COPIED)
 void genVec_reserve_val(genVec* vec, size_t new_capacrity, const u8* val);
 
 //operations
 
-// push to the back of the vec
+// push to the back of the vec (COPIES DATA)
 void genVec_push(genVec* vec, const u8* data);
 // pop from the back of the vec, OPTIONAL: if popped provided, copy data to it
 void genVec_pop(genVec* vec, u8* popped);
@@ -67,8 +68,6 @@ u8* genVec_back(const genVec* vec);
 
 //utility
 
-// make a copy of the vector, CRITICAL: if elm are pointers, then it's a shallow copy
-genVec* genVec_copy(const genVec* src);
 // print the elms to stdout, using a print function fn
 void genVec_print(const genVec* vec, genVec_print_fn fn);
 

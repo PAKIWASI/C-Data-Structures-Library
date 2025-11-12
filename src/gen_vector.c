@@ -463,34 +463,6 @@ u8* genVec_back(const genVec* vec) {
 }
 
 
-
-// this is a shallow copy if elements are pointers
-genVec* genVec_copy(const genVec* src) {
-    if (!src) {
-        printf("copy: src is null\n");
-        return NULL;
-    }
-
-    genVec* vec = genVec_init(src->size, src->data_size, src->del_fn);
-    if (!vec) {
-        printf("copy: genVec init failed\n");
-        return NULL;
-    }
-    if (src->size == 0) {
-        return vec;
-    }
-    if (!src->data || !vec->data) {
-        genVec_destroy(vec);
-        printf("copy: ivalid data pointers\n");
-        return NULL;
-    }
-
-    memcpy(vec->data, src->data, src->size * src->data_size);
-    vec->size = src->size;
-
-    return vec;
-}
-
 void genVec_print(const genVec* vec, genVec_print_fn fn) { 
     if (!vec) {
         printf("print: vec is null\n");

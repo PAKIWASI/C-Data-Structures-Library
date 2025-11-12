@@ -1,6 +1,9 @@
 
+#include "String.h"
+#include "gen_vector.h"
 #include "hashmap.h"
 #include "helper_functions.h"
+#include "str_setup.h"
 
 
 int test_hashmap_1(void)
@@ -57,6 +60,82 @@ int test_hashmap_1(void)
     *hashmap_get_ptr(map, cast(a)) += 200;
 
     hashmap_print(map, int_print, int_print);
+
+    printf("%d\n", map_has_intToInt(map, 5));
+    printf("%d\n", map_has_intToInt(map, 20));
+
+    hashmap_destroy(map);
+    return 0;
+}
+
+
+// TEST 2: STR -> STR
+int test_hashmap_2(void)
+{
+    hashmap* map = hashmap_create(sizeof(String), sizeof(String), murmurhash3_string, string_custom_delete, string_custom_delete, string_custom_compare);
+    
+    map_put_strToStr(map, "hello", "world");
+    map_put_strToStr(map, "hello", "world2");
+    map_put_strToStr(map, "hello ", "world3");
+    map_put_strToStr(map, "helllo", "world4");
+    map_put_strToStr(map, " hello", "world5");
+
+    map_put_strToStr(map, "wasi", "ullah");
+    map_put_strToStr(map, "ali", "abdullah");
+    map_put_strToStr(map, "M", "ahmed");
+
+    hashmap_print(map, str_print, str_print);
+
+    map_del_strToStr(map, " hello");
+    map_del_strToStr(map, "hello ");
+
+    hashmap_print(map, str_print, str_print);
+
+    printf("%d\n", map_has_strToStr(map, "helllo"));
+    printf("%d\n", map_has_strToStr(map, " hello"));
+
+    string_print((const String*)map_get_ptr_strtoStr(map, "ali"));
+    printf("\n");
+
+    string_append_cstr((String*)map_get_ptr_strtoStr(map, "ali"), " abbasi");
+
+    hashmap_print(map, str_print, str_print);
+
+    hashmap_destroy(map);
+    return 0;
+}
+
+static inline void vec_custom_del(u8* elm) { // we create on stk 
+    genVec_destroy_stk((genVec*)elm);
+}
+
+void map_put_intToVec(hashmap* map, int key, genVec* vec) {
+    hashmap_put(map, cast(key), (u8*)vec);
+}
+
+void vec_print_int(const u8* elm) {
+    genVec_print((const genVec*)elm, int_print);
+}
+
+// TEST 3: INT -> VEC
+int test_hashmap_3(void)
+{
+    hashmap* map = hashmap_create(sizeof(int), sizeof(genVec), NULL, NULL, vec_custom_del, NULL);
+    
+    for (int i = 0; i < 10; i++) { // keys
+        genVec vec;
+        genVec_init_stk(5, sizeof(int), NULL, &vec);
+        vec_push_ints(&vec, 1,2,3,4,5);
+
+        map_put_intToVec(map, i, &vec);
+    }
+
+    hashmap_print(map, int_print, vec_print_int);
+
+    int a = 1;
+    vec_push_ints((genVec*)hashmap_get_ptr(map, cast(a)), 10, 11, 12, 13);
+
+    hashmap_print(map, int_print, vec_print_int);
 
     hashmap_destroy(map);
     return 0;
