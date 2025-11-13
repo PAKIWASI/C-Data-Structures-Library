@@ -2,6 +2,7 @@
 #include "gen_vector.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "default_functions.h"
@@ -28,6 +29,10 @@ static void kv_destroy(hashmap* map, const KV* kv)
     if (kv->val && map->val_del_fn) {
         map->val_del_fn(kv->val);
     }
+
+    // TODO: maybe only do this if del fn not called?
+    free(kv->key);
+    free(kv->val);
 
     // dont free kv as managed by genVec
 }
@@ -226,22 +231,16 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     if (found) {
         KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
         
-        u8* new_val = malloc(map->val_size);
-        if (!new_val) {
-            printf("map put: val malloc failed\n");
-            return -1;
-        }
-        
-        memcpy(new_val, val, map->val_size);
-        
-        // Free old value only after successful allocation
-        if (kv->val && map->val_del_fn) {
+        // If we have a delete function, the value owns resources
+        if (map->val_del_fn) {
+            // Free old value's resources
             map->val_del_fn(kv->val);
         }
         
-        kv->val = new_val;
+        // Update value in place (memory already allocated)
+        memcpy(kv->val, val, map->val_size);
         
-        return 0;
+        return 1; // found
     } 
     else {
         // New key - insert
@@ -264,10 +263,9 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
         genVec_replace(map->buckets, slot, (u8*)&kv);
         map->size++;  
         
-        return 0;
+        return 0;  // not found -- new KV
     }
 }
-
 
 u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 {

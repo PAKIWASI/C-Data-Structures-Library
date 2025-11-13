@@ -4,6 +4,7 @@
 #include "hashmap.h"
 #include "helper_functions.h"
 #include "str_setup.h"
+#include <stdint.h>
 
 
 int test_hashmap_1(void)
@@ -136,6 +137,24 @@ int test_hashmap_3(void)
     vec_push_ints((genVec*)hashmap_get_ptr(map, cast(a)), 10, 11, 12, 13);
 
     hashmap_print(map, int_print, vec_print_int);
+
+    hashmap_destroy(map);
+    return 0;
+}
+
+
+int test_hashmap_4(void)
+{
+    hashmap* map = hashmap_create(sizeof(String), sizeof(String), murmurhash3_string, string_custom_delete, string_custom_delete, string_custom_compare);
+    
+    map_put_strToStr(map, "hello", "world");
+    map_put_strToStr(map, "lo", "World");
+    map_put_strToStr(map, "what", "fffff");
+
+    // a problem
+    map_put_strToStr(map, "hello", "World");
+
+    hashmap_print(map, str_print, str_print);
 
     hashmap_destroy(map);
     return 0;

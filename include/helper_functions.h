@@ -203,7 +203,9 @@ static inline void map_del_intToInt(hashmap* map, int key) {
 static inline void map_put_strToInt(hashmap* map, const char* key, int val) {
     String str;
     string_create_onstk(&str, key);
-    hashmap_put(map, cast(str), cast(val));
+    if (hashmap_put(map, cast(str), cast(val))) { // if found
+        string_destroy_fromstk(&str);
+    }
 }
 
 static inline int map_get_strToInt(hashmap* map, const char* key) {
@@ -236,7 +238,9 @@ static inline void map_put_strToStr(hashmap* map, const char* key, const char* v
     String vstr;
     string_create_onstk(&kstr, key);
     string_create_onstk(&vstr, val);
-    hashmap_put(map, cast(kstr), cast(vstr));
+    if (hashmap_put(map, cast(kstr), cast(vstr))) { // if found, key is not copied, need to free it
+        string_destroy_fromstk(&kstr);
+    }
 }
 
 static inline String* map_get_strToStr(hashmap* map, const char* key) {

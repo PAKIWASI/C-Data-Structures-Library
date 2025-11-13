@@ -5,5 +5,5 @@
 
 int main(void)
 {
-    return test_hashmap_1();
+    return test_hashmap_4();
 }
