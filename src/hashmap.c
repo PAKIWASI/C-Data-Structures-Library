@@ -282,10 +282,10 @@ u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, slot);
         memcpy(val, kv->val, map->val_size);
 
-        return 0;
+        return 1; //found
     }
     else {
-        return -1;
+        return 0; // not found
     }
 }
 
@@ -335,11 +335,11 @@ u8 hashmap_del(hashmap* map, const u8* key)
         map->size--;
 
         hashmap_maybe_resize(map);
-        return 0;
+        return 1;
     }
     else {
         printf("map del: not found\n");
-        return -1;
+        return 0;
     }
 }
 

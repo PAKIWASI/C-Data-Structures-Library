@@ -1,10 +1,9 @@
 
 #include "String.h"
-#include "gen_vector.h"
-#include "hashmap.h"
 #include "helper_functions.h"
 #include "str_setup.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 
 int test_hashmap_1(void)
@@ -155,6 +154,32 @@ int test_hashmap_4(void)
     map_put_strToStr(map, "hello", "World");
 
     hashmap_print(map, str_print, str_print);
+
+    map_del_strToStr(map, "hello");
+
+    hashmap_print(map, str_print, str_print);
+
+    map_put_strToStr(map, "", "");
+    map_put_strToStr(map, "wasi", "ullah");
+    map_put_strToStr(map, "del", "fn");
+    map_put_strToStr(map, "shit", "happens");
+
+    hashmap_print(map, str_print, str_print);
+
+    map_del_strToStr(map, "");
+    map_del_strToStr(map, "");
+
+    hashmap_print(map, str_print, str_print);
+
+    printf("%hhu\n", map_has_strToStr(map, "wasi"));
+    printf("%hhu\n", map_has_strToStr(map, ""));
+
+    string_print((const String*)map_get_ptr_strtoStr(map, "shit"));
+    printf("\n");
+
+    String* str = map_get_strToStr(map, "del");     
+    string_print(str);
+    free(str);
 
     hashmap_destroy(map);
     return 0;

@@ -247,7 +247,10 @@ static inline String* map_get_strToStr(hashmap* map, const char* key) {
     String kstr;
     string_create_onstk(&kstr, key);
     String* vstr = string_create();
-    hashmap_get(map, cast(kstr), (u8*)vstr);
+    if (!hashmap_get(map, cast(kstr), (u8*)vstr)) {
+        string_destroy(vstr); 
+        vstr = NULL; 
+    }
     string_destroy_fromstk(&kstr);
     return vstr;
 }
@@ -442,7 +445,7 @@ static inline String* int_to_str(const u8* elm) {
     }
     
     size_t len = string_len(temp);
-    for (int i = len - 1; i >= 0; i--) {
+    for (size_t i = len - 1; i >= 0; i--) {
         string_append_char(str, string_at(temp, i));
     }
     
