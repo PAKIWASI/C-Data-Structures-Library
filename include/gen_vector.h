@@ -20,7 +20,7 @@ typedef struct {
     u32 capacity;
     u32 data_size;
     genVec_delete_fn del_fn;
-} __attribute__((aligned(64))) genVec;
+} __attribute__((aligned(32))) genVec;
 
 
 //memory management
@@ -76,6 +76,11 @@ void genVec_print(const genVec* vec, genVec_print_fn fn);
 // get no of elms in the vec
 static inline u32 genVec_size(const genVec* vec) {
     return vec ? vec->size : 0;
+}
+
+// get total capacity of the vec
+static inline u32 genVec_capacity(const genVec* vec) {
+    return vec ? vec->capacity : 0;
 }
 
 // boolean to query empty

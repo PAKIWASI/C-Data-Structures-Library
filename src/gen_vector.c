@@ -9,6 +9,9 @@
 #define SHRINK_AT 0.25
 #define SHRINK_BY 0.5
 
+#define GET_PTR(vec, i)    ((vec->data) + ((size_t)(i) * (vec->data_size)))
+#define GET_SCALED(vec, i) ((size_t)(i) * (vec->data_size))
+
 //private functions
 void genVec_grow(genVec* vec);
 void genVec_shrink(genVec* vec);
@@ -27,7 +30,7 @@ genVec* genVec_init(u32 n, u32 data_size, genVec_delete_fn del_fn) {
     }
 
     // Only allocate memory if n > 0, otherwise data can be NULL
-    vec->data = (n > 0) ? malloc(data_size * n) : NULL;
+    vec->data = (n > 0) ? malloc((size_t)data_size * n) : NULL;
     
     // Only check for allocation failure if we actually tried to allocate
     if (n > 0 && !vec->data) {
@@ -57,7 +60,7 @@ void genVec_init_stk(u32 n, u32 data_size, genVec_delete_fn del_fn, genVec* vec)
     }
 
     // Only allocate memory if n > 0, otherwise data can be NULL
-    vec->data = (n > 0) ? malloc(data_size * n) : NULL;
+    vec->data = (n > 0) ? malloc((size_t)data_size * n) : NULL;
     if (n > 0 && !vec->data) {
         printf("init stk: data init failed\n");
         return;
@@ -87,7 +90,7 @@ genVec* genVec_init_val(u32 n, const u8* val, u32 data_size, genVec_delete_fn de
     vec->size = n;  //capacity set to n in upper func 
 
     for (u32 i = 0; i < n; i++) {
-        memcpy(vec->data + (i * data_size), val, data_size);
+        memcpy(GET_PTR(vec, i), val, data_size);
     }
 
     return vec;
@@ -100,8 +103,7 @@ void genVec_destroy(genVec* vec)
     if (vec->del_fn) {
         // Custom cleanup for each element
         for (u32 i = 0; i < vec->size; i++) {
-            u8* element = vec->data + (i * vec->data_size);
-            vec->del_fn(element);
+            vec->del_fn(GET_PTR(vec, i));
         }
     }
     
@@ -119,8 +121,7 @@ void genVec_destroy_stk(genVec* vec)
     if (vec->del_fn) {
         // Custom cleanup for each element
         for (u32 i = 0; i < vec->size; i++) {
-            u8* element = vec->data + (i * vec->data_size);
-            vec->del_fn(element);
+            vec->del_fn(GET_PTR(vec, i));
         }
     }
     
@@ -139,8 +140,7 @@ void genVec_clear(genVec* vec) {
 
     if (vec->del_fn) {
         for (u32 i = 0; i < vec->size; i++) {
-            u8* element = vec->data + (i * vec->data_size);
-            vec->del_fn(element);
+            vec->del_fn(GET_PTR(vec, i));
         }
     }
 
@@ -165,7 +165,7 @@ void genVec_reserve(genVec* vec, u32 new_capacity)
         return;
     }
     
-    u8* new_data = realloc(vec->data, new_capacity * vec->data_size);
+    u8* new_data = realloc(vec->data, GET_SCALED(vec, new_capacity));
     if (!new_data) {
         printf("reserve: realloc failed\n");
         return;
@@ -209,8 +209,8 @@ void genVec_push(genVec* vec, const u8* data)
         return;
     }
 
-    u8* next_to_last = vec->data + (vec->size * vec->data_size); 
-    memcpy(next_to_last, data, vec->data_size);
+   // u8* next_to_last = vec->data + ((size_t)vec->size * vec->data_size); 
+    memcpy(GET_PTR(vec, vec->size), data, vec->data_size);
 
     vec->size++;
 }
@@ -225,7 +225,7 @@ void genVec_pop(genVec* vec, u8* popped) {
         return;
     }
     
-    u8* last_elm = vec->data + ((vec->size - 1) * vec->data_size);
+    u8* last_elm = GET_PTR(vec, vec->size - 1);
     if (popped) { //only if buffer provided
         memcpy(popped, last_elm, vec->data_size);
     }
@@ -253,8 +253,7 @@ void genVec_get(const genVec* vec, u32 i, u8* out) {
         return;
     }
 
-    u8* elm = vec->data + (i * vec->data_size);
-    memcpy(out, elm, vec->data_size);
+    memcpy(out, GET_PTR(vec, i), vec->data_size);
 }
 
 const u8* genVec_get_ptr(const genVec* vec, u32 i)
@@ -268,7 +267,7 @@ const u8* genVec_get_ptr(const genVec* vec, u32 i)
         return NULL;
     }
 
-    return vec->data + (i * vec->data_size);
+    return GET_PTR(vec, i);
 }
 
 void genVec_insert(genVec* vec, u32 i, const u8* data)
@@ -293,11 +292,11 @@ void genVec_insert(genVec* vec, u32 i, const u8* data)
     // Calculate the number of elements to shift to right
     u32 elements_to_shift = vec->size - i;
     // the place where we want to insert
-    u8* src = vec->data + (i * vec->data_size);
+    u8* src = GET_PTR(vec, i);
 
     // Shift elements right by one unit
-    u8* dest = vec->data + ((i + 1) * vec->data_size);
-    memmove(dest, src, elements_to_shift * vec->data_size);  // Use memmove for overlapping regions
+    u8* dest = GET_PTR(vec, i + 1);
+    memmove(dest, src, GET_SCALED(vec, elements_to_shift));  // Use memmove for overlapping regions
 
     //src pos is now free to insert (it's data copied to next location)
     memcpy(src, data, vec->data_size);
@@ -331,16 +330,16 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
     }
 
     // the place where we want to insert
-    u8* src = vec->data + (i * vec->data_size);
+    u8* src = GET_PTR(vec, i);
     if (elements_to_shift > 0) {
         // Shift elements right by num_data units to right 
-        u8* dest = vec->data + ((i + num_data) * vec->data_size);
+        u8* dest = GET_PTR(vec, i + num_data);
 
-        memmove(dest, src, elements_to_shift * vec->data_size);  // using memmove for overlapping regions
+        memmove(dest, src, GET_SCALED(vec, elements_to_shift));  // using memmove for overlapping regions
     }
 
     //src pos is now free to insert (it's data copied to next location)
-    memcpy(src, data, num_data * vec->data_size);
+    memcpy(src, data, GET_SCALED(vec, num_data));
 }
 
 void genVec_remove(genVec* vec, u32 i) {
@@ -354,7 +353,7 @@ void genVec_remove(genVec* vec, u32 i) {
     }
 
     if (vec->del_fn) {
-        u8* element = vec->data + (i * vec->data_size);
+        u8* element = GET_PTR(vec, i);
         vec->del_fn(element);
     }
         // Calculate the number of elements to shift
@@ -362,10 +361,10 @@ void genVec_remove(genVec* vec, u32 i) {
     
     if (elements_to_shift > 0) {
         // Shift elements left to overwrite the deleted element
-        u8* dest = vec->data + (i * vec->data_size);
-        u8* src = vec->data + ((i + 1) * vec->data_size);
+        u8* dest = GET_PTR(vec, i);
+        u8* src = GET_PTR(vec, i + 1);
         
-        memmove(dest, src, elements_to_shift * vec->data_size);  // Use memmove for overlapping regions
+        memmove(dest, src, GET_SCALED(vec, elements_to_shift));  // Use memmove for overlapping regions
     }
 
     vec->size--;
@@ -392,7 +391,7 @@ void genVec_remove_range(genVec* vec, u32 l, u32 r)
 
     if (vec->del_fn) {
         for (u32 i = l; i <= r; i++) {
-            u8* elm = vec->data + (i * vec->data_size);
+            u8* elm = GET_PTR(vec, i);
             vec->del_fn(elm);
         }
     }
@@ -400,9 +399,9 @@ void genVec_remove_range(genVec* vec, u32 l, u32 r)
     u32 elms_to_shift = vec->size - (r + 1);
 
      // move from r + 1 to l
-    u8* dest = vec->data + (l * vec->data_size); 
-    u8* src = vec->data + ((r + 1) * vec->data_size);
-    memmove(dest, src, elms_to_shift * vec->data_size);  // Use memmove for overlapping regions
+    u8* dest = GET_PTR(vec, l);
+    u8* src = GET_PTR(vec, r + 1);
+    memmove(dest, src, GET_SCALED(vec, elms_to_shift));  // Use memmove for overlapping regions
 
     vec->size -= (r - l + 1);
 }
@@ -422,7 +421,7 @@ void genVec_replace(genVec* vec, u32 i, const u8* data) {
         return;
     }   
 
-    u8* to_replace = vec->data + (i * vec->data_size); 
+    u8* to_replace = GET_PTR(vec, i);
 
     if (vec->del_fn) {
         vec->del_fn(to_replace);
@@ -441,9 +440,7 @@ u8* genVec_front(const genVec* vec) {
         return NULL;
     }
     
-    //memcpy(out, vec->data, vec->data_size);
     return vec->data;
-
 }
 
 
@@ -457,9 +454,8 @@ u8* genVec_back(const genVec* vec) {
         return NULL;
     }
     
-    //u8* last_elm = vec->data + ((vec->size - 1) * vec->data_size);
-    //memcpy(out, last_elm, vec->data_size);
-    return vec->data + ((vec->size - 1) * vec->data_size);
+    //return vec->data + ((size_t)(vec->size - 1) * vec->data_size);
+    return GET_PTR(vec, vec->size - 1);
 }
 
 
@@ -475,14 +471,14 @@ void genVec_print(const genVec* vec, genVec_print_fn fn) {
 
     printf("[ ");
     for (u32 i = 0; i < vec->size; i++) {
-        u8* element = vec->data + (i * vec->data_size);
+        u8* element = GET_PTR(vec, i);
         fn(element); 
         printf(" ");
     }
     printf("]\n");
 
-    printf("Size: %lu\n", vec->size);
-    printf("Capacity: %lu\n", vec->capacity);
+    printf("Size: %u\n", vec->size);
+    printf("Capacity: %u\n", vec->capacity);
 }
 
 void genVec_grow(genVec* vec) {
@@ -497,7 +493,7 @@ void genVec_grow(genVec* vec) {
         new_cap = (u32)((double)vec->capacity * GROWTH); 
     }
 
-    u8* new_data = realloc(vec->data, new_cap * vec->data_size);
+    u8* new_data = realloc(vec->data, GET_SCALED(vec, new_cap));
     if (!new_data) { 
         printf("grow: realloc failed\n");
         return;
@@ -517,7 +513,7 @@ void genVec_shrink(genVec* vec) {
     u32 reduced_cap = (u32)((double)vec->capacity * SHRINK_BY);
     if (reduced_cap < vec->size || reduced_cap == 0) { return; }
 
-    u8* new_data = realloc(vec->data, reduced_cap * vec->data_size);
+    u8* new_data = realloc(vec->data, GET_SCALED(vec, reduced_cap));
     if (!new_data) {
         printf("shrink: realloc failed\n");
         return;

@@ -177,9 +177,11 @@ int test_hashmap_4(void)
     string_print((const String*)map_get_ptr_strtoStr(map, "shit"));
     printf("\n");
 
+    /*
     String* str = map_get_strToStr(map, "del");     
     string_print(str);
     free(str);
+    */
 
     hashmap_destroy(map);
     return 0;
