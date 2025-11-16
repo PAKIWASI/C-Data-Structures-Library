@@ -6,13 +6,13 @@
 
 
 // ========== Hash function for String* ==========
-size_t murmurhash3_string(const u8* key, size_t size) 
+u32 murmurhash3_string(const u8* key, u32 size) 
 {
     (void)size;
     
     String* str= (String*)key;
     const char* data = string_to_cstr(str);
-    size_t len = string_len(str);
+    u32 len = string_len(str);
     
     const uint32_t c1 = 0xcc9e2d51;
     const uint32_t c2 = 0x1b873593;
@@ -22,9 +22,9 @@ size_t murmurhash3_string(const u8* key, size_t size)
     
     // Body - process 4-byte chunks
     const uint32_t* blocks = (const uint32_t*)data;
-    const size_t nblocks = len / 4;
+    const u32 nblocks = len / 4;
     
-    for (size_t i = 0; i < nblocks; i++) {
+    for (u32 i = 0; i < nblocks; i++) {
         uint32_t k1 = blocks[i];
         
         k1 *= c1;
@@ -64,7 +64,7 @@ size_t murmurhash3_string(const u8* key, size_t size)
 }
 
 // ========== Compare function for String* ==========
-int string_custom_compare(const u8* a, const u8* b, size_t size) 
+int string_custom_compare(const u8* a, const u8* b, u32 size) 
 {
     (void)size;
     return string_compare((String*)a, (String*)b); 

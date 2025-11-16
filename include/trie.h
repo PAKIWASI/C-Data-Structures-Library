@@ -18,17 +18,17 @@ typedef struct {
 } Trie;
 
 // TODO: modify clean() from parse.h to use here (must allow - . )
-char* normalize(const char* token, char* output, size_t output_size) {
+char* normalize(const char* token, char* output, u32 output_size) {
     if (!token || !output || output_size == 0) { return NULL; }
 
-    size_t len = strlen(token);
-    size_t out_idx = 0;
+    u32 len = strlen(token);
+    u32 out_idx = 0;
     bool has_letters = false;
 
     // Normalize curly quotes → ASCII apostrophe
     char tmp[256];
-    size_t tmp_idx = 0;
-    for (size_t i = 0; i < len && tmp_idx < sizeof(tmp) - 1; i++) {
+    u32 tmp_idx = 0;
+    for (u32 i = 0; i < len && tmp_idx < sizeof(tmp) - 1; i++) {
         unsigned char c = token[i];
         if (c == 0xE2 && i + 2 < len &&
             (unsigned char)token[i + 1] == 0x80 &&
@@ -43,7 +43,7 @@ char* normalize(const char* token, char* output, size_t output_size) {
     token = tmp;
     len = tmp_idx;
 
-    for (size_t i = 0; i < len && out_idx < output_size - 1; i++) {
+    for (u32 i = 0; i < len && out_idx < output_size - 1; i++) {
         unsigned char c = (unsigned char)token[i];
 
         if (isdigit(c)) continue; // remove digits

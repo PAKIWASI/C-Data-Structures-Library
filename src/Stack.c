@@ -6,7 +6,7 @@
 
 
 
-Stack* stack_create(size_t n, size_t data_size, genVec_delete_fn del_fn)
+Stack* stack_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
 {
     if (!data_size) {
         printf("stk create: invalid parameters\n");

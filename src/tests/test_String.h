@@ -55,7 +55,7 @@ int test_String_2(void)
 {
     String* s1 = string_from_cstr("wasi ullah satti"); 
 
-    size_t i = string_find_char(s1, ' '); 
+    u32 i = string_find_char(s1, ' '); 
     string_insert_cstr(s1, i, " whar");
     
     string_print(s1);

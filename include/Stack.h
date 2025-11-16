@@ -9,7 +9,7 @@ typedef struct {
 } Stack;
 
 
-Stack* stack_create(size_t n, size_t data_size, genVec_delete_fn del_fn);
+Stack* stack_create(u32 n, u32 data_size, genVec_delete_fn del_fn);
 void stack_destroy(Stack* stk);
 void stack_clear(Stack* stk);
 
@@ -17,7 +17,7 @@ void stack_push(Stack* stk, const u8* x);
 void stack_pop(Stack* stk, u8* popped);
 void stack_peek(Stack* stk, u8* peek);
 
-static inline size_t stack_size(Stack* stk) {
+static inline u32 stack_size(Stack* stk) {
     return genVec_size(stk->arr);
 }
 

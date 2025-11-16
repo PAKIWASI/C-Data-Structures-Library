@@ -49,16 +49,16 @@ static void kv_destroy(hashmap* map, const KV* kv)
 // Sets tombstone_index to first tombstone encountered (for insertion optimization)
 // if linear probing fails(find no empty), we insert at the first tombstone encountered
 // we use warp around, so when we hit end while probing, we go to the start of arr
-static size_t find_slot(const hashmap* map, const u8* key,
+static u32 find_slot(const hashmap* map, const u8* key,
                         u8* found, int* tombstone)
 {
-    size_t index = map->hash_fn(key, map->key_size) % map->capacity;
+    u32 index = map->hash_fn(key, map->key_size) % map->capacity;
 
     *found = 0;
     *tombstone = -1;
 
-    for (size_t x = 0; x < map->capacity; x++) {
-        size_t i = (index + x) % map->capacity;   // warp around
+    for (u32 x = 0; x < map->capacity; x++) {
+        u32 i = (index + x) % map->capacity;   // warp around
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, i);
 
         switch (kv->state) {
@@ -79,10 +79,10 @@ static size_t find_slot(const hashmap* map, const u8* key,
         }
     }
     
-    return (*tombstone != -1) ? (size_t)*tombstone : 0;
+    return (*tombstone != -1) ? (u32)*tombstone : 0;
 }
 
-static void hashmap_resize(hashmap* map, size_t new_capacity) 
+static void hashmap_resize(hashmap* map, u32 new_capacity) 
 {
     if (!map) {
         printf("map resize: map is null\n");
@@ -110,13 +110,13 @@ static void hashmap_resize(hashmap* map, size_t new_capacity)
     map->capacity = new_capacity;
     map->size = 0;          // recounted when we rehash
 
-    for (size_t i = 0; i < old_vec->capacity; i++) {
+    for (u32 i = 0; i < old_vec->capacity; i++) {
         const KV* old_kv = (const KV*)genVec_get_ptr(old_vec, i);
         
         if (old_kv->state == FILLED) {
             u8 found = 0;
             int tombstone = -1;
-            size_t slot = find_slot(map, old_kv->key, &found, &tombstone);
+            u32 slot = find_slot(map, old_kv->key, &found, &tombstone);
 
             // new table can't have tombstones, and load factor will be like 35%
             // so no need for error checking
@@ -141,13 +141,13 @@ static void hashmap_maybe_resize(hashmap* map) {
     double load_factor = (double)map->size / (double)map->capacity;
     
     if (load_factor > LOAD_FACTOR_GROW) {
-        size_t new_cap = next_prime(map->capacity);
+        u32 new_cap = next_prime(map->capacity);
         hashmap_resize(map, new_cap);
     }
     // Shrink when too empty
     else if (load_factor < LOAD_FACTOR_SHRINK && map->capacity > HASHMAP_INIT_CAPACITY) 
     {
-        size_t new_cap = prev_prime(map->capacity);
+        u32 new_cap = prev_prime(map->capacity);
         // Don't shrink below initial capacity
         if (new_cap >= HASHMAP_INIT_CAPACITY) {
             hashmap_resize(map, new_cap);
@@ -159,7 +159,7 @@ static void hashmap_maybe_resize(hashmap* map) {
 ====================PUBLIC FUNCTIONS====================
 */
 
-hashmap* hashmap_create(size_t key_size, size_t val_size, custom_hash_fn hash_fn,
+hashmap* hashmap_create(u32 key_size, u32 val_size, custom_hash_fn hash_fn,
                         delete_fn key_del, delete_fn val_del, compare_fn cmp)
 {
     if (key_size == 0 || val_size == 0) {
@@ -205,7 +205,7 @@ void hashmap_destroy(hashmap* map)
     if (!map) { return; }
 
     if (map->buckets) {
-        for (size_t i = 0; i < map->capacity; i++) {
+        for (u32 i = 0; i < map->capacity; i++) {
             kv_destroy(map, (const KV*)genVec_get_ptr(map->buckets, i));
         }
         genVec_destroy(map->buckets);
@@ -226,7 +226,7 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     
     u8 found = 0;
     int tombstone = -1;
-    size_t slot = find_slot(map, key, &found, &tombstone);
+    u32 slot = find_slot(map, key, &found, &tombstone);
     
     if (found) {
         KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
@@ -276,7 +276,7 @@ u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
     
     u8 found = 0;
     int tombstone = -1;
-    size_t slot = find_slot(map, key, &found, &tombstone);
+    u32 slot = find_slot(map, key, &found, &tombstone);
 
     if (found) {
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, slot);
@@ -298,7 +298,7 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
     
     u8 found = 0;
     int tombstone = -1;
-    size_t slot = find_slot(map, key, &found, &tombstone);
+    u32 slot = find_slot(map, key, &found, &tombstone);
 
     if (found) {
         return ((const KV*)genVec_get_ptr(map->buckets, slot))->val;
@@ -320,7 +320,7 @@ u8 hashmap_del(hashmap* map, const u8* key)
 
     u8 found = 0;
     int tombstone = -1;
-    size_t slot = find_slot(map, key, &found, &tombstone);
+    u32 slot = find_slot(map, key, &found, &tombstone);
 
     if (found) {
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, slot);
@@ -364,7 +364,7 @@ void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_f
     }
 
     printf("\t=========\n");
-    for (size_t i = 0; i < map->capacity; i++) {
+    for (u32 i = 0; i < map->capacity; i++) {
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, i);
         if (kv->state == FILLED) {
             printf("\t");

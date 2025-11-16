@@ -11,7 +11,7 @@
 static inline void ensure_null_terminated(String* str) {
     if (!str || !str->buffer) { return; }
     
-    size_t size = str->buffer->size;
+    u32 size = str->buffer->size;
     if (size == 0 || (str->buffer->data)[size - 1] != '\0') 
     {
         const char null_term = '\0';
@@ -81,7 +81,7 @@ String* string_from_string(const String* other) {
     return string_from_cstr(string_to_cstr(other));
 }
 
-void string_reserve(String* str, size_t capacity) 
+void string_reserve(String* str, u32 capacity) 
 {
     if (!str || !str->buffer) { return; }
     
@@ -124,11 +124,11 @@ void string_append_cstr(String* str, const char* cstr)
         return; 
     }
     
-    size_t cstr_len = strlen(cstr);
+    u32 cstr_len = strlen(cstr);
     if (cstr_len == 0) { return; }// Nothing to append
 
     // Calculate where to start writing (before null terminator (if it exists))
-    size_t write_pos = str->buffer->size;
+    u32 write_pos = str->buffer->size;
     if (write_pos > 0) {
         char last_char;
         genVec_get(str->buffer, write_pos - 1, (u8*)&last_char);
@@ -185,7 +185,7 @@ char string_pop_char(String* str)
     return c;
 }
 
-void string_insert_char(String* str, size_t i, char c)
+void string_insert_char(String* str, u32 i, char c)
 {
     if (!str) {
         printf("str insert char: str is null\n");
@@ -201,7 +201,7 @@ void string_insert_char(String* str, size_t i, char c)
 }
 
 
-void string_insert_cstr(String* str, size_t i, const char* cstr)
+void string_insert_cstr(String* str, u32 i, const char* cstr)
 {
     if (!str) {
         printf("str insert cstr: str is null\n");
@@ -216,7 +216,7 @@ void string_insert_cstr(String* str, size_t i, const char* cstr)
     ensure_null_terminated(str);
 }
 
-void string_insert_string(String* str, size_t i, String* other)
+void string_insert_string(String* str, u32 i, String* other)
 {
     if (!str || !other) {
         printf("str insert str: parameters null\n");
@@ -232,7 +232,7 @@ void string_insert_string(String* str, size_t i, String* other)
 }
 
 
-void string_remove_char(String* str, size_t i) {
+void string_remove_char(String* str, u32 i) {
     if (!str || !str->buffer) { 
         printf("str remove char: str or buffer null\n");
         return; 
@@ -249,7 +249,7 @@ void string_remove_char(String* str, size_t i) {
     ensure_null_terminated(str);
 }
 
-void string_remove_range(String* str, size_t l, size_t r)
+void string_remove_range(String* str, u32 l, u32 r)
 {
     if (!str) {
         printf("str remove range: str is null\n");
@@ -277,7 +277,7 @@ void string_clear(String* str) {
     ensure_null_terminated(str);
 }
 
-char string_at(const String* str, size_t i) {
+char string_at(const String* str, u32 i) {
     if (!str || i >= string_len(str)) { 
         printf("str at: str null or i out of bounds\n");
         return '\0'; 
@@ -288,7 +288,7 @@ char string_at(const String* str, size_t i) {
     return c;
 }
 
-void string_set_char(String* str, size_t i, char c) {
+void string_set_char(String* str, u32 i, char c) {
     if (!str || i >= string_len(str)) { 
         printf("str set char: str null or i out of bounds\n");
         return; 
@@ -313,7 +313,7 @@ int string_equals_cstr(const String* str, const char* cstr) {
     return strcmp(string_to_cstr(str), cstr) == 0;
 }
 
-size_t string_find_char(const String* str, char c) {
+u32 string_find_char(const String* str, char c) {
     if (!str) { return -1; }
     
     const char* cstr = string_to_cstr(str);
@@ -322,7 +322,7 @@ size_t string_find_char(const String* str, char c) {
     return found ? found - cstr : -1;
 }
 
-size_t string_find_cstr(const String* str, const char* substr) {
+u32 string_find_cstr(const String* str, const char* substr) {
     if (!str || !substr) { return -1; }
     
     const char* cstr = string_to_cstr(str);
@@ -331,20 +331,20 @@ size_t string_find_cstr(const String* str, const char* substr) {
 }
 
 
-String* string_substr(const String* str, size_t start, size_t length) 
+String* string_substr(const String* str, u32 start, u32 length) 
 {
     if (!str || start >= string_len(str)) { return NULL; }
     
     String* result = string_create();
     if (!result) { return NULL; }
     
-    size_t end = start + length;
-    size_t str_len = string_len(str);
+    u32 end = start + length;
+    u32 str_len = string_len(str);
     if (end > str_len) {
         end = str_len;
     }
     
-    size_t actual_len = end - start;
+    u32 actual_len = end - start;
     if (actual_len > 0) {
         // Remove null terminator from result
         if (result->buffer->size > 0) {

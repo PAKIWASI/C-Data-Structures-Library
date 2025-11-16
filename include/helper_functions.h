@@ -34,7 +34,7 @@
 #define VEC_PUSH_MULTI(vec, type, ...) \
     do { \
         type temp[] = {__VA_ARGS__}; \
-        for (size_t i = 0; i < sizeof(temp)/sizeof(temp[0]); i++) { \
+        for (u32 i = 0; i < sizeof(temp)/sizeof(temp[0]); i++) { \
             genVec_push(vec, (u8*)&temp[i]); \
         } \
     } while(0)
@@ -53,15 +53,15 @@ static inline int vec_pop_int(genVec* vec) {
     return VEC_POP(vec, int);
 }
 
-static inline int vec_get_int(genVec* vec, size_t i) {
+static inline int vec_get_int(genVec* vec, u32 i) {
     return *(int*)VEC_GET(vec, i);
 }
 
-static inline void vec_replace_int(genVec* vec, size_t i, int x) {
+static inline void vec_replace_int(genVec* vec, u32 i, int x) {
     VEC_REPLACE(vec, i, x);
 }
 
-static inline void vec_insert_int(genVec* vec, size_t i, int x) {
+static inline void vec_insert_int(genVec* vec, u32 i, int x) {
     VEC_INSERT(vec, i, x);
 }
 
@@ -74,15 +74,15 @@ static inline float vec_pop_float(genVec* vec) {
     return VEC_POP(vec, float);
 }
 
-static inline float vec_get_float(genVec* vec, size_t i) {
+static inline float vec_get_float(genVec* vec, u32 i) {
     return *(float*)VEC_GET(vec, i);
 }
 
-static inline void vec_replace_float(genVec* vec, size_t i, float x) {
+static inline void vec_replace_float(genVec* vec, u32 i, float x) {
     VEC_REPLACE(vec, i, x);
 }
 
-static inline void vec_insert_float(genVec* vec, size_t i, float x) {
+static inline void vec_insert_float(genVec* vec, u32 i, float x) {
     VEC_INSERT(vec, i, x);
 }
 
@@ -95,14 +95,14 @@ static inline double vec_pop_double(genVec* vec) {
     return VEC_POP(vec, double);
 }
 
-static inline double vec_get_double(genVec* vec, size_t i) {
+static inline double vec_get_double(genVec* vec, u32 i) {
     return *(double*)VEC_GET(vec, i);
 }
 
-static inline void vec_replace_double(genVec* vec, size_t i, double x) {
+static inline void vec_replace_double(genVec* vec, u32 i, double x) {
     VEC_REPLACE(vec, i, x);
 }
-static inline void vec_insert_double(genVec* vec, size_t i, double x) {
+static inline void vec_insert_double(genVec* vec, u32 i, double x) {
     VEC_INSERT(vec, i, x);
 }
 
@@ -115,15 +115,15 @@ static inline char vec_pop_char(genVec* vec) {
     return VEC_POP(vec, char);
 }
 
-static inline char vec_get_char(genVec* vec, size_t i) {
+static inline char vec_get_char(genVec* vec, u32 i) {
     return *(char*)VEC_GET(vec, i);
 }
 
-static inline void vec_replace_char(genVec* vec, size_t i, char x) {
+static inline void vec_replace_char(genVec* vec, u32 i, char x) {
     VEC_REPLACE(vec, i, x);
 }
 
-static inline void vec_insert_char(genVec* vec, size_t i, char x) {
+static inline void vec_insert_char(genVec* vec, u32 i, char x) {
     VEC_INSERT(vec, i, x);
 }
 
@@ -144,23 +144,23 @@ static inline String* vec_pop_str(genVec* vec) {
 }
 
 // getting pointer to the raw data
-static inline const char* vec_get_cstr(genVec* vec, size_t i) {
+static inline const char* vec_get_cstr(genVec* vec, u32 i) {
     return string_to_cstr((String*)genVec_get_ptr(vec, i)); 
 }
 
-static inline String* vec_get_str(genVec* vec, size_t i) {
+static inline String* vec_get_str(genVec* vec, u32 i) {
     String* str = string_create();
     genVec_get(vec, i, (u8*)str);
     return str;
 }
 
-static inline void vec_replace_cstr(genVec* vec, size_t i, const char* cstr) {
+static inline void vec_replace_cstr(genVec* vec, u32 i, const char* cstr) {
     String* str = string_from_cstr(cstr);
     genVec_replace(vec, i, (u8*)str);
 }
 
 // inserting String* is a 1-liner
-static inline void vec_insert_cstr(genVec* vec, size_t i, const char* cstr) {
+static inline void vec_insert_cstr(genVec* vec, u32 i, const char* cstr) {
     String* str = string_from_cstr(cstr);
     genVec_replace(vec, i, (u8*)str);
 }
@@ -368,7 +368,7 @@ static inline void vecvecint_print(const u8* elm)
     genVec* vec = (genVec*)elm;
 
     printf("[ ");
-    for (size_t i = 0; i < genVec_size(vec); i++) {
+    for (u32 i = 0; i < genVec_size(vec); i++) {
         const u8* element = genVec_get_ptr(vec, i);
         int_print(element);
         printf(" ");
@@ -444,8 +444,8 @@ static inline String* int_to_str(const u8* elm) {
         string_append_char(str, '-');
     }
     
-    size_t len = string_len(temp);
-    for (size_t i = len - 1; i >= 0; i--) {
+    u32 len = string_len(temp);
+    for (u32 i = len - 1; i >= 0; i--) {
         string_append_char(str, string_at(temp, i));
     }
     

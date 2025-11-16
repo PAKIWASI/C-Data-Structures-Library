@@ -12,7 +12,7 @@ static void tail_update(Queue* q);
 static void queue_grow(Queue* q);
 
 
-Queue* queue_create(size_t n, size_t data_size, genVec_delete_fn del_fn)
+Queue* queue_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
 {
     if (!n || !data_size) {
         printf("queue create : invalid parameters\n");
@@ -125,7 +125,7 @@ void queue_print(Queue* q, genVec_print_fn print_fn)
         return;
     } 
 
-    size_t h = q->head;
+    u32 h = q->head;
 
     printf("[ ");
     if (h < q->arr->size && q->size != 0) {
@@ -146,19 +146,19 @@ static void tail_update(Queue* q) {
 }
 
 static void queue_grow(Queue* q) {
-    size_t old_cap = q->arr->capacity;
-    size_t new_cap = (size_t)((double)old_cap * QUEUE_GROWTH);
+    u32 old_cap = q->arr->capacity;
+    u32 new_cap = (u32)((double)old_cap * QUEUE_GROWTH);
     
     genVec_reserve(q->arr, new_cap);
 
     u8* dummy = malloc(q->arr->data_size); // Expand the vector's size to match capacity
-    for (size_t i = old_cap; i < new_cap; i++) {
+    for (u32 i = old_cap; i < new_cap; i++) {
         genVec_push(q->arr, dummy); 
     }
     free(dummy);   
 
     // Move wrapped elements from [0, head) to [old_cap, old_cap + head)
-    for (size_t i = 0; i < q->head; i++) {
+    for (u32 i = 0; i < q->head; i++) {
         genVec_replace(q->arr, old_cap + i, genVec_get_ptr(q->arr, i));
     }
     

@@ -8,10 +8,10 @@
 
 typedef struct {
     genVec* buckets; // of ELM
-    size_t capacity;
-    size_t size;
+    u32 capacity;
+    u32 size;
 
-    size_t elm_size;
+    u32 elm_size;
 
     custom_hash_fn hash_fn;
     delete_fn elm_del_fn;
@@ -19,7 +19,7 @@ typedef struct {
 } __attribute__((aligned(64))) hashset;
 
 
-hashset* hashset_create(size_t elm_size, custom_hash_fn hash_fn, 
+hashset* hashset_create(u32 elm_size, custom_hash_fn hash_fn, 
                         delete_fn elm_del, compare_fn cmp_fn);
 
 void hashset_destroy(hashset* set);

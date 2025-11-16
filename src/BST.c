@@ -13,20 +13,20 @@
 
 
 // PRIVATE HELPER FUNCTIONS
-static void bst_preorder_helper(const BST* bst, size_t i, String* out);
-static void bst_inorder_helper(const BST* bst, size_t i, String* out);
-static void bst_postorder_helper(const BST* bst, size_t i, String* out);
-static void bst_inorder_arr(const BST* bst, size_t i, genVec* out);
+static void bst_preorder_helper(const BST* bst, u32 i, String* out);
+static void bst_inorder_helper(const BST* bst, u32 i, String* out);
+static void bst_postorder_helper(const BST* bst, u32 i, String* out);
+static void bst_inorder_arr(const BST* bst, u32 i, genVec* out);
 static void bst_bfs_helper(const BST* bst, String* out);
-static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags);
-static void bst_remove_helper(BST* bst, const size_t* index);
-static size_t bst_find_min_helper(const BST* bst, size_t index);
-static size_t bst_find_max_helper(const BST* bst, size_t index);
-static void bst_balance_helper(BST* bst, genVec* inorder, size_t l, size_t r);
+static u32 bst_search_helper(const BST* bst, const u8* val, u32 pos, u8* flags);
+static void bst_remove_helper(BST* bst, const u32* index);
+static u32 bst_find_min_helper(const BST* bst, u32 index);
+static u32 bst_find_max_helper(const BST* bst, u32 index);
+static void bst_balance_helper(BST* bst, genVec* inorder, u32 l, u32 r);
 
 
 
-BST* bst_create(size_t data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del)
+BST* bst_create(u32 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del)
 {
     if (!data_size || !cmp || !to_str) {
         printf("bst create: invalid parameters\n");
@@ -81,7 +81,7 @@ void bst_insert(BST* bst, const u8* val)
     }
 
     u8 found = 0; // 1 -> a = b
-    size_t index = bst_search_helper(bst, val, 0, &found);
+    u32 index = bst_search_helper(bst, val, 0, &found);
 
     if (found) {   // value exits
         return;
@@ -102,7 +102,7 @@ void bst_remove(BST* bst, const u8* val)
     }
 
     u8 found = 0;
-    size_t index = bst_search_helper(bst, val, 0, &found);
+    u32 index = bst_search_helper(bst, val, 0, &found);
     
     if (!found) { return; }
 
@@ -131,7 +131,7 @@ void bst_find_min(const BST* bst, u8* min)
         return;
     }
 
-    size_t index = bst_find_min_helper(bst, 0);
+    u32 index = bst_find_min_helper(bst, 0);
 
     genVec_get(bst->arr, index, min);
 }
@@ -143,7 +143,7 @@ void bst_find_max(const BST* bst, u8* max)
         return;
     }
 
-    size_t index = bst_find_max_helper(bst, 0);
+    u32 index = bst_find_max_helper(bst, 0);
 
     genVec_get(bst->arr, index, max);
 }
@@ -234,7 +234,7 @@ String* bst_bfs(const BST* bst)
 
 //                      PRIVATE FUNCTION IMPLEMENTATION
 
-static void bst_preorder_helper(const BST* bst, size_t i, String* out)
+static void bst_preorder_helper(const BST* bst, u32 i, String* out)
 {       // end of arr or root i not set
     if (i >= bst->arr->size || !bitVec_test(bst->flags, i)) {
         return;
@@ -249,7 +249,7 @@ static void bst_preorder_helper(const BST* bst, size_t i, String* out)
     bst_preorder_helper(bst, R_CHILD(i), out);
 }
 
-static void bst_inorder_helper(const BST* bst, size_t i, String* out)
+static void bst_inorder_helper(const BST* bst, u32 i, String* out)
 {       // end of arr or root i not set
     if (i >= bst->arr->size || !bitVec_test(bst->flags, i)) {
         return;
@@ -265,7 +265,7 @@ static void bst_inorder_helper(const BST* bst, size_t i, String* out)
     bst_inorder_helper(bst, R_CHILD(i), out);
 }
 
-static void bst_postorder_helper(const BST* bst, size_t i, String* out)
+static void bst_postorder_helper(const BST* bst, u32 i, String* out)
 {       // end of arr or root i not set
     if (i >= bst->arr->size || !bitVec_test(bst->flags, i)) {
         return;
@@ -280,7 +280,7 @@ static void bst_postorder_helper(const BST* bst, size_t i, String* out)
     string_destroy(temp);
 }
 
-static void bst_inorder_arr(const BST* bst, size_t i, genVec* out)
+static void bst_inorder_arr(const BST* bst, u32 i, genVec* out)
 {
     if (i >= bst->arr->size || !bitVec_test(bst->flags, i)) {
         return;
@@ -295,12 +295,12 @@ static void bst_bfs_helper(const BST* bst, String* out)
 {
     if (bst->size == 0) { return; }
     // we can store the index of the bst node
-    Queue* q = queue_create(bst->size, sizeof(size_t), NULL);
-    size_t index = 0;
+    Queue* q = queue_create(bst->size, sizeof(u32), NULL);
+    u32 index = 0;
     enqueue(q, cast(index));
 
     while (!queue_empty(q)) {
-        size_t i = 0;
+        u32 i = 0;
         dequeue(q, cast(i));
 
         String* temp = bst->to_str(genVec_get_ptr(bst->arr, i));
@@ -308,11 +308,11 @@ static void bst_bfs_helper(const BST* bst, String* out)
         string_append_char(out, ' ');
         string_destroy(temp);
 
-        size_t l = L_CHILD(i);
+        u32 l = L_CHILD(i);
         if (l < bst->arr->size && bitVec_test(bst->flags, l)) {
             enqueue(q, cast(l));
         }
-        size_t r = R_CHILD(i);
+        u32 r = R_CHILD(i);
         if (r < bst->arr->size && bitVec_test(bst->flags, r)) {
             enqueue(q, cast(r));
         }
@@ -321,7 +321,7 @@ static void bst_bfs_helper(const BST* bst, String* out)
     queue_destroy(q);
 }
 
-static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* flags) 
+static u32 bst_search_helper(const BST* bst, const u8* val, u32 pos, u8* flags) 
 {
     // Check if slot is empty (either beyond array or flag not set)
     if (pos >= bst->arr->size || !bitVec_test(bst->flags, pos)) {
@@ -342,10 +342,10 @@ static size_t bst_search_helper(const BST* bst, const u8* val, size_t pos, u8* f
     }
 }
 
-static void bst_remove_helper(BST* bst, const size_t* index)
+static void bst_remove_helper(BST* bst, const u32* index)
 {
-    size_t l = L_CHILD(*index);
-    size_t r = R_CHILD(*index);
+    u32 l = L_CHILD(*index);
+    u32 r = R_CHILD(*index);
 
     u8 has_l = l < bst->arr->size && bitVec_test(bst->flags, l);
     u8 has_r = r < bst->arr->size && bitVec_test(bst->flags, r);
@@ -360,13 +360,13 @@ static void bst_remove_helper(BST* bst, const size_t* index)
         bst_remove_helper(bst, &l);
     } else { // has both left and right children
         // get the min in the right subtree
-        size_t min_r = bst_find_min_helper(bst, r);
+        u32 min_r = bst_find_min_helper(bst, r);
         genVec_replace(bst->arr, *index, genVec_get_ptr(bst->arr, min_r));
         bst_remove_helper(bst, &min_r);   
     }
 }
 
-static size_t bst_find_min_helper(const BST* bst, size_t index)
+static u32 bst_find_min_helper(const BST* bst, u32 index)
 {
     while (index < bst->arr->size && bitVec_test(bst->flags, index)) {
         if (L_CHILD(index) >= bst->arr->size || !bitVec_test(bst->flags, L_CHILD(index))) 
@@ -377,7 +377,7 @@ static size_t bst_find_min_helper(const BST* bst, size_t index)
     return -1; // LONG_MAX returned -> error
 }
 
-static size_t bst_find_max_helper(const BST* bst, size_t index)
+static u32 bst_find_max_helper(const BST* bst, u32 index)
 {
     while (index < bst->arr->size && bitVec_test(bst->flags, index)) {
         if (R_CHILD(index) >= bst->arr->size || !bitVec_test(bst->flags, R_CHILD(index))) 
@@ -389,13 +389,13 @@ static size_t bst_find_max_helper(const BST* bst, size_t index)
 }
 
 // WARN: this is wrong???
-static void bst_balance_helper(BST* bst, genVec* inorder, size_t l, size_t r)
+static void bst_balance_helper(BST* bst, genVec* inorder, u32 l, u32 r)
 {
     if (l >= r) { 
         return;  // base case: no elements in range [l, r)
     }
 
-    size_t m = l + ((r - l) / 2);
+    u32 m = l + ((r - l) / 2);
 
     // Insert middle element 
     bst_insert(bst, genVec_get_ptr(inorder, m));

@@ -12,14 +12,14 @@
 
 
 // Helper function to clean and normalize a word - removes numbers and handles contractions
-char* clean_word(const char* token, char* output, size_t output_size) {
+char* clean_word(const char* token, char* output, u32 output_size) {
     if (!token || !output || output_size == 0) { return NULL; }
     
-    size_t len = strlen(token);
-    size_t out_idx = 0;
+    u32 len = strlen(token);
+    u32 out_idx = 0;
     bool has_letters = false;
     
-    for (size_t i = 0; i < len && out_idx < output_size - 1; i++) {
+    for (u32 i = 0; i < len && out_idx < output_size - 1; i++) {
         unsigned char c = (unsigned char)token[i];
         
         // Skip digits completely - remove numbers like 1023
@@ -34,7 +34,7 @@ char* clean_word(const char* token, char* output, size_t output_size) {
                           (unsigned char)token[i+2] == 0x99)) {
             
             // If it's a UTF-8 curly quote, skip the 3-byte sequence
-            size_t next_pos = i + 1;
+            u32 next_pos = i + 1;
             if (c == 0xE2) {
                 i += 2; // Skip the remaining bytes of UTF-8 sequence
                 next_pos = i + 1;
@@ -44,7 +44,7 @@ char* clean_word(const char* token, char* output, size_t output_size) {
             bool has_letter_after = false;
             bool is_possessive = false;
             
-            for (size_t j = next_pos; j < len; j++) {
+            for (u32 j = next_pos; j < len; j++) {
                 unsigned char next = (unsigned char)token[j];
                 if (isalpha(next)) {
                     has_letter_after = true;
@@ -52,7 +52,7 @@ char* clean_word(const char* token, char* output, size_t output_size) {
                     if (tolower(next) == 's') {
                         // Look ahead to see if there's anything after the 's'
                         bool has_more = false;
-                        for (size_t k = j + 1; k < len; k++) {
+                        for (u32 k = j + 1; k < len; k++) {
                             if (isalpha((unsigned char)token[k])) {
                                 has_more = true;
                                 break;
@@ -110,7 +110,7 @@ int parse(void)
 
     char line[512];
     char cleaned[256];
-    size_t total_words = 0;
+    u32 total_words = 0;
     
     while (fgets(line, sizeof(line), f)) {
         char* token = strtok(line, delim);

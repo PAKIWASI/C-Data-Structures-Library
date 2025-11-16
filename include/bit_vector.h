@@ -6,7 +6,7 @@
 
 typedef struct {
     genVec* arr;
-    size_t size;        // no of set bits
+    u32 size;        // no of set bits
 } __attribute__((aligned(16))) bitVec;
 
 
@@ -15,26 +15,26 @@ bitVec* bitVec_create(void);
 void bitVec_destroy(bitVec* bvec);
 
 
-void bitVec_set(bitVec* bvec, size_t i);
-void bitVec_clear(bitVec* bvec, size_t i);
-u8 bitVec_test(bitVec* bvec, size_t i);
-void bitVec_toggle(bitVec* bvec, size_t i);
+void bitVec_set(bitVec* bvec, u32 i);
+void bitVec_clear(bitVec* bvec, u32 i);
+u8 bitVec_test(bitVec* bvec, u32 i);
+void bitVec_toggle(bitVec* bvec, u32 i);
 
 
 void bitVec_push(bitVec* bvec);
 void bitVec_pop(bitVec* bvec);
 
 
-void bitVec_print(bitVec* bvec, size_t byteI);
+void bitVec_print(bitVec* bvec, u32 byteI);
 
 
 // get the no of BITS in the vector
-static inline size_t bitVec_size_bits(bitVec* bvec) {
+static inline u32 bitVec_size_bits(bitVec* bvec) {
     return bvec->size;
 }
 
 // get the no of BYTES in the vector
-static inline size_t bitVec_size_bytes(bitVec* bvec) {
+static inline u32 bitVec_size_bytes(bitVec* bvec) {
     return genVec_size(bvec->arr);
 }
 

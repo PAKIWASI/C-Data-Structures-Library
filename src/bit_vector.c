@@ -37,15 +37,15 @@ void bitVec_destroy(bitVec* bvec)
 }
 
 // Set bit i to 1
-void bitVec_set(bitVec* bvec, size_t i)
+void bitVec_set(bitVec* bvec, u32 i)
 {
     if (!bvec || !bvec->arr) { 
         printf("bvec set: bvec/arr is null\n");
         return;
     }
     
-    size_t byte_index = i / 8; // which byte (elm) 
-    size_t bit_index = i % 8; // which bit in the byte
+    u32 byte_index = i / 8; // which byte (elm) 
+    u32 bit_index = i % 8; // which bit in the byte
     
     // Ensure byte capacity
     while (byte_index >= bvec->arr->size) {
@@ -67,7 +67,7 @@ void bitVec_set(bitVec* bvec, size_t i)
 }
 
 // Clear bit i (set to 0)
-void bitVec_clear(bitVec* bvec, size_t i)
+void bitVec_clear(bitVec* bvec, u32 i)
 {
     if (!bvec || !bvec->arr) { 
         printf("bvec clear: bvec/arr is null\n");
@@ -79,8 +79,8 @@ void bitVec_clear(bitVec* bvec, size_t i)
         return;
     }
 
-    size_t byte_index = i / 8;
-    size_t bit_index = i % 8;
+    u32 byte_index = i / 8;
+    u32 bit_index = i % 8;
 
     u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index);
     *byte &= ~(1 << bit_index);  // Clear the bit
@@ -90,7 +90,7 @@ void bitVec_clear(bitVec* bvec, size_t i)
 }
 
 // Test bit i (returns 1 or 0)
-u8 bitVec_test(bitVec* bvec, size_t i)
+u8 bitVec_test(bitVec* bvec, u32 i)
 {
     if (!bvec || !bvec->arr) { 
         printf("bvec test: bvec/arr is null\n");
@@ -101,8 +101,8 @@ u8 bitVec_test(bitVec* bvec, size_t i)
         return -1;
     }
 
-    size_t byte_index = i / 8;
-    size_t bit_index = i % 8;
+    u32 byte_index = i / 8;
+    u32 bit_index = i % 8;
 
     //u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index); 
     return (*genVec_get_ptr(bvec->arr, byte_index) >> bit_index) & 1;  // copy of dereferenced byte data returned
@@ -111,7 +111,7 @@ u8 bitVec_test(bitVec* bvec, size_t i)
 }
 
 // Toggle bit i
-void bitVec_toggle(bitVec* bvec, size_t i)
+void bitVec_toggle(bitVec* bvec, u32 i)
 {
     if (!bvec || !bvec->arr) { 
         printf("bvec toggle: bvec/arr is null\n");
@@ -123,8 +123,8 @@ void bitVec_toggle(bitVec* bvec, size_t i)
         return;
     }
 
-    size_t byte_index = i / 8;
-    size_t bit_index = i % 8;
+    u32 byte_index = i / 8;
+    u32 bit_index = i % 8;
 
     u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index);
     *byte ^= (1 << bit_index); // lvalue so byte is modified
@@ -157,7 +157,7 @@ void bitVec_pop(bitVec* bvec)
     }
 }
 
-void bitVec_print(bitVec *bvec, size_t byteI)
+void bitVec_print(bitVec *bvec, u32 byteI)
 {
     if (!bvec || !bvec->arr) { 
         printf("bvec print: bvec/arr is null\n");
@@ -172,7 +172,7 @@ void bitVec_print(bitVec *bvec, size_t byteI)
     u8 bits_to_print = 8;
     // If this is the last byte, only print the valid bits
     if (byteI == bvec->arr->size - 1) {
-        size_t remaining = bvec->size % 8;
+        u32 remaining = bvec->size % 8;
         bits_to_print = (remaining == 0) ? 8 : remaining;
     }
 

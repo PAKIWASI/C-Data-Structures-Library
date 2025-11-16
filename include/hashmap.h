@@ -8,11 +8,11 @@
 
 typedef struct {
     genVec* buckets;    // of KV 
-    size_t capacity;     // total number of buckets
-    size_t size;         // number of elements
+    u32 capacity;     // total number of buckets
+    u32 size;         // number of elements
 
-    size_t key_size;    // size of each key
-    size_t val_size;    // size of each val
+    u32 key_size;    // size of each key
+    u32 val_size;    // size of each val
 
     custom_hash_fn hash_fn;
     delete_fn key_del_fn;
@@ -21,7 +21,7 @@ typedef struct {
 } __attribute__((aligned(128))) hashmap;
 
 
-hashmap* hashmap_create(size_t key_size, size_t val_size, custom_hash_fn hash_fn,
+hashmap* hashmap_create(u32 key_size, u32 val_size, custom_hash_fn hash_fn,
                         delete_fn key_del, delete_fn val_del, compare_fn cmp);
 
 void hashmap_destroy(hashmap* map);

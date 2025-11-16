@@ -38,16 +38,16 @@ static void elm_destroy(hashset* set, const ELM* elm)
 // Sets tombstone_index to first tombstone encountered (for insertion optimization)
 // if linear probing fails(find no empty), we insert at the first tombstone encountered
 // we use warp around, so when we hit end while probing, we go to the start of arr
-static size_t find_slot(const hashset* set, const u8* key,
+static u32 find_slot(const hashset* set, const u8* key,
                         u8* found, int* tombstone)
 {
-    size_t index = set->hash_fn(key, set->elm_size) % set->capacity;
+    u32 index = set->hash_fn(key, set->elm_size) % set->capacity;
 
     *found = 0;
     *tombstone = -1;
 
-    for (size_t x = 0; x < set->capacity; x++) {
-        size_t i = (index + x) % set->capacity;   // warp around
+    for (u32 x = 0; x < set->capacity; x++) {
+        u32 i = (index + x) % set->capacity;   // warp around
         const ELM* elm = (const ELM*)genVec_get_ptr(set->buckets, i);
 
         switch (elm->state) {
@@ -68,11 +68,11 @@ static size_t find_slot(const hashset* set, const u8* key,
         }
     }
     
-    return (*tombstone != -1) ? (size_t)*tombstone : 0;
+    return (*tombstone != -1) ? (u32)*tombstone : 0;
 }
 
 
-static void hashset_resize(hashset* set, size_t new_capacity) 
+static void hashset_resize(hashset* set, u32 new_capacity) 
 {
     if (!set) {
         printf("map resize: map is null\n");
@@ -99,13 +99,13 @@ static void hashset_resize(hashset* set, size_t new_capacity)
     set->capacity = new_capacity;
     set->size = 0;          // recounted when we rehash
 
-    for (size_t i = 0; i < old_vec->capacity; i++) {
+    for (u32 i = 0; i < old_vec->capacity; i++) {
         const ELM* old_elm = (const ELM*)genVec_get_ptr(old_vec, i);
         
         if (old_elm->state == FILLED) {
             u8 found = 0;
             int tombstone = -1;
-            size_t slot = find_slot(set, old_elm->elm, &found, &tombstone);
+            u32 slot = find_slot(set, old_elm->elm, &found, &tombstone);
 
             // new table can't have tombstones, and load factor will be like 35%
             // so no need for error checking
@@ -130,13 +130,13 @@ static void hashset_maybe_resize(hashset* set) {
     double load_factor = (double)set->size / (double)set->capacity;
     
     if (load_factor > LOAD_FACTOR_GROW) {
-        size_t new_cap = next_prime(set->capacity);
+        u32 new_cap = next_prime(set->capacity);
         hashset_resize(set, new_cap);
     }
     // Shrink when too empty
     else if (load_factor < LOAD_FACTOR_SHRINK && set->capacity > HASHMAP_INIT_CAPACITY) 
     {
-        size_t new_cap = prev_prime(set->capacity);
+        u32 new_cap = prev_prime(set->capacity);
         // Don't shrink below initial capacity
         if (new_cap >= HASHMAP_INIT_CAPACITY) {
             hashset_resize(set, new_cap);
@@ -149,7 +149,7 @@ static void hashset_maybe_resize(hashset* set) {
 */
 
 
-hashset* hashset_create(size_t elm_size, custom_hash_fn hash_fn, 
+hashset* hashset_create(u32 elm_size, custom_hash_fn hash_fn, 
                         delete_fn elm_del, compare_fn cmp_fn)
 {
     if (elm_size == 0) {
@@ -192,7 +192,7 @@ void hashset_destroy(hashset *set)
     if (!set) { return; }
 
     if (set->buckets) {
-        for (size_t i = 0; i < set->capacity; i++) {
+        for (u32 i = 0; i < set->capacity; i++) {
             const ELM* elm = (const ELM*)genVec_get_ptr(set->buckets, i);
             elm_destroy(set, elm);
         }
@@ -213,7 +213,7 @@ u8 hashset_insert(hashset* set, const u8* elm)
 
     u8 found = 0;
     int tombstone = -1;
-    size_t slot = find_slot(set, elm, &found, &tombstone);
+    u32 slot = find_slot(set, elm, &found, &tombstone);
 
     if (found) {
         return 0;
@@ -248,7 +248,7 @@ u8 hashset_remove(hashset* set, const u8* elm)
 
     u8 found = 0;
     int tombstone = -1;
-    size_t slot = find_slot(set, elm, &found, &tombstone);
+    u32 slot = find_slot(set, elm, &found, &tombstone);
 
     if (found) {
         ELM* elm = (ELM*)genVec_get_ptr(set->buckets, slot);
@@ -291,7 +291,7 @@ void hashset_print(const hashset* set, genVec_print_fn elm_print)
     }
 
     printf("\t=========\n");
-    for (size_t i = 0; i < set->capacity; i++) {
+    for (u32 i = 0; i < set->capacity; i++) {
         const ELM* elm = (const ELM*)genVec_get_ptr(set->buckets, i);
         if (elm->state == FILLED) {
             printf("\t   ");
