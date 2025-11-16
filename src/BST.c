@@ -2,9 +2,7 @@
 #include "Queue.h"
 #include "helper_functions.h"
 
-#include <stddef.h>
 #include <stdlib.h>
-
 
 
 #define PARENT(i)  (((i) - 1) / 2)
@@ -26,7 +24,7 @@ static void bst_balance_helper(BST* bst, genVec* inorder, u32 l, u32 r);
 
 
 
-BST* bst_create(u32 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del)
+BST* bst_create(u16 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del)
 {
     if (!data_size || !cmp || !to_str) {
         printf("bst create: invalid parameters\n");
@@ -148,7 +146,7 @@ void bst_find_max(const BST* bst, u8* max)
     genVec_get(bst->arr, index, max);
 }
 
-// TODO: this is wrong
+// WARN: this is wrong
 void bst_balance(BST* bst) 
 {
     if (!bst) {

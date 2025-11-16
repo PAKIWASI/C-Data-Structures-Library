@@ -17,7 +17,7 @@ void genVec_grow(genVec* vec);
 void genVec_shrink(genVec* vec);
 
 
-genVec* genVec_init(u32 n, u32 data_size, genVec_delete_fn del_fn) {
+genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn) {
     if (data_size == 0) { 
         printf("init: data_size can't be 0\n");
         return NULL; 
@@ -48,7 +48,7 @@ genVec* genVec_init(u32 n, u32 data_size, genVec_delete_fn del_fn) {
     return vec;
 }
 
-void genVec_init_stk(u32 n, u32 data_size, genVec_delete_fn del_fn, genVec* vec)
+void genVec_init_stk(u32 n, u16 data_size, genVec_delete_fn del_fn, genVec* vec)
 {
     if (data_size == 0) { 
         printf("init stk: data_size can't be 0\n");
@@ -72,7 +72,7 @@ void genVec_init_stk(u32 n, u32 data_size, genVec_delete_fn del_fn, genVec* vec)
     vec->del_fn = del_fn; // NULL if no del_fn
 }
 
-genVec* genVec_init_val(u32 n, const u8* val, u32 data_size, genVec_delete_fn del_fn) 
+genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_delete_fn del_fn) 
 {
     if (val == NULL) {
         printf("val can't be null\n");

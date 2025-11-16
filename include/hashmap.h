@@ -9,8 +9,8 @@ typedef struct {
     u32 capacity;     // total number of buckets
     u32 size;         // number of elements
 
-    u32 key_size;    // size of each key
-    u32 val_size;    // size of each val
+    u16 key_size;    // size of each key
+    u16 val_size;    // size of each val
 
     custom_hash_fn hash_fn;
     delete_fn key_del_fn;
@@ -19,7 +19,7 @@ typedef struct {
 } __attribute__((aligned(64))) hashmap;
 
 
-hashmap* hashmap_create(u32 key_size, u32 val_size, custom_hash_fn hash_fn,
+hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
                         delete_fn key_del, delete_fn val_del, compare_fn cmp);
 
 void hashmap_destroy(hashmap* map);

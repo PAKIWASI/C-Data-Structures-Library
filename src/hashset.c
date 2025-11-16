@@ -4,6 +4,7 @@
 #include "map_setup.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -149,7 +150,7 @@ static void hashset_maybe_resize(hashset* set) {
 */
 
 
-hashset* hashset_create(u32 elm_size, custom_hash_fn hash_fn, 
+hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn, 
                         delete_fn elm_del, compare_fn cmp_fn)
 {
     if (elm_size == 0) {
@@ -270,7 +271,7 @@ u8 hashset_remove(hashset* set, const u8* elm)
     }
 }
 
-u8 hashset_has(const hashset *set, const u8 *elm)
+u8 hashset_has(const hashset* set, const u8* elm)
 {
     if (!set || !elm) {
         return 0;

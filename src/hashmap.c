@@ -2,6 +2,7 @@
 #include "gen_vector.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "default_functions.h"
@@ -158,7 +159,7 @@ static void hashmap_maybe_resize(hashmap* map) {
 ====================PUBLIC FUNCTIONS====================
 */
 
-hashmap* hashmap_create(u32 key_size, u32 val_size, custom_hash_fn hash_fn,
+hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
                         delete_fn key_del, delete_fn val_del, compare_fn cmp)
 {
     if (key_size == 0 || val_size == 0) {

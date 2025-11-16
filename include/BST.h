@@ -9,15 +9,15 @@ typedef String* (*to_string_fn)(const u8* elm);
 
 
 typedef struct {
-    genVec* arr;
-    bitVec* flags; // for each i: 0 -> empty, 1-> set ,
-    u32 size;
+    genVec*           arr;
+    bitVec*           flags; // for each i: 0 -> empty, 1-> set ,
+    u32               size;
     genVec_compare_fn cmp_fn; // for < or > operations (= can be done by bitcmp)
-    to_string_fn to_str;
+    to_string_fn      to_str;
 } __attribute__((aligned(64))) BST; 
 
 
-BST* bst_create(u32 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del);
+BST* bst_create(u16 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del);
 void bst_destroy(BST* bst);
 
 void bst_insert(BST* bst, const u8* val);
