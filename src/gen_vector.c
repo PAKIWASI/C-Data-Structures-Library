@@ -481,6 +481,33 @@ void genVec_print(const genVec* vec, genVec_print_fn fn) {
     printf("Capacity: %u\n", vec->capacity);
 }
 
+void genVec_copy(genVec* dest, const genVec* src, genVec_copy_fn copy_fn)
+{
+    if (!dest || !src) {
+        printf("copy: parameters null\n");
+        return;
+    }
+
+    if (dest->data_size != src->data_size) {
+        printf("copy: dest and src vec's data_size's don't match\n");
+        return;
+    }
+
+    if (dest->capacity < src->size) {
+        genVec_reserve(dest, src->size);
+    }
+
+    if (copy_fn) {
+        for (u32 i = 0; i < src->size; i++) {
+            copy_fn(GET_PTR(dest, i), GET_PTR(src, i));
+        }
+        dest->size = src->size;
+    } else {
+        memcpy(dest->data, src->data, GET_SCALED(src, src->size));
+        dest->size = src->size;
+    }
+}
+
 void genVec_grow(genVec* vec) {
     if (!vec) {
         printf("grow: vec is null\n");

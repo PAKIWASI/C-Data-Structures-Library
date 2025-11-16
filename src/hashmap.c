@@ -12,7 +12,7 @@ typedef struct {
     u8* key;   // KV holds pointers to key, val data
     u8* val;
     STATE state;
-} __attribute__((aligned(32))) KV;
+} KV;
 
 
 /*

@@ -10,7 +10,7 @@
 typedef struct {
     struct Node* children[29];
     bool isword;
-} __attribute__((aligned(128))) Node;
+} Node;
 
 
 typedef struct {

@@ -15,7 +15,7 @@ typedef struct {
     custom_hash_fn hash_fn;
     delete_fn elm_del_fn;
     compare_fn cmp_fn;
-} __attribute__((aligned(64))) hashset;
+} hashset;
 
 
 hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn, 

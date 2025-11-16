@@ -4,6 +4,7 @@
 #include "str_setup.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 
 
@@ -152,8 +153,6 @@ static inline void vec_custom_del(u8* elm) {
 }// the vec->data block contains pointers to malloced data, and other metadata
 // that can only be freed by free(vec), can't individually free each!
 
-
-
 int test_genVec_3(void)
 {
     genVec vec;
@@ -180,18 +179,52 @@ int test_genVec_3(void)
     return 0;
 }
 
-u8* str_copy(const u8* elm) {
-    return (u8*)string_from_string((const String*)elm);
+
+void str_copy(u8* dest, const u8* src) 
+{
+    String* d = (String*)dest;
+    const String* s = (const String*)src;
+    
+    if (!s || !s->buffer) {
+        printf("str copy: src null or invalid\n");
+        return;
+    }
+    
+    // Initialize destination String's buffer (assuming dest is uninitialized)
+    d->buffer = genVec_init(0, sizeof(char), NULL);
+    if (!d->buffer) {
+        printf("str copy: failed to init buffer\n");
+        return;
+    }
+
+    // Clear destination buffer
+    genVec_clear(d->buffer);
+    
+    // Copy the buffer using genVec_copy (no copy_fn needed for chars)
+    genVec_copy(d->buffer, s->buffer, NULL);
 }
 
 int test_genVec_4(void)
 {
-    genVec vec;
-    genVec_init_stk(0, sizeof(String), string_custom_delete, &vec);
+    genVec* vec = genVec_init(10, sizeof(String), string_custom_delete);
+    
+    vec_push_cstr(vec, "hello");
+    vec_push_cstr(vec, "world");
+    vec_push_cstr(vec, "idk");
+    vec_push_cstr(vec, "0");
+    vec_push_cstr(vec, "");
 
+    genVec_print(vec, str_print);
 
-    genVec_destroy_stk(&vec);
+    genVec copy;
+    genVec_init_stk(10, sizeof(String), string_custom_delete, &copy);
 
+    genVec_copy(&copy, vec, str_copy);
+
+    genVec_print(&copy, str_print);
+
+    genVec_destroy_stk(&copy);
+    genVec_destroy(vec);
     return 0;
 }
 

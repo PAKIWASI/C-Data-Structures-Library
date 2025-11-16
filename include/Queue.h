@@ -8,7 +8,7 @@ typedef struct { // Circular Queue
     u32 head;     // dequeue (head + 1) % capacity
     u32 tail;     // enqueue   (head + size) % capacity
     u32 size;
-} __attribute__((aligned(32))) Queue;
+} Queue;
 
 
 Queue* queue_create(u32 n, u32 data_size, genVec_delete_fn del_fn);

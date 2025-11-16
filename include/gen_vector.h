@@ -12,7 +12,7 @@ typedef uint32_t u32;
 typedef void (*genVec_print_fn)(const u8* elm);
 typedef u8   (*genVec_compare_fn)(const u8* a, const u8* b);
 typedef void (*genVec_delete_fn)(u8* elm);
-typedef void (*genVec_copy_fn)(u8* src, u8* copy);
+typedef void (*genVec_copy_fn)(u8* copy, const u8* src);
 
 
 typedef struct {
@@ -21,7 +21,7 @@ typedef struct {
     u32              capacity;
     u16              data_size;
     genVec_delete_fn del_fn;
-} __attribute__((aligned(32))) genVec;
+} genVec;
 
 
 //memory management
@@ -73,6 +73,8 @@ u8* genVec_back(const genVec* vec);
 
 // print the elms to stdout, using a print function fn
 void genVec_print(const genVec* vec, genVec_print_fn fn);
+
+void genVec_copy(genVec* dest, const genVec* src, genVec_copy_fn copy_fn);
 
 // get no of elms in the vec
 static inline u32 genVec_size(const genVec* vec) {

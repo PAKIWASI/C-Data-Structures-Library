@@ -16,7 +16,7 @@ typedef struct {
     delete_fn key_del_fn;
     delete_fn val_del_fn;
     compare_fn compare_fn;
-} __attribute__((aligned(64))) hashmap;
+} hashmap;
 
 
 hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,

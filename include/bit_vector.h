@@ -7,7 +7,7 @@
 typedef struct {
     genVec* arr;
     u32 size;        // no of set bits
-} __attribute__((aligned(16))) bitVec;
+} bitVec;
 
 
 

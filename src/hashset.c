@@ -12,7 +12,7 @@
 typedef struct {
     u8* elm;
     STATE state;
-} __attribute__((aligned(16))) ELM;
+} ELM;
 
 
 /*
