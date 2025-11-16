@@ -37,7 +37,7 @@ u32 murmurhash3_string(const u8* key, u32 size)
     }
     
     // Tail - handle remaining bytes
-    const uint8_t* tail = (const uint8_t*)(data + (nblocks * 4));
+    const uint8_t* tail = (const uint8_t*)(data + ((size_t)nblocks * 4));
     uint32_t k1 = 0;
     
     switch (len & 3) {

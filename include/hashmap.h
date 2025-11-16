@@ -4,8 +4,6 @@
 #include "map_setup.h"
 
 
-
-
 typedef struct {
     genVec* buckets;    // of KV 
     u32 capacity;     // total number of buckets
@@ -18,7 +16,7 @@ typedef struct {
     delete_fn key_del_fn;
     delete_fn val_del_fn;
     compare_fn compare_fn;
-} __attribute__((aligned(128))) hashmap;
+} __attribute__((aligned(64))) hashmap;
 
 
 hashmap* hashmap_create(u32 key_size, u32 val_size, custom_hash_fn hash_fn,

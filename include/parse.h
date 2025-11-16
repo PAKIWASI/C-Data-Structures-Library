@@ -141,8 +141,8 @@ int parse(void)
     
 
     // Print summary
-    printf("\nTotal words processed: %zu\n", total_words);
-    printf("Unique words: %zu\n\n", map->size);
+    printf("\nTotal words processed: %u\n", total_words);
+    printf("Unique words: %u\n\n", map->size);
 
     String str;
     string_create_onstk(&str, "gay");

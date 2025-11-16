@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 
@@ -11,6 +10,7 @@
 #define HASHMAP_INIT_CAPACITY 17  //prime no (index = hash % capacity)
 
 typedef uint8_t u8;
+typedef uint32_t u32;
 
 /*
 ====================DEFAULT FUNCTIONS====================

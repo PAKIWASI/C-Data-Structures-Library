@@ -5,7 +5,6 @@
 
 
 
-
 typedef struct {
     genVec* buckets; // of ELM
     u32 capacity;
