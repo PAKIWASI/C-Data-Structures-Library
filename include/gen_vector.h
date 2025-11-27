@@ -16,11 +16,12 @@ typedef void (*genVec_copy_fn)(u8* copy, const u8* src);
 
 
 typedef struct {
-    u8*              data;
-    u32              size;
-    u32              capacity;
-    u16              data_size;
-    genVec_delete_fn del_fn;
+    u8*               data;
+    u32               size;
+    u32               capacity;
+    u16               data_size;
+    genVec_delete_fn  del_fn;
+    genVec_copy_fn    copy_fn;
 } genVec;
 
 

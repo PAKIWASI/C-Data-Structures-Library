@@ -20,9 +20,6 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address -fsanitize=leak")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
 
-# RelWithDebInfo configuration (optimized but with debug symbols)
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -O2 -DNDEBUG")
-set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "")
 
 file(GLOB SRC_FILES "src/*.c")
 file(GLOB HEADER_FILES "include/*.h")
@@ -37,10 +34,4 @@ target_include_directories(main PRIVATE include)
 # Release build - full optimizations, no debug info, no ASan
 #cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 #ninja -C build
-
-# RelWithDebInfo - optimized but debuggable (good middle ground)
-#cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
-#ninja -C build
-
-
 
