@@ -8,7 +8,8 @@
 
 
 // Private helper to ensure null termination
-static inline void ensure_null_terminated(String* str) {
+static inline void ensure_null_terminated(String* str) 
+{
     if (!str || !str->buffer) { return; }
     
     u32 size = str->buffer->size;
@@ -57,7 +58,8 @@ void string_create_onstk(String* str, const char* cstr)
     string_append_cstr(str, cstr); 
 }
 
-String* string_from_cstr(const char* cstr) {
+String* string_from_cstr(const char* cstr) 
+{
     if (!cstr) { 
         printf("str from cstr: cstr is null\n");
         return NULL; 
@@ -73,7 +75,8 @@ String* string_from_cstr(const char* cstr) {
     return str;
 }
 
-String* string_from_string(const String* other) {
+String* string_from_string(const String* other) 
+{
     if (!other) { 
         printf("string from string: other is null\n");
         return NULL; 
@@ -95,7 +98,8 @@ void string_reserve(String* str, u32 capacity)
     ensure_null_terminated(str);
 }
 
-void string_destroy(String* str) {
+void string_destroy(String* str) 
+{
     if (str) {
         genVec_destroy(str->buffer);
         free(str);
@@ -103,13 +107,15 @@ void string_destroy(String* str) {
 }
 
 // cant free the stack allocated string, but buffer is heap. So seperate delete 
-void string_destroy_fromstk(String* str) {
+void string_destroy_fromstk(String* str) 
+{
     if (str->buffer) {
         genVec_destroy(str->buffer);
     }
 }
 
-const char* string_to_cstr(const String* str) {
+const char* string_to_cstr(const String* str) 
+{
     if (!str || !str->buffer || str->buffer->size == 0) { 
         return ""; 
     }
@@ -144,7 +150,8 @@ void string_append_cstr(String* str, const char* cstr)
    ensure_null_terminated(str); 
 }
 
-void string_append_string(String* str, const String* other) {
+void string_append_string(String* str, const String* other) 
+{
     if (!str || !other) { 
         printf("str append str: parameters null\n");
         return; 
@@ -152,7 +159,8 @@ void string_append_string(String* str, const String* other) {
     string_append_cstr(str, string_to_cstr(other));
 }
 
-void string_append_char(String* str, char c) {
+void string_append_char(String* str, char c) 
+{
     if (!str) { 
         printf("str append char: str null\n");
         return; 
@@ -232,7 +240,8 @@ void string_insert_string(String* str, u32 i, String* other)
 }
 
 
-void string_remove_char(String* str, u32 i) {
+void string_remove_char(String* str, u32 i) 
+{
     if (!str || !str->buffer) { 
         printf("str remove char: str or buffer null\n");
         return; 
@@ -267,7 +276,8 @@ void string_remove_range(String* str, u32 l, u32 r)
     ensure_null_terminated(str);
 }
 
-void string_clear(String* str) {
+void string_clear(String* str) 
+{
     if (!str) { 
         printf("str clear: str null\n");
         return; 
@@ -277,7 +287,8 @@ void string_clear(String* str) {
     ensure_null_terminated(str);
 }
 
-char string_at(const String* str, u32 i) {
+char string_at(const String* str, u32 i) 
+{
     if (!str || i >= string_len(str)) { 
         printf("str at: str null or i out of bounds\n");
         return '\0'; 
@@ -288,7 +299,8 @@ char string_at(const String* str, u32 i) {
     return c;
 }
 
-void string_set_char(String* str, u32 i, char c) {
+void string_set_char(String* str, u32 i, char c) 
+{
     if (!str || i >= string_len(str)) { 
         printf("str set char: str null or i out of bounds\n");
         return; 
@@ -296,7 +308,8 @@ void string_set_char(String* str, u32 i, char c) {
     genVec_replace(str->buffer, i, (u8*)&c);
 }
 
-int string_compare(const String* str1, const String* str2) {
+int string_compare(const String* str1, const String* str2) 
+{
     if (!str1 || !str2) { 
         printf("str comp: parameters null\n");
         return -1; 
@@ -304,16 +317,19 @@ int string_compare(const String* str1, const String* str2) {
     return strcmp(string_to_cstr(str1), string_to_cstr(str2));
 }
 
-int string_equals(const String* str1, const String* str2) {
+int string_equals(const String* str1, const String* str2) 
+{
     return string_compare(str1, str2) == 0;
 }
 
-int string_equals_cstr(const String* str, const char* cstr) {
+int string_equals_cstr(const String* str, const char* cstr) 
+{
     if (!str || !cstr) { return 0; }
     return strcmp(string_to_cstr(str), cstr) == 0;
 }
 
-u32 string_find_char(const String* str, char c) {
+u32 string_find_char(const String* str, char c) 
+{
     if (!str) { return -1; }
     
     const char* cstr = string_to_cstr(str);
@@ -322,7 +338,8 @@ u32 string_find_char(const String* str, char c) {
     return found ? found - cstr : -1;
 }
 
-u32 string_find_cstr(const String* str, const char* substr) {
+u32 string_find_cstr(const String* str, const char* substr) 
+{
     if (!str || !substr) { return -1; }
     
     const char* cstr = string_to_cstr(str);
@@ -360,7 +377,8 @@ String* string_substr(const String* str, u32 start, u32 length)
     return result;
 }
 
-void string_print(const String* str) {
+void string_print(const String* str) 
+{
     if (str) {
         printf("\"%s\"", string_to_cstr(str));
     }

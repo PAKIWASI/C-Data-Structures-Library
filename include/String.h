@@ -4,9 +4,12 @@
 #include <stddef.h>
 
 
+
 typedef struct {
     genVec* buffer;  // Vector of chars - the actual string data
+    
 } String;
+
 
 
 // Construction/Destruction
@@ -18,17 +21,6 @@ void     string_reserve(String* str, u32 capacity);
 void     string_destroy(String* str);
 void     string_destroy_fromstk(String* str);
 
-// Basic properties
-static inline u32 string_len(const String* str) {
-    if (!str || !str->buffer) { return 0; }
-
-    u32 size = genVec_size(str->buffer);
-    // Subtract 1 for null terminator if present
-    return (size > 0) ? size - 1 : 0;
-}
-static inline u8 string_empty(const String* str) {
-    return string_len(str) == 0;
-}
 
 // get ptr to the cstr buffer
 const char* string_to_cstr(const String* str);
@@ -63,5 +55,19 @@ String* string_substr(const String* str, u32 start, u32 length);
 
 // I/O
 void string_print(const String* str);
+
+// Basic properties
+static inline u32 string_len(const String* str) 
+{
+    if (!str || !str->buffer) { return 0; }
+
+    u32 size = genVec_size(str->buffer);
+    // Subtract 1 for null terminator if present
+    return (size > 0) ? size - 1 : 0;
+}
+static inline u8 string_empty(const String* str) 
+{
+    return string_len(str) == 0;
+}
 
 

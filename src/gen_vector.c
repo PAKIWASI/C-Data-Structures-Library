@@ -5,19 +5,22 @@
 #include <string.h>
 
 
-#define GROWTH 1.5 
-#define SHRINK_AT 0.25
-#define SHRINK_BY 0.5
+#define GROWTH      1.5 
+#define SHRINK_AT   0.25
+#define SHRINK_BY   0.5
 
-#define GET_PTR(vec, i)    ((vec->data) + ((size_t)(i) * (vec->data_size)))
-#define GET_SCALED(vec, i) ((size_t)(i) * (vec->data_size))
+
+#define GET_PTR(vec, i)     ((vec->data) + ((size_t)(i) * (vec->data_size)))
+#define GET_SCALED(vec, i)  ((size_t)(i) * (vec->data_size))
+
 
 //private functions
 void genVec_grow(genVec* vec);
 void genVec_shrink(genVec* vec);
 
 
-genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn) {
+genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn) 
+{
     if (data_size == 0) { 
         printf("init: data_size can't be 0\n");
         return NULL; 
@@ -215,7 +218,8 @@ void genVec_push(genVec* vec, const u8* data)
     vec->size++;
 }
 
-void genVec_pop(genVec* vec, u8* popped) {
+void genVec_pop(genVec* vec, u8* popped) 
+{
     if (!vec) {
         printf("pop: vec is null\n");
         return;
@@ -239,7 +243,8 @@ void genVec_pop(genVec* vec, u8* popped) {
         { genVec_shrink(vec); }
 }
 
-void genVec_get(const genVec* vec, u32 i, u8* out) {
+void genVec_get(const genVec* vec, u32 i, u8* out) 
+{
     if (!vec) {
         printf("get: vec is null\n");
         return;
@@ -342,7 +347,8 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
     memcpy(src, data, GET_SCALED(vec, num_data));
 }
 
-void genVec_remove(genVec* vec, u32 i) {
+void genVec_remove(genVec* vec, u32 i) 
+{
     if (!vec) {
         printf("remove: vec is null\n");
         return;
@@ -407,7 +413,8 @@ void genVec_remove_range(genVec* vec, u32 l, u32 r)
 }
 
 
-void genVec_replace(genVec* vec, u32 i, const u8* data) {
+void genVec_replace(genVec* vec, u32 i, const u8* data) 
+{
     if (!vec) {
         printf("replace: vec is null\n");
         return;
@@ -430,7 +437,8 @@ void genVec_replace(genVec* vec, u32 i, const u8* data) {
     memcpy(to_replace, data, vec->data_size);
 }
 
-u8* genVec_front(const genVec* vec) {
+u8* genVec_front(const genVec* vec) 
+{
     if (!vec) {
         printf("front: vec is null\n");
         return NULL;
@@ -444,7 +452,8 @@ u8* genVec_front(const genVec* vec) {
 }
 
 
-u8* genVec_back(const genVec* vec) {
+u8* genVec_back(const genVec* vec) 
+{
     if (!vec) {
         printf("back: vec is null\n");
         return NULL;
@@ -459,7 +468,8 @@ u8* genVec_back(const genVec* vec) {
 }
 
 
-void genVec_print(const genVec* vec, genVec_print_fn fn) { 
+void genVec_print(const genVec* vec, genVec_print_fn fn) 
+{ 
     if (!vec) {
         printf("print: vec is null\n");
         return;
@@ -508,7 +518,8 @@ void genVec_copy(genVec* dest, const genVec* src, genVec_copy_fn copy_fn)
     }
 }
 
-void genVec_grow(genVec* vec) {
+void genVec_grow(genVec* vec) 
+{
     if (!vec) {
         printf("grow: vec is null\n");
         return;
@@ -531,7 +542,8 @@ void genVec_grow(genVec* vec) {
 }
 
 
-void genVec_shrink(genVec* vec) {
+void genVec_shrink(genVec* vec) 
+{
     if (!vec) {
         printf("shrink: vec is null\n ");
         return;
