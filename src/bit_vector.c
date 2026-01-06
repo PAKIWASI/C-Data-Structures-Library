@@ -1,21 +1,21 @@
 #include "bit_vector.h"
+#include "common.h"
 #include "gen_vector.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 
 bitVec* bitVec_create(void)
 {
     bitVec* bvec = malloc(sizeof(bitVec));
     if (!bvec) {
-        printf("bvec create: malloc failed\n");
+        ERROR("malloc failed");
         return NULL;
     }
 
     bvec->arr = genVec_init(0, sizeof(u8), NULL);
     if (!bvec->arr) {
-        printf("bvec init: genVec_init failed\n");
+        ERROR("genVec_init failed");
         free(bvec);
         return NULL;
     }
@@ -40,7 +40,7 @@ void bitVec_destroy(bitVec* bvec)
 void bitVec_set(bitVec* bvec, u32 i)
 {
     if (!bvec || !bvec->arr) { 
-        printf("bvec set: bvec/arr is null\n");
+        ERROR("bvec/arr is null");
         return;
     }
     
@@ -70,12 +70,12 @@ void bitVec_set(bitVec* bvec, u32 i)
 void bitVec_clear(bitVec* bvec, u32 i)
 {
     if (!bvec || !bvec->arr) { 
-        printf("bvec clear: bvec/arr is null\n");
+        ERROR("bvec/arr is null");
         return;
     }
         
     if (i >= bvec->size) { 
-        printf("bvec clear: index out of bounds\n");
+        ERROR("index out of bounds");
         return;
     }
 
@@ -93,7 +93,7 @@ void bitVec_clear(bitVec* bvec, u32 i)
 u8 bitVec_test(bitVec* bvec, u32 i)
 {
     if (!bvec || !bvec->arr) { 
-        printf("bvec test: bvec/arr is null\n");
+        ERROR("bvec/arr is null");
         return -1; // returns 255 (overflow)
     }
     
@@ -114,12 +114,12 @@ u8 bitVec_test(bitVec* bvec, u32 i)
 void bitVec_toggle(bitVec* bvec, u32 i)
 {
     if (!bvec || !bvec->arr) { 
-        printf("bvec toggle: bvec/arr is null\n");
+        ERROR("bvec/arr is null");
         return;
     }
     
     if (i >= bvec->size) { // you can only toggle a previously set bit
-        printf("bvec toggle: arr out of bounds\n");
+        ERROR("arr out of bounds");
         return;
     }
 
@@ -136,7 +136,7 @@ void bitVec_toggle(bitVec* bvec, u32 i)
 void bitVec_push(bitVec* bvec)
 {
     if (!bvec || !bvec->arr) {
-        printf("bvec push: bvec/arr is null\n");
+        ERROR("bvec/arr is null");
         return;
     }
 
@@ -147,7 +147,7 @@ void bitVec_push(bitVec* bvec)
 void bitVec_pop(bitVec* bvec)
 {
     if (!bvec || !bvec->arr) {
-        printf("bvec pop: bvec/arr is null\n");
+        ERROR("bvec/arr is null");
         return;
     }
 
@@ -160,12 +160,12 @@ void bitVec_pop(bitVec* bvec)
 void bitVec_print(bitVec *bvec, u32 byteI)
 {
     if (!bvec || !bvec->arr) { 
-        printf("bvec print: bvec/arr is null\n");
+        ERROR("bvec/arr is null");
         return;
     }
 
     if (byteI >= bvec->arr->size) {
-        printf("bitvec print: arr out of bounds\n");
+        ERROR("arr out of bounds");
         return;
     }
     

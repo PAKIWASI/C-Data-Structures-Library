@@ -1,8 +1,8 @@
 #include "Queue.h"
+#include "common.h"
 #include "gen_vector.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 
 #define QUEUE_GROWTH 1.5
@@ -15,11 +15,11 @@ static void queue_grow(Queue* q);
 Queue* queue_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
 {
     if (!n || !data_size) {
-        printf("queue create : invalid parameters\n");
+        ERROR("invalid parameters");
     }
     Queue* q = malloc(sizeof(Queue));
     if (!q) {
-        printf("queue create: malloc failed\n");
+        ERROR("malloc failed");
         return NULL;
     }
 
@@ -27,7 +27,7 @@ Queue* queue_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
     q->arr = genVec_init_val(n, dummy, data_size, del_fn);
     free(dummy);
     if (!q->arr) {
-        printf("queue create: vec init failed\n");
+        ERROR("vec init failed");
         free(q);
         return NULL;
     }
@@ -53,7 +53,7 @@ void queue_destroy(Queue* q)
 void queue_clear(Queue* q)
 {
     if (!q) {
-        printf("queue clear: queue null\n");
+        ERROR("queue null");
         return;
     }
 
@@ -66,7 +66,7 @@ void queue_clear(Queue* q)
 void enqueue(Queue* q, const u8* x)
 {
     if (!q || !x) {
-        printf("enqueue: parameters null\n");
+        ERROR("parameters null");
         return;
     }
 
@@ -82,12 +82,12 @@ void enqueue(Queue* q, const u8* x)
 void dequeue(Queue* q, u8* out)
 {
     if (!q) {
-        printf("dequeue: queue null\n");
+        ERROR("queue null");
         return;
     }
     
     if (q->size == 0) { 
-        printf("dequeue: queue is empty\n");
+        ERROR("queue is empty");
         return;
     }
 
@@ -107,11 +107,11 @@ void dequeue(Queue* q, u8* out)
 void queue_peek(Queue* q, u8* peek)
 {
     if (!q || !peek) {
-        printf("peek: parameters null\n");
+        ERROR("parameters null");
         return;
     }
     if (q->size == 0) {
-        printf("peek: queue empty\n");
+        ERROR("queue empty");
         return;
     }
 
@@ -121,7 +121,7 @@ void queue_peek(Queue* q, u8* peek)
 void queue_print(Queue* q, genVec_print_fn print_fn)
 {
     if (!q || !print_fn) {
-        printf("queue print: parameters null\n");
+        ERROR("parameters null");
         return;
     } 
 

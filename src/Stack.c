@@ -1,26 +1,26 @@
 #include "Stack.h"
+#include "common.h"
 #include "gen_vector.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 
 
 Stack* stack_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
 {
     if (!data_size) {
-        printf("stk create: invalid parameters\n");
+        ERROR("invalid parameters");
         return NULL;
     }
     Stack* stk = malloc(sizeof(Stack));
     if (!stk) {
-        printf("stk create: malloc failed\n");
+        ERROR("malloc failed");
         return NULL;
     }
 
     stk->arr = genVec_init(n, data_size, del_fn);
     if (!stk->arr) {
-        printf("stk create: vec init failed\n");
+        ERROR("vec init failed");
         free(stk);
         return NULL;
     }
@@ -47,7 +47,7 @@ void stack_clear(Stack* stk)
 void stack_push(Stack* stk, const u8* x)
 {
     if (!stk || !x) {
-        printf("stk push: parameters null\n");
+        ERROR("parameters null");
         return;
     } 
 
@@ -58,7 +58,7 @@ void stack_push(Stack* stk, const u8* x)
 void stack_pop(Stack* stk, u8* popped)
 {
     if (!stk) {
-        printf("stk null\n");
+        ERROR("stk null");
     }
 
     genVec_pop(stk->arr, popped);
@@ -68,7 +68,7 @@ void stack_pop(Stack* stk, u8* popped)
 void stack_peek(Stack* stk, u8* peek)
 {
     if (!stk || !peek) {
-        printf("parameters null\n");
+        ERROR("parameters null");
         return;
     } 
 
@@ -79,7 +79,7 @@ void stack_peek(Stack* stk, u8* peek)
 void stack_print(Stack* stk, genVec_print_fn print_fn)
 {
     if (!stk || !print_fn) {
-        printf("stk print: parameters null\n");
+        ERROR("parameters null");
         return;
     }
 
