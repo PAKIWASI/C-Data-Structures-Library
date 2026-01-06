@@ -1,9 +1,9 @@
 #include "String.h"
+#include "common.h"
 #include "gen_vector.h"
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 
 
@@ -24,14 +24,14 @@ String* string_create(void)
 {
     String* str = malloc(sizeof(String));
     if (!str) { 
-        printf("str create: malloc failed\n");
+        ERROR("malloc failed");
         return NULL; 
     }
     
     // we get a pointer to buffer
     str->buffer = genVec_init(0, sizeof(char), NULL);
     if (!str->buffer) {
-        printf("str create: genVec_init failed\n");
+        ERROR("genVec_init failed");
         free(str);
         return NULL;
     }
@@ -45,13 +45,13 @@ void string_create_onstk(String* str, const char* cstr)
 {
     // the difference is that we dont use string_create(), so str is not heap initilised
     if (!str || ! cstr) {
-        printf("str create stk: str/cstr null\n");
+        ERROR("str/cstr null");
         return;
     }
 
     str->buffer = genVec_init(0, sizeof(char), NULL);
     if (!str->buffer) {
-        printf("str create stk: buffer genvec failed\n");
+        ERROR("buffer genvec failed");
         return;
     }
     
@@ -61,13 +61,13 @@ void string_create_onstk(String* str, const char* cstr)
 String* string_from_cstr(const char* cstr) 
 {
     if (!cstr) { 
-        printf("str from cstr: cstr is null\n");
+        ERROR("cstr is null");
         return NULL; 
     }
     
     String* str = string_create();
     if (!str) { 
-        printf("str from cstr: string_create failed\n");
+        ERROR("string_create failed");
         return NULL; 
     }
     
@@ -78,7 +78,7 @@ String* string_from_cstr(const char* cstr)
 String* string_from_string(const String* other) 
 {
     if (!other) { 
-        printf("string from string: other is null\n");
+        ERROR("other is null");
         return NULL; 
     }
     return string_from_cstr(string_to_cstr(other));
@@ -126,7 +126,7 @@ const char* string_to_cstr(const String* str)
 void string_append_cstr(String* str, const char* cstr) 
 {
     if (!str || !cstr || !str->buffer) { 
-        printf("str append cstr: invalid parameters\n");
+        ERROR("invalid parameters");
         return; 
     }
     
@@ -153,7 +153,7 @@ void string_append_cstr(String* str, const char* cstr)
 void string_append_string(String* str, const String* other) 
 {
     if (!str || !other) { 
-        printf("str append str: parameters null\n");
+        ERROR("parameters are null");
         return; 
     }
     string_append_cstr(str, string_to_cstr(other));
@@ -162,7 +162,7 @@ void string_append_string(String* str, const String* other)
 void string_append_char(String* str, char c) 
 {
     if (!str) { 
-        printf("str append char: str null\n");
+        ERROR("str is null");
         return; 
     }
     
@@ -178,7 +178,7 @@ void string_append_char(String* str, char c)
 char string_pop_char(String* str)
 {
     if (!str) {
-        printf("str pop char: str null\n");
+        ERROR("str is null");
         return '\0';
     }
     
@@ -196,7 +196,7 @@ char string_pop_char(String* str)
 void string_insert_char(String* str, u32 i, char c)
 {
     if (!str) {
-        printf("str insert char: str is null\n");
+        ERROR("str is null");
         return;
     } 
     if (i >= string_len(str)) {
@@ -212,7 +212,7 @@ void string_insert_char(String* str, u32 i, char c)
 void string_insert_cstr(String* str, u32 i, const char* cstr)
 {
     if (!str) {
-        printf("str insert cstr: str is null\n");
+        ERROR("str is null");
         return;
     }
     if (i >= string_len(str)) {
@@ -227,7 +227,7 @@ void string_insert_cstr(String* str, u32 i, const char* cstr)
 void string_insert_string(String* str, u32 i, String* other)
 {
     if (!str || !other) {
-        printf("str insert str: parameters null\n");
+        ERROR("parameters null");
         return;
     }
     if (i >= string_len(str)) {
@@ -243,11 +243,11 @@ void string_insert_string(String* str, u32 i, String* other)
 void string_remove_char(String* str, u32 i) 
 {
     if (!str || !str->buffer) { 
-        printf("str remove char: str or buffer null\n");
+        ERROR("str or buffer null");
         return; 
     }
     if (i >= string_len(str)) {
-        printf("str remove char: index out of bounds\n");
+        ERROR("index out of bounds");
         return;
     }
     
@@ -261,12 +261,12 @@ void string_remove_char(String* str, u32 i)
 void string_remove_range(String* str, u32 l, u32 r)
 {
     if (!str) {
-        printf("str remove range: str is null\n");
+        ERROR("str is null");
         return;
     }
 
     if (l >= string_len(str)) {
-        printf("str remove range: index out of bounds\n");
+        ERROR("index out of bounds");
         return;
     }
 
@@ -279,7 +279,7 @@ void string_remove_range(String* str, u32 l, u32 r)
 void string_clear(String* str) 
 {
     if (!str) { 
-        printf("str clear: str null\n");
+        ERROR("str null");
         return; 
     }
     
@@ -290,7 +290,7 @@ void string_clear(String* str)
 char string_at(const String* str, u32 i) 
 {
     if (!str || i >= string_len(str)) { 
-        printf("str at: str null or i out of bounds\n");
+        ERROR("str null or i out of bounds");
         return '\0'; 
     }
     
@@ -302,7 +302,7 @@ char string_at(const String* str, u32 i)
 void string_set_char(String* str, u32 i, char c) 
 {
     if (!str || i >= string_len(str)) { 
-        printf("str set char: str null or i out of bounds\n");
+        ERROR("str null or i out of bounds");
         return; 
     }
     genVec_replace(str->buffer, i, (u8*)&c);
@@ -311,7 +311,7 @@ void string_set_char(String* str, u32 i, char c)
 int string_compare(const String* str1, const String* str2) 
 {
     if (!str1 || !str2) { 
-        printf("str comp: parameters null\n");
+        ERROR("parameters null");
         return -1; 
     }
     return strcmp(string_to_cstr(str1), string_to_cstr(str2));
