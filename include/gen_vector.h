@@ -15,6 +15,7 @@ typedef void (*genVec_delete_fn)(u8* elm);
 typedef void (*genVec_copy_fn)(u8* copy, const u8* src);
 
 
+
 typedef struct {
     u8*               data;
     u32               size;

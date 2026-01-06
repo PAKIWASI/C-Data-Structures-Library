@@ -1,4 +1,5 @@
 #include "gen_vector.h"
+#include "common.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,13 +23,13 @@ void genVec_shrink(genVec* vec);
 genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn) 
 {
     if (data_size == 0) { 
-        printf("init: data_size can't be 0\n");
+        ERROR("data_size can't be 0");
         return NULL; 
     }
 
     genVec* vec = malloc(sizeof(genVec));
     if (!vec) { 
-        printf("init: vec init failed\n");
+        ERROR("vec init failed");
         return NULL; 
     }
 
@@ -38,7 +39,7 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn)
     // Only check for allocation failure if we actually tried to allocate
     if (n > 0 && !vec->data) {
         free(vec);
-        printf("vec init: data init failed\n");
+        ERROR("data init failed");
         return NULL;
     }
     
@@ -54,18 +55,18 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn)
 void genVec_init_stk(u32 n, u16 data_size, genVec_delete_fn del_fn, genVec* vec)
 {
     if (data_size == 0) { 
-        printf("init stk: data_size can't be 0\n");
+        ERROR("data_size can't be 0");
         return; 
     }
     if (!vec) { 
-        printf("init stk: vec null\n");
+        ERROR("vec null");
         return; 
     }
 
     // Only allocate memory if n > 0, otherwise data can be NULL
     vec->data = (n > 0) ? malloc((size_t)data_size * n) : NULL;
     if (n > 0 && !vec->data) {
-        printf("init stk: data init failed\n");
+        ERROR("data init failed");
         return;
     }
     
@@ -78,7 +79,7 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_delete_fn del_fn, genVec* vec)
 genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_delete_fn del_fn) 
 {
     if (val == NULL) {
-        printf("val can't be null\n");
+        ERROR("val can't be null");
         return NULL;
     }
 
@@ -86,7 +87,7 @@ genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_delete_fn de
     if (!vec) { return NULL; }
 
     if (n == 0) {
-        printf("cant init with val if n = 0\n");
+        ERROR("cant init with val if n = 0");
         return vec;
     }
 
@@ -137,7 +138,7 @@ void genVec_destroy_stk(genVec* vec)
 
 void genVec_clear(genVec* vec) {
     if (!vec) {
-        printf("clear: vector is null\n");
+        ERROR("vector is null");
         return;
     }
 
@@ -159,7 +160,7 @@ void genVec_clear(genVec* vec) {
 void genVec_reserve(genVec* vec, u32 new_capacity) 
 {
     if (!vec) {
-        printf("reserve: vec is null\n");
+        ERROR("vec is null");
         return;
     }
     
@@ -170,7 +171,7 @@ void genVec_reserve(genVec* vec, u32 new_capacity)
     
     u8* new_data = realloc(vec->data, GET_SCALED(vec, new_capacity));
     if (!new_data) {
-        printf("reserve: realloc failed\n");
+        ERROR("realloc failed");
         return;
     }
     
@@ -181,7 +182,7 @@ void genVec_reserve(genVec* vec, u32 new_capacity)
 void genVec_reserve_val(genVec* vec, u32 new_capacrity, const u8* val)
 {
     if (!vec) {
-        printf("reserve val: vec is null\n");
+        ERROR("vec is null");
         return;
     }
 
@@ -198,7 +199,7 @@ void genVec_reserve_val(genVec* vec, u32 new_capacrity, const u8* val)
 void genVec_push(genVec* vec, const u8* data) 
 {
     if (!vec) {
-        printf("push: vec is null\n");
+        ERROR("vec is null");
         return;
     }
 
@@ -208,7 +209,7 @@ void genVec_push(genVec* vec, const u8* data)
 
     // If data is still NULL after grow, we have a problem
     if (!vec->data) {
-        printf("push: data allocation failed\n");
+        ERROR("data allocation failed");
         return;
     }
 
@@ -221,11 +222,11 @@ void genVec_push(genVec* vec, const u8* data)
 void genVec_pop(genVec* vec, u8* popped) 
 {
     if (!vec) {
-        printf("pop: vec is null\n");
+        ERROR("vec is null");
         return;
     }
     if (vec->size == 0) {
-        printf("pop: vec is empty\n");
+        ERROR("vec is empty");
         return;
     }
     
@@ -247,6 +248,7 @@ void genVec_get(const genVec* vec, u32 i, u8* out)
 {
     if (!vec) {
         printf("get: vec is null\n");
+        ERROR("vec is null");
         return;
     }
     if (i >= vec->size) {
