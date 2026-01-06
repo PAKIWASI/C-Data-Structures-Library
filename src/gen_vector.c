@@ -247,16 +247,15 @@ void genVec_pop(genVec* vec, u8* popped)
 void genVec_get(const genVec* vec, u32 i, u8* out) 
 {
     if (!vec) {
-        printf("get: vec is null\n");
         ERROR("vec is null");
         return;
     }
     if (i >= vec->size) {
-        printf("get: index of of bounds\n");
+        ERROR("index of of bounds");
         return;
     }
     if (!out) {
-        printf("get: need a valid out variable to get the element\n");
+        ERROR("need a valid out variable to get the element");
         return;
     }
 
@@ -266,11 +265,11 @@ void genVec_get(const genVec* vec, u32 i, u8* out)
 const u8* genVec_get_ptr(const genVec* vec, u32 i)
 {
     if (!vec) {
-        printf("get ptr: vec is null\n");
+        ERROR("vec is null");
         return NULL;
     }
     if (i >= vec->size) {
-        printf("get ptr: index out of bounds\n");
+        ERROR("index out of bounds");
         return NULL;
     }
 
@@ -280,11 +279,11 @@ const u8* genVec_get_ptr(const genVec* vec, u32 i)
 void genVec_insert(genVec* vec, u32 i, const u8* data)
 {
     if (!vec || !data) {
-        printf("insert: vec or data or vec-data is null\n");
+        ERROR("vec or data or vec-data is null");
         return;
     }
     if (i > vec->size) {
-        printf("insert: index out of bounds\n");
+        ERROR("index out of bounds");
         return;
     }
     if (i == vec->size) {
@@ -314,13 +313,12 @@ void genVec_insert(genVec* vec, u32 i, const u8* data)
 
 void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
 {
-    if (!vec || !data || num_data == 0) 
-    {
-        printf("insertM: vec or data or vec-data is null\n");
+    if (!vec || !data || num_data == 0) {
+        ERROR("vec or data or vec-data is null");
         return;
     }
     if (i > vec->size) {
-        printf("insertM: index out of bounds\n");
+        ERROR("index out of bounds");
         return;
     }
 
@@ -331,7 +329,7 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
 
     genVec_reserve(vec, vec->size); // reserve with new size
     if (!vec->data) {
-        printf("insertM: genvec reserve failed\n");
+        ERROR("genvec reserve failed");
         vec->size -= num_data;
         return;
     }
@@ -352,11 +350,11 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
 void genVec_remove(genVec* vec, u32 i) 
 {
     if (!vec) {
-        printf("remove: vec is null\n");
+        ERROR("vec is null");
         return;
     }
     if (i >= vec->size) {
-        printf("remove: index out of bounds\n");
+        ERROR("index out of bounds");
         return;
     }
 
@@ -384,12 +382,12 @@ void genVec_remove(genVec* vec, u32 i)
 void genVec_remove_range(genVec* vec, u32 l, u32 r)
 {
     if (!vec) {
-        printf("remove range: vec is null\n");
+        ERROR("vec is null");
         return;
     }
 
     if (l >= vec->size) {
-        printf("remove range: index out of range\n");
+        ERROR("index out of range");
         return;
     }
 
@@ -418,15 +416,15 @@ void genVec_remove_range(genVec* vec, u32 l, u32 r)
 void genVec_replace(genVec* vec, u32 i, const u8* data) 
 {
     if (!vec) {
-        printf("replace: vec is null\n");
+        ERROR("vec is null");
         return;
     } 
     if (i >= vec->size) {
-        printf("replace: index of of bounds\n");
+        ERROR("index of of bounds");
         return;
     }
     if (!data) {
-        printf("replace: need a valid data variable\n");
+        ERROR("need a valid data variable");
         return;
     }   
 
@@ -442,11 +440,11 @@ void genVec_replace(genVec* vec, u32 i, const u8* data)
 u8* genVec_front(const genVec* vec) 
 {
     if (!vec) {
-        printf("front: vec is null\n");
+        ERROR("vec is null");
         return NULL;
     }
     if (vec->size == 0) {
-        printf("front: vec is empty\n");
+        ERROR("vec is empty");
         return NULL;
     }
     
@@ -457,11 +455,11 @@ u8* genVec_front(const genVec* vec)
 u8* genVec_back(const genVec* vec) 
 {
     if (!vec) {
-        printf("back: vec is null\n");
+        ERROR("vec is null");
         return NULL;
     }
     if (vec->size == 0) {
-        printf("back: vec is empty\n");
+        ERROR("vec is empty");
         return NULL;
     }
     
@@ -473,11 +471,11 @@ u8* genVec_back(const genVec* vec)
 void genVec_print(const genVec* vec, genVec_print_fn fn) 
 { 
     if (!vec) {
-        printf("print: vec is null\n");
+        ERROR("vec is null");
         return;
     }
     if (!fn) {
-        printf("print: print func is null\n");
+        ERROR("print func is null");
         return; 
     }
 
@@ -496,12 +494,12 @@ void genVec_print(const genVec* vec, genVec_print_fn fn)
 void genVec_copy(genVec* dest, const genVec* src, genVec_copy_fn copy_fn)
 {
     if (!dest || !src) {
-        printf("copy: parameters null\n");
+        ERROR("parameters null");
         return;
     }
 
     if (dest->data_size != src->data_size) {
-        printf("copy: dest and src vec's data_size's don't match\n");
+        ERROR("dest and src vec's data_size's don't match");
         return;
     }
 
@@ -523,7 +521,7 @@ void genVec_copy(genVec* dest, const genVec* src, genVec_copy_fn copy_fn)
 void genVec_grow(genVec* vec) 
 {
     if (!vec) {
-        printf("grow: vec is null\n");
+        ERROR("vec is null");
         return;
     }
 
@@ -535,7 +533,7 @@ void genVec_grow(genVec* vec)
 
     u8* new_data = realloc(vec->data, GET_SCALED(vec, new_cap));
     if (!new_data) { 
-        printf("grow: realloc failed\n");
+        ERROR("realloc failed");
         return;
     }
 
@@ -547,7 +545,7 @@ void genVec_grow(genVec* vec)
 void genVec_shrink(genVec* vec) 
 {
     if (!vec) {
-        printf("shrink: vec is null\n ");
+        ERROR("vec is null");
         return;
     }
 
@@ -556,7 +554,7 @@ void genVec_shrink(genVec* vec)
 
     u8* new_data = realloc(vec->data, GET_SCALED(vec, reduced_cap));
     if (!new_data) {
-        printf("shrink: realloc failed\n");
+        ERROR("realloc failed");
         return;
     }
 
