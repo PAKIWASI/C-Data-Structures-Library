@@ -1,9 +1,6 @@
 #include "hashmap.h"
-#include "gen_vector.h"
+#include "common.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "default_functions.h"
 
@@ -85,7 +82,7 @@ static u32 find_slot(const hashmap* map, const u8* key,
 static void hashmap_resize(hashmap* map, u32 new_capacity) 
 {
     if (!map) {
-        printf("map resize: map is null\n");
+        ERROR("map is null");
         return;
     }
     if (new_capacity <= HASHMAP_INIT_CAPACITY) {
@@ -102,7 +99,7 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
 
     map->buckets = genVec_init_val(new_capacity, (u8*)&kv, map->buckets->data_size, NULL);
     if (!map->buckets) {
-        printf("map resize: new vec init failed\n");
+        ERROR("new vec init failed");
         map->buckets = old_vec;
         return;
     }
@@ -163,13 +160,13 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
                         delete_fn key_del, delete_fn val_del, compare_fn cmp)
 {
     if (key_size == 0 || val_size == 0) {
-        printf("map create: size cant be 0\n");
+        ERROR("size cant be 0");
         return NULL;
     }
 
     hashmap* map = malloc(sizeof(hashmap));
     if (!map) {
-        printf("map create: map malloc failed\n");
+        ERROR("map malloc failed");
         return NULL;
     }
 
@@ -182,7 +179,7 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
     // we dont give custom delete fn for kv as kv is stored directly and not a pointer
     map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&kv, sizeof(KV), NULL);
     if (!map->buckets) {
-        printf("map create: buckets init failed\n");
+        ERROR("buckets init failed");
         free(map);
         return NULL;
     }
@@ -218,7 +215,7 @@ void hashmap_destroy(hashmap* map)
 u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
 {
     if (!map || !key || !val) {
-        printf("map put: map/key/val is null\n");
+        ERROR("map/key/val is null");
         return -1;
     }
     
@@ -251,7 +248,7 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
         };
         
         if (!kv.key || !kv.val) {
-            printf("map put: key/val malloc failed\n");
+            ERROR("key/val malloc failed");
             if (kv.key) { free(kv.key); }
             if (kv.val) { free(kv.val); }
             return -1;
@@ -270,7 +267,7 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
 u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 {
     if (!map || !key || !val) {
-        printf("map get: map/key is null\n");
+        ERROR("map/key is null");
         return -1;
     }
     
@@ -292,7 +289,7 @@ u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 u8* hashmap_get_ptr(hashmap* map, const u8* key)
 {
     if (!map || !key) {
-        printf("map get ptr: parameters null\n");
+        ERROR("parameters null");
         return NULL;
     }
     
@@ -313,7 +310,7 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
 u8 hashmap_del(hashmap* map, const u8* key)
 {
     if (!map || !key) {
-        printf("map del: map/key is null\n");
+        ERROR("map/key is null");
         return -1;
     }
     if (map->size == 0) { return -1; }
@@ -338,7 +335,7 @@ u8 hashmap_del(hashmap* map, const u8* key)
         return 1;
     }
     else {
-        printf("map del: not found\n");
+        ERROR("not found");
         return 0;
     }
 }
@@ -359,7 +356,7 @@ u8 hashmap_has(const hashmap* map, const u8* key)
 void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print)
 {
     if (!map || !key_print || !val_print) {
-        printf("map print: map is null\n");
+        ERROR("map is null");
         return;
     }
 

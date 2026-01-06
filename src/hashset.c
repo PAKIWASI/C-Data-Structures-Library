@@ -1,11 +1,9 @@
 #include "hashset.h"
+#include "common.h"
 #include "default_functions.h"
 #include "gen_vector.h"
 #include "map_setup.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 
 
@@ -76,7 +74,7 @@ static u32 find_slot(const hashset* set, const u8* key,
 static void hashset_resize(hashset* set, u32 new_capacity) 
 {
     if (!set) {
-        printf("map resize: map is null\n");
+        ERROR("map is null");
         return;
     }
     if (new_capacity <= HASHMAP_INIT_CAPACITY) {
@@ -92,7 +90,7 @@ static void hashset_resize(hashset* set, u32 new_capacity)
 
     set->buckets = genVec_init_val(new_capacity, (u8*)&elm, set->buckets->data_size, NULL);
     if (!set->buckets) {
-        printf("map resize: new vec init failed\n");
+        ERROR("new vec init failed");
         set->buckets = old_vec;
         return;
     }
@@ -154,13 +152,13 @@ hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn,
                         delete_fn elm_del, compare_fn cmp_fn)
 {
     if (elm_size == 0) {
-        printf("set create: size can't be 0\n");
+        ERROR("size can't be 0");
         return NULL;
     }
 
     hashset* set = malloc(sizeof(hashset));
     if (!set) {
-        printf("set create: set malloc failed\n");
+        ERROR("set malloc failed");
         return NULL;
     }
 
@@ -171,7 +169,7 @@ hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn,
 
     set->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&elm, sizeof(ELM), NULL);
     if (!set->buckets) {
-        printf("set create: buckets init failed\n");
+        ERROR("buckets init failed");
         free(set);
         return NULL;
     } 
@@ -206,7 +204,7 @@ void hashset_destroy(hashset *set)
 u8 hashset_insert(hashset* set, const u8* elm)
 {
     if (!set || !elm) {
-        printf("set insert: parameters null\n");
+        ERROR("parameters null");
         return -1;
     } 
     
@@ -226,7 +224,7 @@ u8 hashset_insert(hashset* set, const u8* elm)
         };
 
         if (!e.elm) {
-            printf("set insert : elm malloc failed\n");
+            ERROR("elm malloc failed");
             return -1;
         }
 
@@ -243,7 +241,7 @@ u8 hashset_remove(hashset* set, const u8* elm)
 {
     if (set->size == 0) { return -1; }
     if (!set || !elm) {
-        printf("map del: map/key is null\n");
+        ERROR("map/key is null");
         return -1;
     }
 
@@ -266,7 +264,7 @@ u8 hashset_remove(hashset* set, const u8* elm)
         return 0;
     }
     else {
-        printf("set del: not found\n");
+        ERROR("not found");
         return -1;
     }
 }
@@ -287,7 +285,7 @@ u8 hashset_has(const hashset* set, const u8* elm)
 void hashset_print(const hashset* set, genVec_print_fn elm_print)
 {
     if (!set || !elm_print) {
-        printf("set print: parameters null\n");
+        ERROR("parameters null");
         return;
     }
 
