@@ -8,6 +8,8 @@
 typedef String* (*to_string_fn)(const u8* elm);
 
 
+// TODO: turn this into AVL
+
 typedef struct {
     genVec*           arr;
     bitVec*           flags; // for each i: 0 -> empty, 1-> set ,

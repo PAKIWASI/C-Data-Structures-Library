@@ -1,8 +1,8 @@
 #include "BST.h"
 #include "Queue.h"
+#include "common.h"
 #include "helper_functions.h"
 
-#include <stdlib.h>
 
 
 #define PARENT(i)  (((i) - 1) / 2)
@@ -27,19 +27,19 @@ static void bst_balance_helper(BST* bst, genVec* inorder, u32 l, u32 r);
 BST* bst_create(u16 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del)
 {
     if (!data_size || !cmp || !to_str) {
-        printf("bst create: invalid parameters\n");
+        ERROR("invalid parameters");
         return NULL;
     }
 
     BST* bst = malloc(sizeof(BST));
     if (!bst) {
-        printf("bst create: malloc failed\n");
+        ERROR("malloc failed");
         return NULL;
     }
 
     bst->arr = genVec_init(0, data_size, del);
     if (!bst->arr) {
-        printf("bst create: genvec init failed\n");
+        ERROR("genvec init failed");
         free(bst);
         return NULL;
     }
@@ -47,7 +47,7 @@ BST* bst_create(u16 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVe
 
     bst->flags = bitVec_create(); 
     if (!bst->flags) {
-        printf("bst create: genvec init failed\n");
+        ERROR("genvec init failed");
         free(bst);
         free(bst->arr);
         return NULL;
@@ -74,7 +74,7 @@ void bst_destroy(BST* bst)
 void bst_insert(BST* bst, const u8* val)
 {
     if (!bst || !val) {
-        printf("bst insert: parameters null\n");
+        ERROR("parameters null");
         return;
     }
 
@@ -95,7 +95,7 @@ void bst_insert(BST* bst, const u8* val)
 void bst_remove(BST* bst, const u8* val)
 {
     if (!bst || !val) {
-        printf("bst val: parameters null\n");
+        ERROR("parameters null");
         return;
     }
 
@@ -113,7 +113,7 @@ void bst_remove(BST* bst, const u8* val)
 u8 bst_search(const BST* bst, const u8* val)
 {
     if (!bst || !val) {
-        printf("bst search: parameters null\n");
+        ERROR("parameters null");
         return -1; // 255 error
     }
 
@@ -125,7 +125,7 @@ u8 bst_search(const BST* bst, const u8* val)
 void bst_find_min(const BST* bst, u8* min)
 {
     if (!bst || !min) {
-        printf("bst find min: parameters null\n");
+        ERROR("parameters null");
         return;
     }
 
@@ -137,7 +137,7 @@ void bst_find_min(const BST* bst, u8* min)
 void bst_find_max(const BST* bst, u8* max)
 {
     if (!bst || !max) {
-        printf("bst find min: parameters null\n");
+        ERROR("parameters null");
         return;
     }
 
@@ -150,7 +150,7 @@ void bst_find_max(const BST* bst, u8* max)
 void bst_balance(BST* bst) 
 {
     if (!bst) {
-        printf("bst balance: bst is null\n");
+        ERROR("bst is null");
         return;
     }
 
@@ -179,7 +179,7 @@ void bst_balance(BST* bst)
 String* bst_preorder(const BST* bst)
 {
     if (!bst) {
-        printf("bst preorder: parameters null\n");
+        ERROR("parameters null");
         return NULL;
     }
 
@@ -193,7 +193,7 @@ String* bst_preorder(const BST* bst)
 String* bst_inorder(const BST* bst)
 {
     if (!bst) {
-        printf("bst inorder: parameters null\n");
+        ERROR("parameters null");
         return NULL;
     }
 
@@ -207,7 +207,7 @@ String* bst_inorder(const BST* bst)
 String* bst_postorder(const BST* bst)
 {
     if (!bst) {
-        printf("bst postorder: parameters null\n");
+        ERROR("parameters null");
         return NULL;
     }
 
@@ -221,7 +221,7 @@ String* bst_postorder(const BST* bst)
 String* bst_bfs(const BST* bst)
 {
     if (!bst) {
-        printf("bst bfs: bst is null\n");
+        ERROR("bst is null");
         return NULL;
     }
 
