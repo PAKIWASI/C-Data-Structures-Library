@@ -23,7 +23,6 @@ typedef struct {
     u16               data_size;
     genVec_delete_fn  del_fn;
     genVec_copy_fn    copy_fn;
-
 } genVec;
 
 

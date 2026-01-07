@@ -1,5 +1,5 @@
 #include "Stack.h"
-#include "common.h"
+#include "error.h"
 #include "gen_vector.h"
 
 #include <stdio.h>

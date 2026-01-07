@@ -1,5 +1,5 @@
 #include "hashset.h"
-#include "common.h"
+#include "error.h"
 #include "default_functions.h"
 #include "gen_vector.h"
 #include "map_setup.h"

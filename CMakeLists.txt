@@ -31,6 +31,7 @@ target_include_directories(main PRIVATE include)
 #cmake -B build -G Ninja
 #ninja -C build
 
+
 # Release build - full optimizations, no debug info, no ASan
 #cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 #ninja -C build

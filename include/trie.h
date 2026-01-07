@@ -12,7 +12,6 @@ typedef struct {
     bool isword;
 } Node;
 
-
 typedef struct {
     Node* root;
 } Trie;
