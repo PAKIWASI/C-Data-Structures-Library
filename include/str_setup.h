@@ -2,7 +2,6 @@
 
 #include "String.h"
 #include "gen_vector.h"
-#include <stdint.h>
 
 
 // ========== Hash function for String* ==========
@@ -14,18 +13,18 @@ u32 murmurhash3_string(const u8* key, u32 size)
     const char* data = string_to_cstr(str);
     u32 len = string_len(str);
     
-    const uint32_t c1 = 0xcc9e2d51;
-    const uint32_t c2 = 0x1b873593;
-    const uint32_t seed = 0x9747b28c;
+    const u32 c1 = 0xcc9e2d51;
+    const u32 c2 = 0x1b873593;
+    const u32 seed = 0x9747b28c;
     
-    uint32_t h1 = seed;
+    u32 h1 = seed;
     
     // Body - process 4-byte chunks
-    const uint32_t* blocks = (const uint32_t*)data;
+    const u32* blocks = (const u32*)data;
     const u32 nblocks = len / 4;
     
     for (u32 i = 0; i < nblocks; i++) {
-        uint32_t k1 = blocks[i];
+        u32 k1 = blocks[i];
         
         k1 *= c1;
         k1 = (k1 << 15) | (k1 >> 17);
@@ -37,8 +36,8 @@ u32 murmurhash3_string(const u8* key, u32 size)
     }
     
     // Tail - handle remaining bytes
-    const uint8_t* tail = (const uint8_t*)(data + ((size_t)nblocks * 4));
-    uint32_t k1 = 0;
+    const u8* tail = (const uint8_t*)(data + ((size_t)nblocks * 4));
+    u32 k1 = 0;
     
     switch (len & 3) {
         case 3: k1 ^= tail[2] << 16;

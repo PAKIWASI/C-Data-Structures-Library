@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stdint.h>
+#include "common.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -9,15 +10,13 @@
 #define LOAD_FACTOR_SHRINK 0.20  
 #define HASHMAP_INIT_CAPACITY 17  //prime no (index = hash % capacity)
 
-typedef uint8_t u8;
-typedef uint32_t u32;
 
 /*
 ====================DEFAULT FUNCTIONS====================
 */
 // 32-bit FNV-1a (default hash)
 static u32 fnv1a_hash(const u8* bytes, u32 size) {
-    uint32_t hash = 2166136261U;  // FNV offset basis
+    u32 hash = 2166136261U;  // FNV offset basis
 
     for (u32 i = 0; i < size; i++) {
         hash ^= bytes[i];   // XOR with current byte

@@ -1,7 +1,6 @@
 #include "gen_vector.h"
-#include "error.h"
+#include "common.h"
 
-#include <stdio.h>
 #include <string.h>
 
 

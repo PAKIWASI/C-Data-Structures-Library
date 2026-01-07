@@ -1,12 +1,7 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
+#include "common.h"
 
-
-typedef uint8_t     u8;
-typedef uint16_t    u16;
-typedef uint32_t    u32;
 
 //user provided
 typedef void (*genVec_print_fn)(const u8* elm);

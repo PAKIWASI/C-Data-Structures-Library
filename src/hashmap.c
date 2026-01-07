@@ -1,7 +1,5 @@
 #include "hashmap.h"
-#include "error.h"
-
-
+#include "common.h"
 #include "default_functions.h"
 
 

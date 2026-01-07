@@ -1,5 +1,5 @@
 #include "bit_vector.h"
-#include "error.h"
+#include "common.h"
 #include "gen_vector.h"
 
 #include <stdio.h>

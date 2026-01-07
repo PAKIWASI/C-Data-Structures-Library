@@ -1,6 +1,6 @@
 #include "BST.h"
 #include "Queue.h"
-#include "error.h"
+#include "common.h"
 #include "helper_functions.h"
 
 
