@@ -1,12 +1,12 @@
-#include "./tests/test_genVec.h"
-
-
+#include "arena.h"
 
 
 
 
 int main(void)
 {
+    Arena* arena = arena_create(nKB(1));
+
+    return 0;
 }
 
-// what is wrong with this?

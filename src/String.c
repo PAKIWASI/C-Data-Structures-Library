@@ -22,17 +22,13 @@ static inline void ensure_null_terminated(String* str)
 String* string_create(void) 
 {
     String* str = malloc(sizeof(String));
-    if (!str) { 
-        ERROR("malloc failed");
-        return NULL; 
-    }
+    CHECK_FATAL(!str, "malloc failed");
     
     // we get a pointer to buffer
     str->buffer = genVec_init(0, sizeof(char), NULL);
     if (!str->buffer) {
-        ERROR("genVec_init failed");
         free(str);
-        return NULL;
+        FATAL("genVec_init failed");
     }
     
     ensure_null_terminated(str);
@@ -43,32 +39,21 @@ String* string_create(void)
 void string_create_onstk(String* str, const char* cstr) 
 {
     // the difference is that we dont use string_create(), so str is not heap initilised
-    if (!str || ! cstr) {
-        ERROR("str/cstr null");
-        return;
-    }
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(!cstr, "cstr is null");
 
     str->buffer = genVec_init(0, sizeof(char), NULL);
-    if (!str->buffer) {
-        ERROR("buffer genvec failed");
-        return;
-    }
+    CHECK_FATAL(!str->buffer, "buffer init failed");
     
     string_append_cstr(str, cstr); 
 }
 
 String* string_from_cstr(const char* cstr) 
 {
-    if (!cstr) { 
-        ERROR("cstr is null");
-        return NULL; 
-    }
+    CHECK_FATAL(!cstr, "cstr is null");
     
     String* str = string_create();
-    if (!str) { 
-        ERROR("string_create failed");
-        return NULL; 
-    }
+    CHECK_FATAL(!str, "string_create failed");
     
     string_append_cstr(str, cstr);
     return str;
@@ -76,16 +61,15 @@ String* string_from_cstr(const char* cstr)
 
 String* string_from_string(const String* other) 
 {
-    if (!other) { 
-        ERROR("other is null");
-        return NULL; 
-    }
+    CHECK_FATAL(!other, "other is null");
+
     return string_from_cstr(string_to_cstr(other));
 }
 
 void string_reserve(String* str, u32 capacity) 
 {
-    if (!str || !str->buffer) { return; }
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(!str->buffer, "buffer is null");
     
     // Add 1 for null terminator
     capacity++;
@@ -99,24 +83,27 @@ void string_reserve(String* str, u32 capacity)
 
 void string_destroy(String* str) 
 {
-    if (str) {
-        genVec_destroy(str->buffer);
-        free(str);
-    }
+    string_destroy_fromstk(str);
+
+    free(str);
 }
 
 // cant free the stack allocated string, but buffer is heap. So seperate delete 
 void string_destroy_fromstk(String* str) 
 {
-    if (str->buffer) {
-        genVec_destroy(str->buffer);
-    }
+    CHECK_FATAL(!str, "str is null");
+
+    genVec_destroy(str->buffer);
 }
 
+// TODO: should return a copy ?
 const char* string_to_cstr(const String* str) 
 {
-    if (!str || !str->buffer || str->buffer->size == 0) { 
-        return ""; 
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(!str->buffer, "str buffer is null");
+
+    if (str->buffer->size == 0) {
+        return "";
     }
     
     return (const char*)str->buffer->data;
@@ -124,10 +111,9 @@ const char* string_to_cstr(const String* str)
 
 void string_append_cstr(String* str, const char* cstr) 
 {
-    if (!str || !cstr || !str->buffer) { 
-        ERROR("invalid parameters");
-        return; 
-    }
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(!str->buffer, "str buffer is null");
+    CHECK_FATAL(!cstr, "cstr is null");
     
     u32 cstr_len = strlen(cstr);
     if (cstr_len == 0) { return; }// Nothing to append
@@ -151,19 +137,15 @@ void string_append_cstr(String* str, const char* cstr)
 
 void string_append_string(String* str, const String* other) 
 {
-    if (!str || !other) { 
-        ERROR("parameters are null");
-        return; 
-    }
+    CHECK_FATAL(!str, "str is empty");
+    CHECK_FATAL(!other, "other is empty");
+
     string_append_cstr(str, string_to_cstr(other));
 }
 
 void string_append_char(String* str, char c) 
 {
-    if (!str) { 
-        ERROR("str is null");
-        return; 
-    }
+    CHECK_FATAL(!str, "str is null");
     
     // Remove null terminator temporarily
     if (str->buffer->size > 0) {
@@ -176,11 +158,8 @@ void string_append_char(String* str, char c)
 
 char string_pop_char(String* str)
 {
-    if (!str) {
-        ERROR("str is null");
-        return '\0';
-    }
-    
+    CHECK_FATAL(!str, "str is null");
+
     // Remove null terminator temporarily
     if (str->buffer->size > 0) {
         genVec_pop(str->buffer, NULL);
@@ -189,15 +168,14 @@ char string_pop_char(String* str)
     char c;
     genVec_pop(str->buffer, (u8*)&c);
     ensure_null_terminated(str);
+
     return c;
 }
 
 void string_insert_char(String* str, u32 i, char c)
 {
-    if (!str) {
-        ERROR("str is null");
-        return;
-    } 
+    CHECK_FATAL(!str, "str is null");
+
     if (i >= string_len(str)) {
         string_append_char(str, c); // this will ensure null term at end
         return;
@@ -210,10 +188,8 @@ void string_insert_char(String* str, u32 i, char c)
 
 void string_insert_cstr(String* str, u32 i, const char* cstr)
 {
-    if (!str) {
-        ERROR("str is null");
-        return;
-    }
+    CHECK_FATAL(!str, "str is null");
+
     if (i >= string_len(str)) {
         string_append_cstr(str, cstr); // null term garenteed
         return;
@@ -225,10 +201,9 @@ void string_insert_cstr(String* str, u32 i, const char* cstr)
 
 void string_insert_string(String* str, u32 i, String* other)
 {
-    if (!str || !other) {
-        ERROR("parameters null");
-        return;
-    }
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(!other, "other is null");
+
     if (i >= string_len(str)) {
         string_append_string(str, other);
         return;
@@ -241,14 +216,10 @@ void string_insert_string(String* str, u32 i, String* other)
 
 void string_remove_char(String* str, u32 i) 
 {
-    if (!str || !str->buffer) { 
-        ERROR("str or buffer null");
-        return; 
-    }
-    if (i >= string_len(str)) {
-        ERROR("index out of bounds");
-        return;
-    }
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(!str->buffer, "str buffer is null");
+
+    CHECK_FATAL(i >= string_len(str), "index out of bounds");
     
     // Remove the character at index i
     genVec_remove(str->buffer, i);
@@ -259,28 +230,19 @@ void string_remove_char(String* str, u32 i)
 
 void string_remove_range(String* str, u32 l, u32 r)
 {
-    if (!str) {
-        ERROR("str is null");
-        return;
-    }
+    CHECK_FATAL(!str, "str is null");
 
-    if (l >= string_len(str)) {
-        ERROR("index out of bounds");
-        return;
-    }
+    CHECK_FATAL(l >= string_len(str), "index out of bounds");
 
     genVec_remove_range(str->buffer, l, r);
 
-// upper func sets r to len - 1 so null terminator will be removed
+    // upper func sets r to len - 1 so null terminator will be removed
     ensure_null_terminated(str);
 }
 
 void string_clear(String* str) 
 {
-    if (!str) { 
-        ERROR("str null");
-        return; 
-    }
+    CHECK_FATAL(!str, "str is null");
     
     genVec_clear(str->buffer);
     ensure_null_terminated(str);
@@ -288,31 +250,30 @@ void string_clear(String* str)
 
 char string_at(const String* str, u32 i) 
 {
-    if (!str || i >= string_len(str)) { 
-        ERROR("str null or i out of bounds");
-        return '\0'; 
-    }
-    
+    CHECK_FATAL(!str, "str is null");
+
+    CHECK_FATAL(i >= string_len(str), "index out of bounds");
+
     char c;
     genVec_get(str->buffer, i, (u8*)&c);
+
     return c;
 }
 
 void string_set_char(String* str, u32 i, char c) 
 {
-    if (!str || i >= string_len(str)) { 
-        ERROR("str null or i out of bounds");
-        return; 
-    }
+    CHECK_FATAL(!str, "str is null");
+
+    CHECK_FATAL(i >= string_len(str), "index out of bounds");
+
     genVec_replace(str->buffer, i, (u8*)&c);
 }
 
 int string_compare(const String* str1, const String* str2) 
 {
-    if (!str1 || !str2) { 
-        ERROR("parameters null");
-        return -1; 
-    }
+    CHECK_FATAL(!str1, "str1 is null");
+    CHECK_FATAL(!str2, "str2 is null");
+
     return strcmp(string_to_cstr(str1), string_to_cstr(str2));
 }
 
@@ -323,23 +284,27 @@ int string_equals(const String* str1, const String* str2)
 
 int string_equals_cstr(const String* str, const char* cstr) 
 {
-    if (!str || !cstr) { return 0; }
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(!cstr, "cstr is null");
+
     return strcmp(string_to_cstr(str), cstr) == 0;
 }
 
 u32 string_find_char(const String* str, char c) 
 {
-    if (!str) { return -1; }
+    CHECK_FATAL(!str, "str is null");
     
     const char* cstr = string_to_cstr(str);
     const char* found = strchr(cstr, c);
+
     // found points to index we want and cstr points to 0th pos
     return found ? found - cstr : -1;
 }
 
 u32 string_find_cstr(const String* str, const char* substr) 
 {
-    if (!str || !substr) { return -1; }
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(!substr, "substr is null");
     
     const char* cstr = string_to_cstr(str);
     const char* found = strstr(cstr, substr);
@@ -349,10 +314,10 @@ u32 string_find_cstr(const String* str, const char* substr)
 
 String* string_substr(const String* str, u32 start, u32 length) 
 {
-    if (!str || start >= string_len(str)) { return NULL; }
+    CHECK_FATAL(!str, "str is null");
+    CHECK_FATAL(start >= string_len(str), "index out of bounds");
     
     String* result = string_create();
-    if (!result) { return NULL; }
     
     u32 end = start + length;
     u32 str_len = string_len(str);
@@ -373,14 +338,15 @@ String* string_substr(const String* str, u32 start, u32 length)
         
         ensure_null_terminated(result);
     }
+
     return result;
 }
 
 void string_print(const String* str) 
 {
-    if (str) {
-        printf("\"%s\"", string_to_cstr(str));
-    }
+    CHECK_FATAL(!str, "str is null");
+
+    printf("\"%s\"", string_to_cstr(str));
 }
 
 

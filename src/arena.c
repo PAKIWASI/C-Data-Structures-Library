@@ -1,4 +1,5 @@
 #include "arena.h"
+#include "common.h"
 
 
 // align PTR to SIZE. (int -> 4 bytes, double -> 8 bytes)
@@ -17,7 +18,6 @@ Arena* arena_create(u32 capacity)
     }
 
     Arena* arena = (Arena*)malloc(capacity);
-    if (!arena) {
-        ERROR("arena malloc failed");
-    }
+    ASSERT_FATAL(!arena, "arena malloc failed");
+
 }
