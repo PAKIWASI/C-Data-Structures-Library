@@ -2,28 +2,17 @@
 #include "common.h"
 #include "gen_vector.h"
 
-#include <stdio.h>
-
 
 
 Stack* stack_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
 {
-    if (!data_size) {
-        ERROR("invalid parameters");
-        return NULL;
-    }
+    CHECK_FATAL(data_size == 0, "data_size can't be 0");
+
     Stack* stk = malloc(sizeof(Stack));
-    if (!stk) {
-        ERROR("malloc failed");
-        return NULL;
-    }
+    CHECK_FATAL(!stk, "stk malloc failed");
 
     stk->arr = genVec_init(n, data_size, del_fn);
-    if (!stk->arr) {
-        ERROR("vec init failed");
-        free(stk);
-        return NULL;
-    }
+    //CHECK_FATAL(!stk->arr, "stk arr init failed");
 
     return stk;
 }
@@ -31,7 +20,7 @@ Stack* stack_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
 
 void stack_destroy(Stack* stk)
 {
-    if (!stk) { return; }
+    CHECK_FATAL(!stk, "stk is null");
 
     genVec_destroy(stk->arr);
 
@@ -46,10 +35,7 @@ void stack_clear(Stack* stk)
 
 void stack_push(Stack* stk, const u8* x)
 {
-    if (!stk || !x) {
-        ERROR("parameters null");
-        return;
-    } 
+    CHECK_FATAL(!stk, "stk is null");
 
     genVec_push(stk->arr, x);
 }
@@ -57,9 +43,7 @@ void stack_push(Stack* stk, const u8* x)
 
 void stack_pop(Stack* stk, u8* popped)
 {
-    if (!stk) {
-        ERROR("stk null");
-    }
+    CHECK_FATAL(!stk, "stk is null");
 
     genVec_pop(stk->arr, popped);
 }
@@ -67,10 +51,8 @@ void stack_pop(Stack* stk, u8* popped)
 
 void stack_peek(Stack* stk, u8* peek)
 {
-    if (!stk || !peek) {
-        ERROR("parameters null");
-        return;
-    } 
+    CHECK_FATAL(!stk, "stk is null");
+    CHECK_FATAL(!peek, "peek is null");
 
     genVec_get(stk->arr, genVec_size(stk->arr) - 1, peek);
 }
@@ -78,10 +60,8 @@ void stack_peek(Stack* stk, u8* peek)
 
 void stack_print(Stack* stk, genVec_print_fn print_fn)
 {
-    if (!stk || !print_fn) {
-        ERROR("parameters null");
-        return;
-    }
+    CHECK_FATAL(!stk, "stk is null");
+    CHECK_FATAL(!print_fn, "print_fn is null");
 
     genVec_print(stk->arr,print_fn);
 }
