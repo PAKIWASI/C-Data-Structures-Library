@@ -83,8 +83,6 @@ static u32 find_slot(const hashmap* map, const u8* key,
 
 static void hashmap_resize(hashmap* map, u32 new_capacity) 
 {
-    CHECK_FATAL(!map, "map is null");
-
     if (new_capacity <= HASHMAP_INIT_CAPACITY) {
         new_capacity = HASHMAP_INIT_CAPACITY;
     }
@@ -139,6 +137,7 @@ static void hashmap_maybe_resize(hashmap* map)
         u32 new_cap = next_prime(map->capacity);
         hashmap_resize(map, new_cap);
     }
+
     // Shrink when too empty
     else if (load_factor < LOAD_FACTOR_SHRINK && map->capacity > HASHMAP_INIT_CAPACITY) 
     {
@@ -171,7 +170,7 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
 
     // we dont give custom delete fn for kv as kv is stored directly and not a pointer
     // resources owned by kv are cleaned by us, not genVec destroy
-    // TODO: maybe pass kv_destroy() as a del func to make cleaning automatic ?
+    // this is done because when resizing, we destroy the old container but dont free the mem kv point to
     map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&kv, sizeof(KV), NULL);
     //CHECK_FATAL(!map->buckets, "bucket init failed");
     

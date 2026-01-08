@@ -19,11 +19,16 @@ typedef struct {
 
 static void elm_destroy(hashset* set, const ELM* elm)
 {
-    if (!elm) { return; }
+    CHECK_FATAL(!elm, "ELM is null");
+    CHECK_FATAL(!elm->elm, "elm ptr is null");
 
-    if (elm->elm) {
+    if (set->elm_del_fn) {
         set->elm_del_fn(elm->elm);
+    } else {
+        free(elm->elm);
     }
+
+    // dont free elm
 }
 
 /*
@@ -73,10 +78,6 @@ static u32 find_slot(const hashset* set, const u8* key,
 
 static void hashset_resize(hashset* set, u32 new_capacity) 
 {
-    if (!set) {
-        ERROR("map is null");
-        return;
-    }
     if (new_capacity <= HASHMAP_INIT_CAPACITY) {
         new_capacity = HASHMAP_INIT_CAPACITY;
     }
@@ -89,11 +90,7 @@ static void hashset_resize(hashset* set, u32 new_capacity)
     };
 
     set->buckets = genVec_init_val(new_capacity, (u8*)&elm, set->buckets->data_size, NULL);
-    if (!set->buckets) {
-        ERROR("new vec init failed");
-        set->buckets = old_vec;
-        return;
-    }
+    //CHECK_FATAL(!set->buckets, "set bucket init failed");
 
     set->capacity = new_capacity;
     set->size = 0;          // recounted when we rehash
@@ -123,8 +120,9 @@ static void hashset_resize(hashset* set, u32 new_capacity)
 }
 
 
-static void hashset_maybe_resize(hashset* set) {
-    if (!set) { return; }
+static void hashset_maybe_resize(hashset* set) 
+{
+    CHECK_FATAL(!set, "set is null");
     
     double load_factor = (double)set->size / (double)set->capacity;
     
@@ -132,6 +130,7 @@ static void hashset_maybe_resize(hashset* set) {
         u32 new_cap = next_prime(set->capacity);
         hashset_resize(set, new_cap);
     }
+
     // Shrink when too empty
     else if (load_factor < LOAD_FACTOR_SHRINK && set->capacity > HASHMAP_INIT_CAPACITY) 
     {
@@ -151,16 +150,10 @@ static void hashset_maybe_resize(hashset* set) {
 hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn, 
                         delete_fn elm_del, compare_fn cmp_fn)
 {
-    if (elm_size == 0) {
-        ERROR("size can't be 0");
-        return NULL;
-    }
+    CHECK_FATAL(elm_size == 0, "elm size can't be 0");
 
     hashset* set = malloc(sizeof(hashset));
-    if (!set) {
-        ERROR("set malloc failed");
-        return NULL;
-    }
+    CHECK_FATAL(!set, "set malloc failed");
 
     ELM elm = {
         .elm = NULL,
@@ -168,11 +161,7 @@ hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn,
     };
 
     set->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&elm, sizeof(ELM), NULL);
-    if (!set->buckets) {
-        ERROR("buckets init failed");
-        free(set);
-        return NULL;
-    } 
+    //CHECK_FATAL(!set->buckets, "set bucket init failed");
 
     set->capacity = HASHMAP_INIT_CAPACITY;
     set->size = 0;
@@ -188,25 +177,23 @@ hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn,
 
 void hashset_destroy(hashset *set)
 {
-    if (!set) { return; }
+    CHECK_FATAL(!set, "set is null");
+    CHECK_FATAL(!set->buckets, "set bucket is null");
 
-    if (set->buckets) {
-        for (u32 i = 0; i < set->capacity; i++) {
-            const ELM* elm = (const ELM*)genVec_get_ptr(set->buckets, i);
-            elm_destroy(set, elm);
-        }
-        genVec_destroy(set->buckets);
+    for (u32 i = 0; i < set->capacity; i++) {
+        elm_destroy(set, (const ELM*)genVec_get_ptr(set->buckets, i));
     }
+
+    genVec_destroy(set->buckets);
+
     free(set);
 }
 
 
 u8 hashset_insert(hashset* set, const u8* elm)
 {
-    if (!set || !elm) {
-        ERROR("parameters null");
-        return -1;
-    } 
+    CHECK_FATAL(!set, "set is null");
+    CHECK_FATAL(!elm, "elm is null");
     
     hashset_maybe_resize(set);
 
@@ -215,7 +202,7 @@ u8 hashset_insert(hashset* set, const u8* elm)
     u32 slot = find_slot(set, elm, &found, &tombstone);
 
     if (found) {
-        return 0;
+        return 1; // found
     }
     else {
         ELM e = {
@@ -223,27 +210,23 @@ u8 hashset_insert(hashset* set, const u8* elm)
             .state = FILLED
         };
 
-        if (!e.elm) {
-            ERROR("elm malloc failed");
-            return -1;
-        }
+        CHECK_FATAL(!elm, "elm malloc failed");
 
         memcpy(e.elm, elm, set->elm_size);
         
         genVec_replace(set->buckets, slot, (u8*)&e);
         set->size++;
 
-        return 0;
+        return 0; // not found
     }
 }
 
 u8 hashset_remove(hashset* set, const u8* elm)
 {
-    if (set->size == 0) { return -1; }
-    if (!set || !elm) {
-        ERROR("map/key is null");
-        return -1;
-    }
+    CHECK_FATAL(!set, "set is null");
+    CHECK_FATAL(!elm, "elm is null");
+    //if (set->size == 0) { return -1; }
+    CHECK_WARN_RET(set->size == 0, -1, "can't remove from empty set");
 
     u8 found = 0;
     int tombstone = -1;
@@ -261,19 +244,17 @@ u8 hashset_remove(hashset* set, const u8* elm)
         set->size--;
 
         hashset_maybe_resize(set);
-        return 0;
+        return 1;// found
     }
     else {
-        ERROR("not found");
-        return -1;
+        return 0; // not found
     }
 }
 
 u8 hashset_has(const hashset* set, const u8* elm)
 {
-    if (!set || !elm) {
-        return 0;
-    }
+    CHECK_FATAL(!set, "set is null");
+    CHECK_FATAL(!elm, "set is null");
 
     u8 found = 0;
     int tombstone = -1;
@@ -284,13 +265,13 @@ u8 hashset_has(const hashset* set, const u8* elm)
 
 void hashset_print(const hashset* set, genVec_print_fn elm_print)
 {
-    if (!set || !elm_print) {
-        ERROR("parameters null");
-        return;
-    }
+    CHECK_FATAL(!set, "set is null");
+    CHECK_FATAL(!elm_print, "elm_print is null");
 
     printf("\t=========\n");
+
     for (u32 i = 0; i < set->capacity; i++) {
+
         const ELM* elm = (const ELM*)genVec_get_ptr(set->buckets, i);
         if (elm->state == FILLED) {
             printf("\t   ");
@@ -298,6 +279,7 @@ void hashset_print(const hashset* set, genVec_print_fn elm_print)
             printf("\n");
         }
     }
+
     printf("\t=========\n");
 }
 

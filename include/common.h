@@ -49,14 +49,14 @@
     }                                           \
 } while (0)
 
-#define CHECK_WARN(cond, fmt, ...) do {    \
+#define CHECK_WARN(cond, fmt, ...) do {     \
     if ((cond)) {                           \
         WARN("Couldn't Ensure: (%s): " fmt, \
              #cond, ##__VA_ARGS__);         \
     }                                       \
 } while (0)
 
-#define CHECK_WARN_VOID(cond, fmt, ...) do {   \
+#define CHECK_WARN_VOID(cond, fmt, ...) do {    \
     if ((cond)) {                               \
         WARN("Couldn't Ensure: (%s): " fmt,     \
               #cond, ##__VA_ARGS__);            \
@@ -64,15 +64,15 @@
     }                                           \
 } while (0)
 
-#define CHECK_WARN_NULL(cond, fmt, ...) do {   \
-    if ((cond)) {                               \
-        WARN("Couldn't Ensure: (%s): " fmt,     \
-              #cond, ##__VA_ARGS__);            \
-        return NULL;                            \
-    }                                           \
-}
+#define CHECK_WARN_RET(cond, ret, fmt, ...) do {    \
+    if ((cond)) {                                   \
+        WARN("Couldn't Ensure: (%s): " fmt,         \
+              #cond, ##__VA_ARGS__);                \
+        return ret;                                 \
+    }                                               \
+} while (0)
 
-#define CHECK_FATAL(cond, fmt, ...) do {       \
+#define CHECK_FATAL(cond, fmt, ...) do {        \
     if (cond) {                                 \
         FATAL("Couldn't Ensure: (%s): " fmt,    \
              #cond, ##__VA_ARGS__);             \
