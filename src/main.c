@@ -1,11 +1,10 @@
-#include "arena.h"
-
+#include "./tests/test_genVec.h"
 
 
 
 int main(void)
 {
-    Arena* arena = arena_create(nKB(1));
+   test_genVec_2();
 
     return 0;
 }

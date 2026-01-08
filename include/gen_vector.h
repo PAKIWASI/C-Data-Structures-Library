@@ -51,6 +51,8 @@ void genVec_pop(genVec* vec, u8* popped);
 void genVec_get(const genVec* vec, u32 i, u8* out);
         // get a pointer to the data at index i
 const u8* genVec_get_ptr(const genVec* vec, u32 i);
+        // get a pointer to data arr
+const u8* genVec_get_data(const genVec* vec);
         // repace elm at index i with data, deleting old elm
 void genVec_replace(genVec* vec, u32 i, const u8* data);
         // insert at data index i, shifting elm to the right
@@ -75,16 +77,19 @@ void genVec_copy(genVec* dest, const genVec* src, genVec_copy_fn copy_fn);
 
         // get no of elms in the vec
 static inline u32 genVec_size(const genVec* vec) {
-    return vec ? vec->size : 0;
+    CHECK_FATAL(!vec, "vec is null");
+    return vec->size;
 }
 
         // get total capacity of the vec
 static inline u32 genVec_capacity(const genVec* vec) {
-    return vec ? vec->capacity : 0;
+    CHECK_FATAL(!vec, "vec is null");
+    return vec->capacity;
 }
 
         // boolean to query empty
 static inline u8 genVec_empty(const genVec* vec) {
-    return vec ? vec->size == 0 : 0;
+    CHECK_FATAL(!vec, "vec is null");
+    return vec->size == 0;
 }
 

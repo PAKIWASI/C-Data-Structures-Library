@@ -9,9 +9,6 @@
 #include <stdio.h>
 
 
-#define cast(x)     ((u8*)(&x))
-#define castptr(x)  ((u8*)(x))
-
 
 // ================== VECTOR MACROS =====================
 
@@ -145,7 +142,7 @@ static inline String* vec_pop_str(genVec* vec) {
 
 // getting pointer to the raw data
 static inline const char* vec_get_cstr(genVec* vec, u32 i) {
-    return string_to_cstr((String*)genVec_get_ptr(vec, i)); 
+    return string_to_cstr_ptr((String*)genVec_get_ptr(vec, i)); 
 }
 
 static inline String* vec_get_str(genVec* vec, u32 i) {
@@ -446,7 +443,7 @@ static inline String* int_to_str(const u8* elm) {
     
     u32 len = string_len(temp);
     for (u32 i = len - 1; i >= 0; i--) {
-        string_append_char(str, string_at(temp, i));
+        string_append_char(str, string_char_at(temp, i));
     }
     
     string_destroy(temp);

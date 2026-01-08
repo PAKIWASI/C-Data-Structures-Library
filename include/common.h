@@ -91,6 +91,11 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 
 
+// CASTING
+
+#define cast(x)     ((u8*)(&(x)))
+#define castptr(x)  ((u8*)(x))
+
 
 // COMMON SIZES
 

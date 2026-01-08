@@ -205,6 +205,13 @@ const u8* genVec_get_ptr(const genVec* vec, u32 i)
     return GET_PTR(vec, i);
 }
 
+const u8* genVec_get_data(const genVec* vec)
+{
+    CHECK_FATAL(!vec, "vec is null");
+
+    return vec->data;
+}
+
 void genVec_insert(genVec* vec, u32 i, const u8* data)
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -252,7 +259,6 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
     vec->size += num_data; // no of new elements in chunk
 
     genVec_reserve(vec, vec->size); // reserve with new size
-    CHECK_FATAL(!vec->data, "genvec reserve failed");
 
     // the place where we want to insert
     u8* src = GET_PTR(vec, i);

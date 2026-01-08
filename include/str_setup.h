@@ -10,7 +10,7 @@ u32 murmurhash3_string(const u8* key, u32 size)
     (void)size;
     
     String* str= (String*)key;
-    const char* data = string_to_cstr(str);
+    const char* data = string_to_cstr_ptr(str);
     u32 len = string_len(str);
     
     const u32 c1 = 0xcc9e2d51;

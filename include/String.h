@@ -20,8 +20,10 @@ void     string_destroy(String* str);
 void     string_destroy_fromstk(String* str);
 
 
-// get ptr to the cstr buffer
+
 const char* string_to_cstr(const String* str);
+// get ptr to the cstr buffer
+const char* string_to_cstr_ptr(const String* str);
 
 // Modification
 void string_append_cstr(String* str, const char* cstr);
@@ -36,36 +38,34 @@ void string_remove_range(String* str, u32 l, u32 r);
 void string_clear(String* str);
 
 // Access
-char string_at(const String* str, u32 i);
+char string_char_at(const String* str, u32 i);
 void string_set_char(String* str, u32 i, char c);
 
 // Comparison
-int string_compare(const String* str1, const String* str2);
-int string_equals(const String* str1, const String* str2);
-int string_equals_cstr(const String* str, const char* cstr);
+int string_compare(String* str1, String* str2);
+int string_equals(String* str1, String* str2);
+int string_equals_cstr(String* str, const char* cstr);
 
 // Search
-u32 string_find_char(const String* str, char c);
-u32 string_find_cstr(const String* str, const char* substr);
+u32 string_find_char(String* str, char c);
+u32 string_find_cstr(String* str, const char* substr);
 
 // Substring
 String* string_substr(const String* str, u32 start, u32 length);
 
 // I/O
-void string_print(const String* str);
+void string_print(String* str);
 
 // Basic properties
 static inline u32 string_len(const String* str) 
 {
-    if (!str || !str->buffer) { return 0; }
+    CHECK_FATAL(!str, "str is null");
 
-    u32 size = genVec_size(str->buffer);
-    // Subtract 1 for null terminator if present
-    return (size > 0) ? size - 1 : 0;
+    return str->buffer->size;
 }
-static inline u8 string_empty(const String* str) 
+
+static inline b8 string_empty(const String* str) 
 {
     return string_len(str) == 0;
 }
-
 

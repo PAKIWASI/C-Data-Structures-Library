@@ -3,13 +3,6 @@
 #include "helper_functions.h"
 #include "str_setup.h"
 
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-
-
-
-
 
 // TEST 1: simple vector init with basic datatype
 int test_genVec_1(void)
@@ -89,57 +82,18 @@ int test_genVec_2(void)
     genVec vec;
     genVec_init_stk(10, sizeof(String), string_custom_delete, &vec);
 
-
-    vec_push_cstr(&vec, "hello"); 
-    vec_push_cstr(&vec, "workd"); 
-    vec_push_cstr(&vec, "fjdfdf"); 
-    vec_push_cstr(&vec, "he"); 
-    vec_push_cstr(&vec, "llo"); 
-    vec_push_cstr(&vec, ""); 
-    vec_push_cstr(&vec, "wtf"); 
+    vec_push_cstr(&vec, "hello");
+    vec_push_cstr(&vec, "world");
+    vec_push_cstr(&vec, "");
+    vec_push_cstr(&vec, "wtf");
 
     genVec_print(&vec, str_print);
 
-    string_print((const String*)genVec_get_ptr(&vec, 2));
-    printf("\n");
-    string_append_cstr((String*)genVec_get_ptr(&vec, 2), "WASI");
-
-    genVec_print(&vec, str_print);
-
-    String* s1 = vec_pop_str(&vec);
-    string_print(s1);
-    string_destroy(s1);
+    string_print((String*)genVec_get_ptr(&vec, 1));
     printf("\n");
 
-    s1 = vec_pop_str(&vec);
-    string_print(s1);
-    string_destroy(s1);
-    printf("\n");
+    genVec_destroy_stk(&vec);
 
-    printf("%s\n", vec_get_cstr(&vec, 1));
-
-    string_print((const String*)genVec_front(&vec));
-    printf("\n");
-    string_print((const String*)genVec_back(&vec));
-    printf("\n");
-    
-    /*
-    // shallow print (points to same data)
-    genVec* copy = genVec_copy(&vec);
-
-    string_append_cstr((String*)genVec_get_ptr(copy, 0), "world");
-
-    genVec_print(&vec, str_print);
-    genVec_print(copy, str_print);
-
-    // test new remove range
-    genVec_remove_range(copy, 1, 1);
-    genVec_print(copy, str_print);
-
-    //genVec_destroy_stk(&vec);  // double free
-    genVec_destroy(copy); // data destroyed
-
-    */
     return 0;
 }
 
