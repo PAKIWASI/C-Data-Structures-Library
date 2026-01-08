@@ -306,6 +306,8 @@ void genVec_remove_range(genVec* vec, u32 l, u32 r)
 
     CHECK_FATAL(l >= vec->size, "index out of range");
 
+    CHECK_FATAL(l > r, "invalid range");
+
     if (r >= vec->size) {
         r = vec->size - 1;
     }

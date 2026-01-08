@@ -49,7 +49,7 @@ static void kv_destroy(hashmap* map, const KV* kv)
 // if linear probing fails(find no empty), we insert at the first tombstone encountered
 // we warp around, so when we hit end while probing, we go to the start of arr
 static u32 find_slot(const hashmap* map, const u8* key,
-                        u8* found, int* tombstone)
+                        b8* found, int* tombstone)
 {
     u32 index = map->hash_fn(key, map->key_size) % map->capacity;
 
@@ -106,7 +106,7 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
         const KV* old_kv = (const KV*)genVec_get_ptr(old_vec, i);
         
         if (old_kv->state == FILLED) {
-            u8 found = 0;
+            b8 found = 0;
             int tombstone = -1;
             u32 slot = find_slot(map, old_kv->key, &found, &tombstone);
 
@@ -203,7 +203,7 @@ void hashmap_destroy(hashmap* map)
 }
 
 
-u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
+b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
@@ -211,7 +211,7 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     
     hashmap_maybe_resize(map);
     
-    u8 found = 0;
+    b8 found = 0;
     int tombstone = -1;
     u32 slot = find_slot(map, key, &found, &tombstone);
     
@@ -250,14 +250,14 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     }
 }
 
-u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
+b8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
     CHECK_FATAL(!val, "val is null");
 
     
-    u8 found = 0;
+    b8 found = 0;
     int tombstone = -1;
     u32 slot = find_slot(map, key, &found, &tombstone);
 
@@ -277,7 +277,7 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
 
-    u8 found = 0;
+    b8 found = 0;
     int tombstone = -1;
     u32 slot = find_slot(map, key, &found, &tombstone);
 
@@ -291,14 +291,14 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
 
 
 
-u8 hashmap_del(hashmap* map, const u8* key)
+b8 hashmap_del(hashmap* map, const u8* key)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
 
     if (map->size == 0) { return -1; }
 
-    u8 found = 0;
+    b8 found = 0;
     int tombstone = -1;
     u32 slot = find_slot(map, key, &found, &tombstone);
 
@@ -323,12 +323,12 @@ u8 hashmap_del(hashmap* map, const u8* key)
     }
 }
 
-u8 hashmap_has(const hashmap* map, const u8* key)
+b8 hashmap_has(const hashmap* map, const u8* key)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
     
-    u8 found = 0;
+    b8 found = 0;
     int tombstone = -1;
     find_slot(map, key, &found, &tombstone);
     

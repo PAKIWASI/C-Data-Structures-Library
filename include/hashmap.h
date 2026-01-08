@@ -26,15 +26,15 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
 
 void     hashmap_destroy(hashmap* map);
 
-u8       hashmap_put(hashmap* map, const u8* key, const u8* val);
+b8       hashmap_put(hashmap* map, const u8* key, const u8* val);
 
-u8       hashmap_get(const hashmap* map, const u8* key, u8* val);
+b8       hashmap_get(const hashmap* map, const u8* key, u8* val);
 
 u8*      hashmap_get_ptr(hashmap* map, const u8* key);
 
-u8       hashmap_del(hashmap* map, const u8* key);
+b8       hashmap_del(hashmap* map, const u8* key);
 
-u8       hashmap_has(const hashmap* map, const u8* key);
+b8       hashmap_has(const hashmap* map, const u8* key);
 
 void     hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print);
 

@@ -5,7 +5,7 @@
 
 
 typedef struct {
-    genVec* buffer;  // Vector of chars - the actual string data
+    genVec buffer;  // Vector of chars - the actual string data
 } String;
 
 
@@ -41,9 +41,10 @@ char string_char_at(const String* str, u32 i);
 void string_set_char(String* str, u32 i, char c);
 
 // Comparison
+// 0 -> equal, 1 -> not equal
 int string_compare(String* str1, String* str2);
-int string_equals(String* str1, String* str2);
-int string_equals_cstr(String* str, const char* cstr);
+b8 string_equals(String* str1, String* str2);
+b8 string_equals_cstr(String* str, const char* cstr);
 
 // Search
 u32 string_find_char(String* str, char c);
@@ -60,7 +61,7 @@ static inline u32 string_len(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
 
-    return str->buffer->size;
+    return str->buffer.size;
 }
 
 static inline b8 string_empty(const String* str) 

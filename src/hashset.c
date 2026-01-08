@@ -1,5 +1,4 @@
 #include "hashset.h"
-#include "common.h"
 #include "default_functions.h"
 #include "gen_vector.h"
 #include "map_setup.h"
@@ -43,7 +42,7 @@ static void elm_destroy(hashset* set, const ELM* elm)
 // if linear probing fails(find no empty), we insert at the first tombstone encountered
 // we use warp around, so when we hit end while probing, we go to the start of arr
 static u32 find_slot(const hashset* set, const u8* key,
-                        u8* found, int* tombstone)
+                        b8* found, int* tombstone)
 {
     u32 index = set->hash_fn(key, set->elm_size) % set->capacity;
 
@@ -99,7 +98,7 @@ static void hashset_resize(hashset* set, u32 new_capacity)
         const ELM* old_elm = (const ELM*)genVec_get_ptr(old_vec, i);
         
         if (old_elm->state == FILLED) {
-            u8 found = 0;
+            b8 found = 0;
             int tombstone = -1;
             u32 slot = find_slot(set, old_elm->elm, &found, &tombstone);
 
@@ -190,14 +189,14 @@ void hashset_destroy(hashset *set)
 }
 
 
-u8 hashset_insert(hashset* set, const u8* elm)
+b8 hashset_insert(hashset* set, const u8* elm)
 {
     CHECK_FATAL(!set, "set is null");
     CHECK_FATAL(!elm, "elm is null");
     
     hashset_maybe_resize(set);
 
-    u8 found = 0;
+    b8 found = 0;
     int tombstone = -1;
     u32 slot = find_slot(set, elm, &found, &tombstone);
 
@@ -221,14 +220,14 @@ u8 hashset_insert(hashset* set, const u8* elm)
     }
 }
 
-u8 hashset_remove(hashset* set, const u8* elm)
+b8 hashset_remove(hashset* set, const u8* elm)
 {
     CHECK_FATAL(!set, "set is null");
     CHECK_FATAL(!elm, "elm is null");
     //if (set->size == 0) { return -1; }
     CHECK_WARN_RET(set->size == 0, -1, "can't remove from empty set");
 
-    u8 found = 0;
+    b8 found = 0;
     int tombstone = -1;
     u32 slot = find_slot(set, elm, &found, &tombstone);
 
@@ -251,12 +250,12 @@ u8 hashset_remove(hashset* set, const u8* elm)
     }
 }
 
-u8 hashset_has(const hashset* set, const u8* elm)
+b8 hashset_has(const hashset* set, const u8* elm)
 {
     CHECK_FATAL(!set, "set is null");
     CHECK_FATAL(!elm, "set is null");
 
-    u8 found = 0;
+    b8 found = 0;
     int tombstone = -1;
     find_slot(set, elm, &found, &tombstone);
 

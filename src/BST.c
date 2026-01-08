@@ -1,7 +1,6 @@
 #include "BST.h"
 #include "Queue.h"
 #include "common.h"
-#include "helper_functions.h"
 
 
 
@@ -63,7 +62,7 @@ void bst_insert(BST* bst, const u8* val)
     CHECK_FATAL(!bst, "bst is null");
     CHECK_FATAL(!val, "val is null");
 
-    u8 found = 0; // 1 -> a = b
+    b8 found = 0; // 1 -> a = b
     u32 index = bst_search_helper(bst, val, 0, &found);
 
     if (found) {   // value exits
@@ -83,7 +82,7 @@ void bst_remove(BST* bst, const u8* val)
     CHECK_FATAL(!val, "val is null");
 
 
-    u8 found = 0;
+    b8 found = 0;
     u32 index = bst_search_helper(bst, val, 0, &found);
     
     if (!found) { return; }
@@ -100,7 +99,7 @@ u8 bst_search(const BST* bst, const u8* val)
     CHECK_FATAL(!val, "val is null");
 
 
-    u8 found = 0;
+    b8 found = 0;
     bst_search_helper(bst, val, 0, &found);
 
     return found;
