@@ -26,32 +26,19 @@ static void bst_balance_helper(BST* bst, genVec* inorder, u32 l, u32 r);
 
 BST* bst_create(u16 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVec_delete_fn del)
 {
-    if (!data_size || !cmp || !to_str) {
-        ERROR("invalid parameters");
-        return NULL;
-    }
+    CHECK_FATAL(data_size == 0, "data_size can't be 0");
+    CHECK_FATAL(!cmp, "cmp is null");
+    CHECK_FATAL(!to_str, "to_str is null");
 
     BST* bst = malloc(sizeof(BST));
-    if (!bst) {
-        ERROR("malloc failed");
-        return NULL;
-    }
+    CHECK_FATAL(!bst, "bst malloc failed");
 
     bst->arr = genVec_init(0, data_size, del);
-    if (!bst->arr) {
-        ERROR("genvec init failed");
-        free(bst);
-        return NULL;
-    }
+    //CHECK_FATAL(!bst->arr, "bst arr init failed");
 
 
     bst->flags = bitVec_create(); 
-    if (!bst->flags) {
-        ERROR("genvec init failed");
-        free(bst);
-        free(bst->arr);
-        return NULL;
-    }
+    //CHECK_FATAL(!bst->flags, "bst flag init failed");
 
     bst->size = 0;
     bst->cmp_fn = cmp;
@@ -62,21 +49,19 @@ BST* bst_create(u16 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVe
 
 void bst_destroy(BST* bst)
 {
-    if (!bst) { return; }
+    CHECK_FATAL(!bst, "bst is null");
 
-    if (bst->arr) { genVec_destroy(bst->arr); }
+    genVec_destroy(bst->arr);
 
-    if (bst->flags) { bitVec_destroy(bst->flags); }
+    bitVec_destroy(bst->flags);
 
     free(bst);
 }
 
 void bst_insert(BST* bst, const u8* val)
 {
-    if (!bst || !val) {
-        ERROR("parameters null");
-        return;
-    }
+    CHECK_FATAL(!bst, "bst is null");
+    CHECK_FATAL(!val, "val is null");
 
     u8 found = 0; // 1 -> a = b
     u32 index = bst_search_helper(bst, val, 0, &found);
@@ -94,10 +79,9 @@ void bst_insert(BST* bst, const u8* val)
 
 void bst_remove(BST* bst, const u8* val)
 {
-    if (!bst || !val) {
-        ERROR("parameters null");
-        return;
-    }
+    CHECK_FATAL(!bst, "bst is null");
+    CHECK_FATAL(!val, "val is null");
+
 
     u8 found = 0;
     u32 index = bst_search_helper(bst, val, 0, &found);
@@ -112,22 +96,20 @@ void bst_remove(BST* bst, const u8* val)
 
 u8 bst_search(const BST* bst, const u8* val)
 {
-    if (!bst || !val) {
-        ERROR("parameters null");
-        return -1; // 255 error
-    }
+    CHECK_FATAL(!bst, "bst is null");
+    CHECK_FATAL(!val, "val is null");
+
 
     u8 found = 0;
     bst_search_helper(bst, val, 0, &found);
+
     return found;
 }
 
 void bst_find_min(const BST* bst, u8* min)
 {
-    if (!bst || !min) {
-        ERROR("parameters null");
-        return;
-    }
+    CHECK_FATAL(!bst, "bst is null");
+    CHECK_FATAL(!min, "min is null");
 
     u32 index = bst_find_min_helper(bst, 0);
 
@@ -136,23 +118,18 @@ void bst_find_min(const BST* bst, u8* min)
 
 void bst_find_max(const BST* bst, u8* max)
 {
-    if (!bst || !max) {
-        ERROR("parameters null");
-        return;
-    }
+    CHECK_FATAL(!bst, "bst is null");
+    CHECK_FATAL(!max, "max is null");
 
     u32 index = bst_find_max_helper(bst, 0);
 
     genVec_get(bst->arr, index, max);
 }
 
-// WARN: this is wrong
+// BUG: this is wrong
 void bst_balance(BST* bst) 
 {
-    if (!bst) {
-        ERROR("bst is null");
-        return;
-    }
+    CHECK_FATAL(!bst, "bst is null");
 
     if (bst->size == 0) { return; }
 
@@ -178,10 +155,7 @@ void bst_balance(BST* bst)
 
 String* bst_preorder(const BST* bst)
 {
-    if (!bst) {
-        ERROR("parameters null");
-        return NULL;
-    }
+    CHECK_FATAL(!bst, "bst is null");
 
     String* out = string_create();
     
@@ -192,10 +166,7 @@ String* bst_preorder(const BST* bst)
 
 String* bst_inorder(const BST* bst)
 {
-    if (!bst) {
-        ERROR("parameters null");
-        return NULL;
-    }
+    CHECK_FATAL(!bst, "bst is null");
 
     String* out = string_create();
     
@@ -206,10 +177,7 @@ String* bst_inorder(const BST* bst)
 
 String* bst_postorder(const BST* bst)
 {
-    if (!bst) {
-        ERROR("parameters null");
-        return NULL;
-    }
+    CHECK_FATAL(!bst, "bst is null");
 
     String* out = string_create();
     
@@ -220,10 +188,7 @@ String* bst_postorder(const BST* bst)
 
 String* bst_bfs(const BST* bst)
 {
-    if (!bst) {
-        ERROR("bst is null");
-        return NULL;
-    }
+    CHECK_FATAL(!bst, "bst is null");
 
     String* out = string_create();
     bst_bfs_helper(bst, out);
@@ -386,7 +351,7 @@ static u32 bst_find_max_helper(const BST* bst, u32 index)
     return -1; // LONG_MAX returned -> error
 }
 
-// WARN: this is wrong???
+// BUG: this is wrong???
 static void bst_balance_helper(BST* bst, genVec* inorder, u32 l, u32 r)
 {
     if (l >= r) { 

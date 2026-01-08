@@ -8,17 +8,10 @@
 bitVec* bitVec_create(void)
 {
     bitVec* bvec = malloc(sizeof(bitVec));
-    if (!bvec) {
-        ERROR("malloc failed");
-        return NULL;
-    }
+    CHECK_FATAL(!bvec, "bvec init failed");
 
     bvec->arr = genVec_init(0, sizeof(u8), NULL);
-    if (!bvec->arr) {
-        ERROR("genVec_init failed");
-        free(bvec);
-        return NULL;
-    }
+    //CHECK_FATAL(!bvec->arr, "bvec arr init failed");
 
     bvec->size = 0;
 
@@ -27,11 +20,9 @@ bitVec* bitVec_create(void)
 
 void bitVec_destroy(bitVec* bvec)
 {
-    if (!bvec) { return; }
+    CHECK_FATAL(!bvec, "bvec is null");
 
-    if (bvec->arr) {
-        genVec_destroy(bvec->arr);
-    }
+    genVec_destroy(bvec->arr);
 
     free(bvec);
 }
@@ -39,10 +30,7 @@ void bitVec_destroy(bitVec* bvec)
 // Set bit i to 1
 void bitVec_set(bitVec* bvec, u32 i)
 {
-    if (!bvec || !bvec->arr) { 
-        ERROR("bvec/arr is null");
-        return;
-    }
+    CHECK_FATAL(!bvec, "bvec is null");
     
     u32 byte_index = i / 8; // which byte (elm) 
     u32 bit_index = i % 8; // which bit in the byte
@@ -69,15 +57,9 @@ void bitVec_set(bitVec* bvec, u32 i)
 // Clear bit i (set to 0)
 void bitVec_clear(bitVec* bvec, u32 i)
 {
-    if (!bvec || !bvec->arr) { 
-        ERROR("bvec/arr is null");
-        return;
-    }
-        
-    if (i >= bvec->size) { 
-        ERROR("index out of bounds");
-        return;
-    }
+    CHECK_FATAL(!bvec, "bvec is null");
+
+    CHECK_FATAL(i >= bvec->size, "index out of bounds");     
 
     u32 byte_index = i / 8;
     u32 bit_index = i % 8;
@@ -92,14 +74,9 @@ void bitVec_clear(bitVec* bvec, u32 i)
 // Test bit i (returns 1 or 0)
 u8 bitVec_test(bitVec* bvec, u32 i)
 {
-    if (!bvec || !bvec->arr) { 
-        ERROR("bvec/arr is null");
-        return -1; // returns 255 (overflow)
-    }
+    CHECK_FATAL(!bvec, "bvec is null");
     
-    if (i >= bvec->size) { 
-        return -1;
-    }
+    CHECK_FATAL(i >= bvec->size, "index out of bounds");
 
     u32 byte_index = i / 8;
     u32 bit_index = i % 8;
@@ -113,15 +90,9 @@ u8 bitVec_test(bitVec* bvec, u32 i)
 // Toggle bit i
 void bitVec_toggle(bitVec* bvec, u32 i)
 {
-    if (!bvec || !bvec->arr) { 
-        ERROR("bvec/arr is null");
-        return;
-    }
+    CHECK_FATAL(!bvec, "bvec is null");
     
-    if (i >= bvec->size) { // you can only toggle a previously set bit
-        ERROR("arr out of bounds");
-        return;
-    }
+    CHECK_FATAL(i >= bvec->size, "index out of bounds");
 
     u32 byte_index = i / 8;
     u32 bit_index = i % 8;
@@ -135,21 +106,13 @@ void bitVec_toggle(bitVec* bvec, u32 i)
 
 void bitVec_push(bitVec* bvec)
 {
-    if (!bvec || !bvec->arr) {
-        ERROR("bvec/arr is null");
-        return;
-    }
-
     bitVec_set(bvec, bvec->size); 
 }
 
 
 void bitVec_pop(bitVec* bvec)
 {
-    if (!bvec || !bvec->arr) {
-        ERROR("bvec/arr is null");
-        return;
-    }
+    CHECK_FATAL(!bvec, "bvec is null");
 
     bvec->size--;
     if (bvec->size % 8 == 0) {
@@ -159,15 +122,9 @@ void bitVec_pop(bitVec* bvec)
 
 void bitVec_print(bitVec *bvec, u32 byteI)
 {
-    if (!bvec || !bvec->arr) { 
-        ERROR("bvec/arr is null");
-        return;
-    }
+    CHECK_FATAL(!bvec, "bvec is null");
 
-    if (byteI >= bvec->arr->size) {
-        ERROR("arr out of bounds");
-        return;
-    }
+    CHECK_FATAL(byteI >= bvec->arr->size, "index out of bounds");
     
     u8 bits_to_print = 8;
     // If this is the last byte, only print the valid bits
@@ -180,6 +137,7 @@ void bitVec_print(bitVec *bvec, u32 byteI)
         // we print from 0th bit to 7th bit (there are no lsb, msb)
         printf("%d", ((*genVec_get_ptr(bvec->arr, byteI)) >> i) & 1);// we lose data from right
     }
+
     printf("\n");
 }
 
