@@ -19,8 +19,7 @@ void     string_reserve(String* str, u32 capacity);
 void     string_destroy(String* str);
 void     string_destroy_fromstk(String* str);
 
-
-
+// get cstr as COPY
 const char* string_to_cstr(const String* str);
 // get ptr to the cstr buffer
 const char* string_to_cstr_ptr(const String* str);

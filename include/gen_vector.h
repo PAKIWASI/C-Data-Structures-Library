@@ -17,7 +17,7 @@ typedef struct {
     u32               capacity;
     u16               data_size;
     genVec_delete_fn  del_fn;
-    genVec_copy_fn    copy_fn;
+    genVec_copy_fn    copy_fn;      // TODO: need to use this
 } genVec;
 
 
