@@ -26,6 +26,7 @@ String* string_create(void)
     
     // we get a pointer to buffer
     str->buffer = genVec_init(0, sizeof(char), NULL);
+    // TODO: if genVec_init returns, always right vec, never null
     if (!str->buffer) {
         free(str);
         FATAL("genVec_init failed");
@@ -43,7 +44,8 @@ void string_create_onstk(String* str, const char* cstr)
     CHECK_FATAL(!cstr, "cstr is null");
 
     str->buffer = genVec_init(0, sizeof(char), NULL);
-    CHECK_FATAL(!str->buffer, "buffer init failed");
+    // genVec_init will error n die or return correct vector. never null
+    //CHECK_FATAL(!str->buffer, "buffer init failed");
     
     string_append_cstr(str, cstr); 
 }
@@ -53,7 +55,7 @@ String* string_from_cstr(const char* cstr)
     CHECK_FATAL(!cstr, "cstr is null");
     
     String* str = string_create();
-    CHECK_FATAL(!str, "string_create failed");
+    //CHECK_FATAL(!str, "string_create failed");
     
     string_append_cstr(str, cstr);
     return str;
@@ -61,7 +63,7 @@ String* string_from_cstr(const char* cstr)
 
 String* string_from_string(const String* other) 
 {
-    CHECK_FATAL(!other, "other is null");
+    CHECK_FATAL(!other, "other str is null");
 
     return string_from_cstr(string_to_cstr(other));
 }

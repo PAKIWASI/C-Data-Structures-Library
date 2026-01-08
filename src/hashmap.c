@@ -16,18 +16,22 @@ typedef struct {
 
 static void kv_destroy(hashmap* map, const KV* kv)
 {
-    if (!kv) { return; }
+    CHECK_FATAL(!kv, "kv is null");
+    CHECK_FATAL(!kv->key, "kv key is null");
+    CHECK_FATAL(!kv->val, "kv val is null");
 
-    if (kv->key && map->key_del_fn) {
+    if (map->key_del_fn) {
         map->key_del_fn(kv->key); 
-    }
-    if (kv->val && map->val_del_fn) {
-        map->val_del_fn(kv->val);
+    } else {
+        free(kv->key);
     }
 
-    // TODO: maybe only do this if del fn not called?
-    free(kv->key);
-    free(kv->val);
+    if (map->val_del_fn) {
+        map->val_del_fn(kv->val);
+    } else {
+        free(kv->val);
+    }
+    // now key/val del funcs have to free key/vals themselves
 
     // dont free kv as managed by genVec
 }
@@ -43,7 +47,7 @@ static void kv_destroy(hashmap* map, const KV* kv)
 // Sets found_index to 1 if key exists, 0 otherwise
 // Sets tombstone_index to first tombstone encountered (for insertion optimization)
 // if linear probing fails(find no empty), we insert at the first tombstone encountered
-// we use warp around, so when we hit end while probing, we go to the start of arr
+// we warp around, so when we hit end while probing, we go to the start of arr
 static u32 find_slot(const hashmap* map, const u8* key,
                         u8* found, int* tombstone)
 {
@@ -79,10 +83,8 @@ static u32 find_slot(const hashmap* map, const u8* key,
 
 static void hashmap_resize(hashmap* map, u32 new_capacity) 
 {
-    if (!map) {
-        ERROR("map is null");
-        return;
-    }
+    CHECK_FATAL(!map, "map is null");
+
     if (new_capacity <= HASHMAP_INIT_CAPACITY) {
         new_capacity = HASHMAP_INIT_CAPACITY;
     }
@@ -96,11 +98,8 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
     };
 
     map->buckets = genVec_init_val(new_capacity, (u8*)&kv, map->buckets->data_size, NULL);
-    if (!map->buckets) {
-        ERROR("new vec init failed");
-        map->buckets = old_vec;
-        return;
-    }
+    // genVec init val fails and kills program or returns correct vec
+    //CHECK_FATAL(!map->buckets, "bucket init failed");
 
     map->capacity = new_capacity;
     map->size = 0;          // recounted when we rehash
@@ -130,8 +129,9 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
     genVec_destroy(old_vec); // this will just destroy the KV containers and not the key,val pointers
 }
 
-static void hashmap_maybe_resize(hashmap* map) {
-    if (!map) { return; }
+static void hashmap_maybe_resize(hashmap* map) 
+{
+    CHECK_FATAL(!map, "map is null");
     
     double load_factor = (double)map->size / (double)map->capacity;
     
@@ -157,16 +157,11 @@ static void hashmap_maybe_resize(hashmap* map) {
 hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
                         delete_fn key_del, delete_fn val_del, compare_fn cmp)
 {
-    if (key_size == 0 || val_size == 0) {
-        ERROR("size cant be 0");
-        return NULL;
-    }
+    CHECK_FATAL(key_size == 0, "key size can't be zero");
+    CHECK_FATAL(val_size == 0, "val size can't be zero");
 
     hashmap* map = malloc(sizeof(hashmap));
-    if (!map) {
-        ERROR("map malloc failed");
-        return NULL;
-    }
+    CHECK_FATAL(!map, "map malloc failed");
 
     KV kv = {     // empty kv that points to null
         .key = NULL,
@@ -175,12 +170,10 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
     };
 
     // we dont give custom delete fn for kv as kv is stored directly and not a pointer
+    // resources owned by kv are cleaned by us, not genVec destroy
+    // TODO: maybe pass kv_destroy() as a del func to make cleaning automatic ?
     map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&kv, sizeof(KV), NULL);
-    if (!map->buckets) {
-        ERROR("buckets init failed");
-        free(map);
-        return NULL;
-    }
+    //CHECK_FATAL(!map->buckets, "bucket init failed");
     
     map->capacity = HASHMAP_INIT_CAPACITY;
     map->size = 0;
@@ -197,14 +190,15 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
 
 void hashmap_destroy(hashmap* map)
 {
-    if (!map) { return; }
+    CHECK_FATAL(!map, "map is null");
+    CHECK_FATAL(!map->buckets, "map bucket is null");
 
-    if (map->buckets) {
-        for (u32 i = 0; i < map->capacity; i++) {
-            kv_destroy(map, (const KV*)genVec_get_ptr(map->buckets, i));
-        }
-        genVec_destroy(map->buckets);
+    // destroy each kv pair (if kv own resources, clean them)
+    for (u32 i = 0; i < map->capacity; i++) {
+        kv_destroy(map, (const KV*)genVec_get_ptr(map->buckets, i));
     }
+    // destroy the KV containers them selves (no del fn)
+    genVec_destroy(map->buckets);
 
     free(map);
 }
@@ -212,10 +206,9 @@ void hashmap_destroy(hashmap* map)
 
 u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
 {
-    if (!map || !key || !val) {
-        ERROR("map/key/val is null");
-        return -1;
-    }
+    CHECK_FATAL(!map, "map is null");
+    CHECK_FATAL(!key, "key is null");
+    CHECK_FATAL(!val, "val is null");
     
     hashmap_maybe_resize(map);
     
@@ -245,12 +238,8 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
             .state = FILLED
         };
         
-        if (!kv.key || !kv.val) {
-            ERROR("key/val malloc failed");
-            if (kv.key) { free(kv.key); }
-            if (kv.val) { free(kv.val); }
-            return -1;
-        }
+        CHECK_FATAL(!kv.key, "key malloc failed");
+        CHECK_FATAL(!kv.val, "val malloc failed");
         
         memcpy(kv.key, key, map->key_size);
         memcpy(kv.val, val, map->val_size);
@@ -264,10 +253,10 @@ u8 hashmap_put(hashmap* map, const u8* key, const u8* val)
 
 u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 {
-    if (!map || !key || !val) {
-        ERROR("map/key is null");
-        return -1;
-    }
+    CHECK_FATAL(!map, "map is null");
+    CHECK_FATAL(!key, "key is null");
+    CHECK_FATAL(!val, "val is null");
+
     
     u8 found = 0;
     int tombstone = -1;
@@ -286,11 +275,9 @@ u8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 
 u8* hashmap_get_ptr(hashmap* map, const u8* key)
 {
-    if (!map || !key) {
-        ERROR("parameters null");
-        return NULL;
-    }
-    
+    CHECK_FATAL(!map, "map is null");
+    CHECK_FATAL(!key, "key is null");
+
     u8 found = 0;
     int tombstone = -1;
     u32 slot = find_slot(map, key, &found, &tombstone);
@@ -307,10 +294,9 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
 
 u8 hashmap_del(hashmap* map, const u8* key)
 {
-    if (!map || !key) {
-        ERROR("map/key is null");
-        return -1;
-    }
+    CHECK_FATAL(!map, "map is null");
+    CHECK_FATAL(!key, "key is null");
+
     if (map->size == 0) { return -1; }
 
     u8 found = 0;
@@ -330,19 +316,18 @@ u8 hashmap_del(hashmap* map, const u8* key)
         map->size--;
 
         hashmap_maybe_resize(map);
-        return 1;
+
+        return 1; // found
     }
     else {
-        ERROR("not found");
-        return 0;
+        return 0; // not found
     }
 }
 
 u8 hashmap_has(const hashmap* map, const u8* key)
 {
-    if (!map || !key) {
-        return 0;
-    }
+    CHECK_FATAL(!map, "map is null");
+    CHECK_FATAL(!key, "key is null");
     
     u8 found = 0;
     int tombstone = -1;
@@ -353,13 +338,14 @@ u8 hashmap_has(const hashmap* map, const u8* key)
 
 void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print)
 {
-    if (!map || !key_print || !val_print) {
-        ERROR("map is null");
-        return;
-    }
+    CHECK_FATAL(!map, "map is null");
+    CHECK_FATAL(!key_print, "key_print is null");
+    CHECK_FATAL(!val_print, "val_print is null");
 
     printf("\t=========\n");
+
     for (u32 i = 0; i < map->capacity; i++) {
+
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, i);
         if (kv->state == FILLED) {
             printf("\t");
@@ -369,6 +355,7 @@ void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_f
             printf("\n");
         }
     }
+
     printf("\t=========\n");
 }
 
