@@ -18,7 +18,7 @@ void genVec_grow(genVec* vec);
 void genVec_shrink(genVec* vec);
 
 
-genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn) 
+genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn) 
 {
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
     
@@ -38,12 +38,13 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn)
     vec->capacity = n;
     vec->data_size = data_size;
 
+    vec->copy_fn = copy_fn;
     vec->del_fn = del_fn; // NULL if no del_fn
 
     return vec;
 }
 
-void genVec_init_stk(u32 n, u16 data_size, genVec_delete_fn del_fn, genVec* vec)
+void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
@@ -55,15 +56,16 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_delete_fn del_fn, genVec* vec)
     vec->size = 0;
     vec->capacity = n;
     vec->data_size = data_size;
+    vec->copy_fn = copy_fn;
     vec->del_fn = del_fn; // NULL if no del_fn
 }
 
-genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_delete_fn del_fn) 
+genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn) 
 {
     CHECK_FATAL(!val, "val can't be null");
     CHECK_FATAL(n == 0, "cant init with val if n = 0");
 
-    genVec* vec = genVec_init(n, data_size, del_fn);
+    genVec* vec = genVec_init(n, data_size, copy_fn, del_fn);
 
     vec->size = n;  //capacity set to n in upper func 
 
@@ -157,10 +159,11 @@ void genVec_push(genVec* vec, const u8* data)
     if (vec->size >= vec->capacity || !vec->data) 
         { genVec_grow(vec); }
 
-    // If data is still NULL after grow, we have a problem
-    CHECK_FATAL(!vec->data, "data allocation failed");
-
-    memcpy(GET_PTR(vec, vec->size), data, vec->data_size);
+    if (vec->copy_fn) {
+        vec->copy_fn(GET_PTR(vec, vec->size), data);
+    } else {
+        memcpy(GET_PTR(vec, vec->size), data, vec->data_size);
+    }
 
     vec->size++;
 }
@@ -172,11 +175,27 @@ void genVec_pop(genVec* vec, u8* popped)
     CHECK_WARN_VOID(vec->size == 0, "vec is empty");
     
     u8* last_elm = GET_PTR(vec, vec->size - 1);
+    /*
     if (popped) { //only if buffer provided
         memcpy(popped, last_elm, vec->data_size);
     }
     else if (vec->del_fn) {
         vec->del_fn(last_elm);  // (if it's a pointer, like String*)
+    }
+    */
+
+    // with copy fn, we copy to output buffer and delete original
+    // TODO: any way to MOVE memory from src to dest ?  
+    if (popped) {
+        if (vec->copy_fn) {
+            vec->copy_fn(popped, last_elm);
+        } else {
+            memcpy(popped, last_elm, vec->data_size);
+        }
+    }
+
+    if (vec->del_fn) { // now del fn has to COMPLETELY delete memory, not just ptr
+        vec->del_fn(last_elm);
     }
 
     vec->size--;    // set for re-write
@@ -193,7 +212,12 @@ void genVec_get(const genVec* vec, u32 i, u8* out)
 
     CHECK_FATAL(!out, "need a valid out variable to get the element");
 
-    memcpy(out, GET_PTR(vec, i), vec->data_size);
+    if (vec->copy_fn) {
+        vec->copy_fn(out, GET_PTR(vec, i));
+    } else {
+        memcpy(out, GET_PTR(vec, i), vec->data_size);
+    }
+     
 }
 
 const u8* genVec_get_ptr(const genVec* vec, u32 i)
@@ -238,7 +262,11 @@ void genVec_insert(genVec* vec, u32 i, const u8* data)
     memmove(dest, src, GET_SCALED(vec, elements_to_shift));  // Use memmove for overlapping regions
 
     //src pos is now free to insert (it's data copied to next location)
-    memcpy(src, data, vec->data_size);
+    if (vec->copy_fn) {
+        vec->copy_fn(src, data);
+    } else {
+        memcpy(src, data, vec->data_size);
+    }
 
     vec->size++;  
 }
@@ -270,7 +298,16 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
     }
 
     //src pos is now free to insert (it's data copied to next location)
-    memcpy(src, data, GET_SCALED(vec, num_data));
+    // TODO: use vec->copyfn for all individually ?
+    //memcpy(src, data, GET_SCALED(vec, num_data));
+
+    if (vec->copy_fn) {
+        for (u32 j = 0; j < num_data; j++) {
+            vec->copy_fn(GET_PTR(vec, j+i), (data + (size_t)(j * vec->data_size)));   
+        }
+    } else {
+        memcpy(src, data, num_data);
+    }
 }
 
 void genVec_remove(genVec* vec, u32 i) 
@@ -344,7 +381,11 @@ void genVec_replace(genVec* vec, u32 i, const u8* data)
         vec->del_fn(to_replace);
     }
 
-    memcpy(to_replace, data, vec->data_size);
+    if (vec->copy_fn) {
+        vec->copy_fn(to_replace, data);
+    } else {
+        memcpy(to_replace, data, vec->data_size);
+    }
 }
 
 u8* genVec_front(const genVec* vec) 
@@ -400,11 +441,10 @@ void genVec_copy(genVec* dest, const genVec* src, genVec_copy_fn copy_fn)
         for (u32 i = 0; i < src->size; i++) {
             copy_fn(GET_PTR(dest, i), GET_PTR(src, i));
         }
-        dest->size = src->size;
     } else {
         memcpy(dest->data, src->data, GET_SCALED(src, src->size));
-        dest->size = src->size;
     }
+    dest->size = src->size;
 }
 
 void genVec_grow(genVec* vec) 

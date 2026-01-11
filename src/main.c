@@ -1,11 +1,10 @@
-#include "tests/string_test.h"
-
+#include "tests/genVec_test.h"
 
 
 int main(void)
 {
-    string_test_1();
 
+    genVec_test_1();
     return 0;
 }
 

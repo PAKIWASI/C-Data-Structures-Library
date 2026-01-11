@@ -21,7 +21,7 @@ Queue* queue_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
     CHECK_FATAL(!q, "queue malloc failed");
 
     u8* dummy = malloc(sizeof(data_size));
-    q->arr = genVec_init_val(n, dummy, data_size, del_fn);
+    q->arr = genVec_init_val(n, dummy, data_size,NULL, del_fn);
     free(dummy);
 
     q->head = 0;   // (head + 1) % capacity

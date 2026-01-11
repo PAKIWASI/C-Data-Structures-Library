@@ -11,7 +11,7 @@ String* string_create(void)
     CHECK_FATAL(!str, "malloc failed");
     
     //str->buffer = genVec_init(0, sizeof(char), NULL);
-    genVec_init_stk(0, sizeof(char), NULL, &str->buffer);
+    genVec_init_stk(0, sizeof(char), NULL, NULL, &str->buffer);
     
     return str;
 }
@@ -23,7 +23,7 @@ void string_create_onstk(String* str, const char* cstr)
     CHECK_FATAL(!cstr, "cstr is null");
 
     //str->buffer = genVec_init(0, sizeof(char), NULL);
-    genVec_init_stk(0, sizeof(char), NULL, &str->buffer);
+    genVec_init_stk(0, sizeof(char), NULL, NULL,&str->buffer);
     
     string_append_cstr(str, cstr); 
 }

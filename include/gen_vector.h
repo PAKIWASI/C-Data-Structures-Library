@@ -5,7 +5,7 @@
 
 //user provided
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef u8   (*genVec_compare_fn)(const u8* a, const u8* b);
+typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b);
 typedef void (*genVec_delete_fn)(u8* elm);
 typedef void (*genVec_copy_fn)(u8* copy, const u8* src);
 
@@ -17,18 +17,18 @@ typedef struct {
     u32               capacity;
     u16               data_size;
     genVec_delete_fn  del_fn;
-    genVec_copy_fn    copy_fn;      // TODO: need to use this
+    genVec_copy_fn    copy_fn;      // TODO: also need move fn??? 
 } genVec;
 
 
 //memory management
 
         // init empty vector of size = n, del_fn needed if data is complex(pointer to some other data) otherwise NULL
-genVec* genVec_init(u32 n, u16 data_size, genVec_delete_fn del_fn);
+genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn);
         // init a vector on stack with the data on the heap
-void    genVec_init_stk(u32 n, u16 data_size, genVec_delete_fn del_fn, genVec* vec);
+void    genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn, genVec* vec);
         // init empty vector of size = n, each elm with val = val, del_fn needed if data is complex(pointer to some other data) otherwise NULL
-genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_delete_fn del_fn);
+genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn);
         // destroy vec, using previously provided del_fn
 void    genVec_destroy(genVec* vec);
         // destroy the stack version of the vector

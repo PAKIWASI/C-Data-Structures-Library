@@ -88,7 +88,7 @@ static void hashset_resize(hashset* set, u32 new_capacity)
         .state = EMPTY
     };
 
-    set->buckets = genVec_init_val(new_capacity, (u8*)&elm, set->buckets->data_size, NULL);
+    set->buckets = genVec_init_val(new_capacity, (u8*)&elm, set->buckets->data_size, NULL, NULL);
     //CHECK_FATAL(!set->buckets, "set bucket init failed");
 
     set->capacity = new_capacity;
@@ -159,7 +159,7 @@ hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn,
         .state = EMPTY
     };
 
-    set->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&elm, sizeof(ELM), NULL);
+    set->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&elm, sizeof(ELM), NULL, NULL);
     //CHECK_FATAL(!set->buckets, "set bucket init failed");
 
     set->capacity = HASHMAP_INIT_CAPACITY;

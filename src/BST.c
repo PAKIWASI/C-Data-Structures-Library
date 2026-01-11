@@ -32,7 +32,7 @@ BST* bst_create(u16 data_size, genVec_compare_fn cmp, to_string_fn to_str, genVe
     BST* bst = malloc(sizeof(BST));
     CHECK_FATAL(!bst, "bst malloc failed");
 
-    bst->arr = genVec_init(0, data_size, del);
+    bst->arr = genVec_init(0, data_size,NULL, del);
     //CHECK_FATAL(!bst->arr, "bst arr init failed");
 
 
@@ -134,7 +134,7 @@ void bst_balance(BST* bst)
 
     // Collect inorder traversal
     genVec inorder;
-    genVec_init_stk(bst->size, bst->arr->data_size, bst->arr->del_fn, &inorder);
+    genVec_init_stk(bst->size, bst->arr->data_size, NULL, bst->arr->del_fn, &inorder);
     bst_inorder_arr(bst, 0, &inorder);
 
     // COMPLETELY clear the current tree
@@ -142,7 +142,7 @@ void bst_balance(BST* bst)
     bitVec_destroy(bst->flags);
     
     // Create new empty structures
-    bst->arr = genVec_init(0, inorder.data_size, inorder.del_fn);
+    bst->arr = genVec_init(0, inorder.data_size, NULL,  inorder.del_fn);
     bst->flags = bitVec_create();
     bst->size = 0;
 
