@@ -621,7 +621,3 @@ The parser includes advanced word normalization:
 - **Queue Shrinking**: Queue does not shrink to optimize for performance
 - **String Helper Functions**: Some string vector helpers in `helper_functions.h` have memory management issues (see WARN/TODO comments)
 
-## License
-
-This is a personal educational project. Feel free to use and modify as needed.
-
