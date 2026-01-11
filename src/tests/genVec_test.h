@@ -1,4 +1,5 @@
 #include "String.h"
+#include "common.h"
 #include "gen_vector.h"
 #include "str_setup.h"
 
@@ -11,11 +12,12 @@ void str_print(const u8 *elm)
 
 void string_copy(u8* copy, const u8* src)
 {
-    String* s = (String*) src;
     String* c = (String*) copy;
+    String* s = (String*) src;
 
-    string_append_cstr(c, string_to_cstr(s)); 
+    genVec_copy(&c->buffer, &s->buffer);
 }
+
 
 
 int genVec_test_1(void)
@@ -23,8 +25,7 @@ int genVec_test_1(void)
     genVec* vec = genVec_init(10, sizeof(String), string_copy, string_custom_delete);
 
     String* str = string_from_cstr("hello");
-    genVec_push(vec, castptr(str));
-    string_destroy(str);
+    genVec_push_move(vec, (u8**)(&str));
 
     genVec_print(vec, str_print);
 

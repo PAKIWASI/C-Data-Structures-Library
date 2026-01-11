@@ -132,7 +132,8 @@ static inline u8 genVec_empty(const genVec* vec) {
     return vec->size == 0;
 }
 
-// TO add:
+// TODO: add:
+
 // Swap two elements (useful for sorting algorithms)
 void genVec_swap(genVec* vec, u32 i, u32 j);
 
@@ -141,3 +142,5 @@ b8 genVec_find(const genVec* vec, const u8* elm, genVec_compare_fn cmp);
 
 // Get a subarray copy from array
 void genVec_subarray(genVec* vec, genVec* subarr, u32 l, u32 r);
+
+

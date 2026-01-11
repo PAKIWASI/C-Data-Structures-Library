@@ -4,18 +4,21 @@
 #include <string.h>
 
 
-#define GROWTH      1.5 
-#define SHRINK_AT   0.25
-#define SHRINK_BY   0.5
+#define GROWTH      1.5     // vec capacity multiplier
+#define SHRINK_AT   0.25    // % filled to shrink at (25% filled)
+#define SHRINK_BY   0.5     // capacity dividor (half)
 
 
+// get ptr to elm at index i
 #define GET_PTR(vec, i)     ((vec->data) + ((size_t)(i) * (vec->data_size)))
+// get total_size in bytes for i elements
 #define GET_SCALED(vec, i)  ((size_t)(i) * (vec->data_size))
 
 
 //private functions
 void genVec_grow(genVec* vec);
 void genVec_shrink(genVec* vec);
+
 
 
 genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn) 
@@ -39,7 +42,7 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_
     vec->data_size = data_size;
 
     vec->copy_fn = copy_fn;
-    vec->del_fn = del_fn; // NULL if no del_fn
+    vec->del_fn = del_fn;
 
     return vec;
 }
@@ -102,7 +105,7 @@ void genVec_destroy_stk(genVec* vec)
         free(vec->data);
         vec->data = NULL;
     }
-    // dont free vec as on stk
+    // dont free vec as on stk (don't own memory)
 }
 
 void genVec_clear(genVec* vec) 
@@ -114,7 +117,7 @@ void genVec_clear(genVec* vec)
             vec->del_fn(GET_PTR(vec, i));
         }
     }
-
+    // doesn't free container
     vec->size = 0;
 }
 
@@ -189,7 +192,7 @@ void genVec_push(genVec* vec, const u8* data)
     vec->size++;
 }
 
-// own the resouce and null original pointer
+
 void genVec_push_move(genVec* vec, u8** data) 
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -235,6 +238,7 @@ void genVec_pop(genVec* vec, u8* popped)
         { genVec_shrink(vec); }
 }
 
+
 void genVec_get(const genVec* vec, u32 i, u8* out) 
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -250,6 +254,7 @@ void genVec_get(const genVec* vec, u32 i, u8* out)
     }
 }
 
+
 const u8* genVec_get_ptr(const genVec* vec, u32 i)
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -258,6 +263,7 @@ const u8* genVec_get_ptr(const genVec* vec, u32 i)
 
     return GET_PTR(vec, i);
 }
+
 
 void genVec_insert(genVec* vec, u32 i, const u8* data)
 {
@@ -332,9 +338,7 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!data, "data is null");
-
     CHECK_FATAL(num_data == 0, "num_data can't be 0");
-
     CHECK_FATAL(i > vec->size, "index out of bounds");
 
     // Calculate the number of elements to shift to right
@@ -367,9 +371,7 @@ void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!data, "data is null");
-
     CHECK_FATAL(num_data == 0, "num_data can't be 0");
-
     CHECK_FATAL(i > vec->size, "index out of bounds");
 
     // Calculate the number of elements to shift to right
@@ -395,7 +397,6 @@ void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data)
 }
 
 
-// can't have move as array is contiguos
 void genVec_remove(genVec* vec, u32 i, u8* out) 
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -429,6 +430,7 @@ void genVec_remove(genVec* vec, u32 i, u8* out)
     if (vec->size <= (u32)((double)vec->capacity * SHRINK_AT)) 
         { genVec_shrink(vec); }
 }
+
 
 void genVec_remove_range(genVec* vec, u32 l, u32 r)
 {
@@ -484,6 +486,7 @@ void genVec_replace(genVec* vec, u32 i, const u8* data)
     }
 }
 
+
 void genVec_replace_move(genVec* vec, u32 i, u8** data) 
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -502,6 +505,7 @@ void genVec_replace_move(genVec* vec, u32 i, u8** data)
     memcpy(to_replace, *data, vec->data_size);
     *data = NULL;
 }
+
 
 u8* genVec_front(const genVec* vec) 
 {
