@@ -22,10 +22,10 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
 
 
 file(GLOB SRC_FILES "src/*.c")
-file(GLOB HEADER_FILES "include/*.h")
+#file(GLOB HEADER_FILES "include/*.h")
 
-add_executable(main ${SRC_FILES} ${HEADER_FILES})
-target_include_directories(main PRIVATE include)
+add_executable(main ${SRC_FILES}) #${HEADER_FILES})
+target_include_directories(main PRIVATE include src/tests)
 
 # Debug build (default) - with ASan, no optimizations, full debug info
 #cmake -B build -G Ninja

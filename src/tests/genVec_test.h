@@ -1,34 +1,40 @@
 #include "String.h"
-#include "common.h"
 #include "gen_vector.h"
-#include "str_setup.h"
 
 
-void str_print(const u8 *elm)
+void str_copy(u8* copy, const u8* src)
 {
-    string_print((String*)elm);
+    String* c = (String*)copy;
+    String* s = (String*)src;
+
+    //string_append_string(c, s);
 }
 
-
-void string_copy(u8* copy, const u8* src)
+// del buffer, not ptr
+void str_del(u8* elm)
 {
-    String* c = (String*) copy;
-    String* s = (String*) src;
-
-    genVec_copy(&c->buffer, &s->buffer);
+    string_destroy_fromstk((String*)elm);
 }
 
+void str_print(const u8* elm)
+{
+    string_print((const String*)elm);
+}
 
 
 int genVec_test_1(void)
 {
-    genVec* vec = genVec_init(10, sizeof(String), string_copy, string_custom_delete);
+    String str;
+    string_create_onstk(&str, "");
+    genVec* vec = genVec_init_val(10, cast(str), sizeof(String), str_copy, str_del);
 
-    String* str = string_from_cstr("hello");
-    genVec_push_move(vec, (u8**)(&str));
 
     genVec_print(vec, str_print);
 
+
     genVec_destroy(vec);
+
+    return (vec == NULL) ? 0 : 1;
+
     return 0;
 }

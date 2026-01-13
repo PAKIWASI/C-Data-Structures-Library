@@ -1,0 +1,64 @@
+BasedOnStyle: LLVM
+
+# Your custom brace style
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterControlStatement: Never
+  AfterClass: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterNamespace: false
+  BeforeCatch: false
+  BeforeElse: false
+
+# Your alignment preferences
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Left
+AlignTrailingComments: true
+
+# Spacing (your preferences)
+KeepEmptyLinesAtTheStartOfBlocks: true
+MaxEmptyLinesToKeep: 2
+SortIncludes: true
+
+# Common sane defaults
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100                              # 80-120 is common
+
+# Pointer/reference alignment (pick one style)
+PointerAlignment: Left                        # int* ptr (more common in C)
+# PointerAlignment: Right                     # int *ptr (K&R style)
+
+# Function parameters
+AllowAllParametersOfDeclarationOnNextLine: true
+BinPackParameters: true                       # Pack params on fewer lines
+AlignAfterOpenBracket: Align                  # Align multi-line params
+
+# Control flow spacing
+SpaceBeforeParens: ControlStatements          # if (...) not if(...)
+SpaceBeforeAssignmentOperators: true          # x = 5 not x=5
+SpacesInParentheses: false                    # (x) not ( x )
+SpacesInSquareBrackets: false                 # [i] not [ i ]
+
+# Indentation
+IndentCaseLabels: false                       # Don't indent case: labels
+IndentPPDirectives: None                      # #ifdef at column 0
+IndentWrappedFunctionNames: false
+
+# Line breaking
+AllowShortFunctionsOnASingleLine: Inline            # Only inline/lambda on one line
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortBlocksOnASingleLine: Always              # Also allows while/for single line
+AllowShortLoopsOnASingleLine: true                 # while (x--) {}
+BreakBeforeBinaryOperators: None              # Operators at end of line
+BreakBeforeTernaryOperators: true             # ? on new line
+
+# Other common settings
+ReflowComments: false                         # Don't rewrap comment paragraphs
+
+
