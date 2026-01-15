@@ -6,7 +6,7 @@
 
 typedef struct {
     genVec buffer;  // Vector of chars - the actual string data
-} String;
+}  String;
 
 
 

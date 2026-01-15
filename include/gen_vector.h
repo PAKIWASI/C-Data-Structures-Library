@@ -5,21 +5,22 @@
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b);
-typedef void (*genVec_delete_fn)(u8* elm);                  // Cleanup owned resources
-typedef void (*genVec_copy_fn)(u8* copy, const u8* src);    // Deep copy resources
+typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b); // havent used this
+typedef void (*genVec_delete_fn)(u8* elm);                 // Cleanup owned resources
+typedef void (*genVec_copy_fn)(u8* dest, const u8* src);   // Deep copy resources
+typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into dest, null src
 
 
 // generic vector container
 typedef struct {
-    u8*               data;        // Contiguous array of elements
-    u32               size;        // Number of elements currently in vector
-    u32               capacity;    // Total allocated capacity
-    u16               data_size;   // Size of each element in bytes
-    genVec_delete_fn  del_fn;      // Cleanup function for owned resources (or NULL)
-    genVec_copy_fn    copy_fn;     // Deep copy function for owned resources (or NULL)
+    u8*              data;      // Contiguous array of elements
+    u32              size;      // Number of elements currently in vector
+    u32              capacity;  // Total allocated capacity
+    u16              data_size; // Size of each element in bytes
+    genVec_copy_fn   copy_fn;   // Deep copy function for owned resources (or NULL)
+    genVec_move_fn   move_fn;   // Get a double pointer, transfer ownership and null original
+    genVec_delete_fn del_fn;    // Cleanup function for owned resources (or NULL)
 } genVec;
-
 
 
 // Memory Management
@@ -27,13 +28,15 @@ typedef struct {
 
 // Initialize vector with capacity n. If elements own heap resources,
 // provide copy_fn (deep copy) and del_fn (cleanup). Otherwise pass NULL.
-genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn);
+genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn, genVec_move_fn move_fn);
 
 // Initialize vector on stack with data on heap
-void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn, genVec* vec);
+void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, 
+                     genVec_delete_fn del_fn, genVec_move_fn move_fn, genVec* vec);
 
 // Initialize vector of size n, all elements set to val
-genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn);
+genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn,
+                        genVec_move_fn move_fn, genVec_delete_fn del_fn);
 
 // Destroy heap-allocated vector and clean up all elements
 void genVec_destroy(genVec* vec);
@@ -71,7 +74,7 @@ void genVec_pop(genVec* vec, u8* popped);
 void genVec_get(const genVec* vec, u32 i, u8* out);
 
 // Get pointer to element at index i
-// WARNING: Pointer invalidated by push/insert/remove operations
+// Note: Pointer invalidated by push/insert/remove operations
 const u8* genVec_get_ptr(const genVec* vec, u32 i);
 
 // Replace element at index i with data (cleans up old element)
@@ -90,6 +93,7 @@ void genVec_insert_move(genVec* vec, u32 i, u8** data);
 void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data);
 
 // Insert (move) num_data  elements from data starting at index i. Transfers ownership
+// Note: This function should only be used if vec stores pointers (not values) 
 void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data);
 
 // Remove element at index i, optionally copy to out, shift elements left
@@ -115,19 +119,22 @@ void genVec_print(const genVec* vec, genVec_print_fn fn);
 void genVec_copy(genVec* dest, const genVec* src);
 
 // Get number of elements in vector
-static inline u32 genVec_size(const genVec* vec) {
+static inline u32 genVec_size(const genVec* vec)
+{
     CHECK_FATAL(!vec, "vec is null");
     return vec->size;
 }
 
 // Get total capacity of vector
-static inline u32 genVec_capacity(const genVec* vec) {
+static inline u32 genVec_capacity(const genVec* vec)
+{
     CHECK_FATAL(!vec, "vec is null");
     return vec->capacity;
 }
 
 // Check if vector is empty
-static inline u8 genVec_empty(const genVec* vec) {
+static inline u8 genVec_empty(const genVec* vec)
+{
     CHECK_FATAL(!vec, "vec is null");
     return vec->size == 0;
 }
@@ -143,5 +150,8 @@ b8 genVec_find(const genVec* vec, const u8* elm, genVec_compare_fn cmp);
 // Get a subarray copy from array
 void genVec_subarray(genVec* vec, genVec* subarr, u32 l, u32 r);
 
+// Move a vector from src to dest. 
+// Note: if dest is already inited, call genVec_destroy on it
+void genVec_move(genVec** dest, genVec** src);
 
 

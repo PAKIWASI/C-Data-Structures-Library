@@ -1,15 +1,19 @@
 #include "String.h"
 #include "common.h"
 #include "gen_vector.h"
-#include <stdio.h>
 #include <string.h>
 
 
+/*
+ * If we are copying by value, then sizeof(String) is easier (copy_fn for push) 
+ * If we are transfering, then sizeof(String*) is easier (move_fn for push_move)
+*/
+
 
 // container stores String by value (40 bytes), not ptr
-void str_copy(u8* copy, const u8* src)
+void str_copy(u8* dest, const u8* src)
 {
-    String* c = (String*)copy;  // not initalized container (garbage value)
+    String* c = (String*)dest;  // not initalized container (garbage value)
     String* s = (String*)src;
 
     // copy all field values
@@ -21,6 +25,11 @@ void str_copy(u8* copy, const u8* src)
     
     // copy data
     memcpy(c->buffer.data, s->buffer.data, n);
+}
+
+void str_move(u8* dest, u8** src)
+{
+
 }
 
 
