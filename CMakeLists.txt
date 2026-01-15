@@ -12,9 +12,10 @@ endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-# Debug configuration
-set(CMAKE_C_FLAGS_DEBUG "-g -O0 -fsanitize=address -fsanitize=leak")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address -fsanitize=leak")
+# Debug configuration with sanitizers
+set(CMAKE_C_FLAGS_DEBUG "-g -O0 -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address -fsanitize=undefined")
 
 # Release configuration
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
@@ -22,9 +23,8 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
 
 
 file(GLOB SRC_FILES "src/*.c")
-#file(GLOB HEADER_FILES "include/*.h")
 
-add_executable(main ${SRC_FILES}) #${HEADER_FILES})
+add_executable(main ${SRC_FILES})
 target_include_directories(main PRIVATE include src/tests)
 
 # Debug build (default) - with ASan, no optimizations, full debug info

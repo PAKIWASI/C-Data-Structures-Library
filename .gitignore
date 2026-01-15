@@ -3,7 +3,6 @@
 
 build/
 .cache/
-.clangd
 
 
 
