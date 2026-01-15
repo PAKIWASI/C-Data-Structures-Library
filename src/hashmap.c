@@ -64,7 +64,7 @@ static u32 find_slot(const hashmap* map, const u8* key,
             case EMPTY: // bucket empty, found 0 and return bucket as insertion location
                 return i;
             case FILLED: // bucket filled, if key match, found 1 and return i
-                if (map->compare_fn(kv->key, key, map->key_size) == 0) 
+                if (map->cmp_fn(kv->key, key, map->key_size) == 0) 
                 {
                     *found = 1;
                     return i;
@@ -95,7 +95,7 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
         .state = EMPTY
     };
 
-    map->buckets = genVec_init_val(new_capacity, (u8*)&kv, map->buckets->data_size, NULL, NULL);
+    map->buckets = genVec_init_val(new_capacity, (u8*)&kv, map->buckets->data_size, NULL, NULL, NULL);
     // genVec init val fails and kills program or returns correct vec
     //CHECK_FATAL(!map->buckets, "bucket init failed");
 
@@ -154,7 +154,7 @@ static void hashmap_maybe_resize(hashmap* map)
 */
 
 hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
-                        delete_fn key_del, delete_fn val_del, compare_fn cmp)
+                        compare_fn cmp_fn, delete_fn key_del, delete_fn val_del)
 {
     CHECK_FATAL(key_size == 0, "key size can't be zero");
     CHECK_FATAL(val_size == 0, "val size can't be zero");
@@ -171,7 +171,7 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
     // we dont give custom delete fn for kv as kv is stored directly and not a pointer
     // resources owned by kv are cleaned by us, not genVec destroy
     // this is done because when resizing, we destroy the old container but dont free the mem kv point to
-    map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&kv, sizeof(KV), NULL, NULL);
+    map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&kv, sizeof(KV), NULL, NULL, NULL);
     //CHECK_FATAL(!map->buckets, "bucket init failed");
     
     map->capacity = HASHMAP_INIT_CAPACITY;
@@ -180,9 +180,9 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
     map->val_size = val_size;
 
     map->hash_fn = hash_fn ? hash_fn : fnv1a_hash;
+    map->cmp_fn = cmp_fn;
     map->key_del_fn = key_del; 
     map->val_del_fn = val_del;
-    map->compare_fn = cmp ? cmp : default_compare;
 
     return map;
 }

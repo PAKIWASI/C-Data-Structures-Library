@@ -9,7 +9,7 @@ typedef struct {
 } Stack;
 
 
-Stack* stack_create(u32 n, u32 data_size, genVec_delete_fn del_fn);
+Stack* stack_create(u32 n, u16 data_size, genVec_delete_fn del_fn);
 void stack_destroy(Stack* stk);
 void stack_clear(Stack* stk);
 

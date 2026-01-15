@@ -10,7 +10,7 @@ bitVec* bitVec_create(void)
     bitVec* bvec = malloc(sizeof(bitVec));
     CHECK_FATAL(!bvec, "bvec init failed");
 
-    bvec->arr = genVec_init(0, sizeof(u8), NULL, NULL);
+    bvec->arr = genVec_init(0, sizeof(u8), NULL, NULL, NULL);
     //CHECK_FATAL(!bvec->arr, "bvec arr init failed");
 
     bvec->size = 0;

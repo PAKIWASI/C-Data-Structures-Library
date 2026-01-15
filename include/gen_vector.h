@@ -28,11 +28,11 @@ typedef struct {
 
 // Initialize vector with capacity n. If elements own heap resources,
 // provide copy_fn (deep copy) and del_fn (cleanup). Otherwise pass NULL.
-genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn, genVec_move_fn move_fn);
+genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
 
 // Initialize vector on stack with data on heap
-void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, 
-                     genVec_delete_fn del_fn, genVec_move_fn move_fn, genVec* vec);
+void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, 
+                     genVec_delete_fn del_fn, genVec* vec);
 
 // Initialize vector of size n, all elements set to val
 genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn,
@@ -118,6 +118,11 @@ void genVec_print(const genVec* vec, genVec_print_fn fn);
 // Deep copy src vector into dest (cleans up dest's existing elements first)
 void genVec_copy(genVec* dest, const genVec* src);
 
+// Move a vector from src to dest. 
+// Note: if dest is already inited, call genVec_destroy on it
+void genVec_move(genVec* dest, genVec** src);
+
+
 // Get number of elements in vector
 static inline u32 genVec_size(const genVec* vec)
 {
@@ -150,8 +155,5 @@ b8 genVec_find(const genVec* vec, const u8* elm, genVec_compare_fn cmp);
 // Get a subarray copy from array
 void genVec_subarray(genVec* vec, genVec* subarr, u32 l, u32 r);
 
-// Move a vector from src to dest. 
-// Note: if dest is already inited, call genVec_destroy on it
-void genVec_move(genVec** dest, genVec** src);
 
 

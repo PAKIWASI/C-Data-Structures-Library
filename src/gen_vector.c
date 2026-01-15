@@ -20,7 +20,8 @@ void genVec_grow(genVec* vec);
 void genVec_shrink(genVec* vec);
 
 
-genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_fn del_fn, genVec_move_fn move_fn)
+genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+                    genVec_delete_fn del_fn)
 {
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
 
@@ -47,8 +48,9 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_delete_
     return vec;
 }
 
-void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, 
-                     genVec_delete_fn del_fn, genVec_move_fn move_fn, genVec* vec)
+
+void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+                     genVec_delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
@@ -61,9 +63,10 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn,
     vec->capacity  = n;
     vec->data_size = data_size;
     vec->copy_fn   = copy_fn;
-    vec->move_fn = move_fn;
+    vec->move_fn   = move_fn;
     vec->del_fn    = del_fn;
 }
+
 
 genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn,
                         genVec_move_fn move_fn, genVec_delete_fn del_fn)
@@ -71,7 +74,7 @@ genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy
     CHECK_FATAL(!val, "val can't be null");
     CHECK_FATAL(n == 0, "cant init with val if n = 0");
 
-    genVec* vec = genVec_init(n, data_size, copy_fn, del_fn, move_fn);
+    genVec* vec = genVec_init(n, data_size, copy_fn, move_fn, del_fn);
 
     vec->size = n; //capacity set to n in upper func
 
@@ -97,15 +100,15 @@ void genVec_destroy_stk(genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
 
+    if (!vec->data) { return; }     // TODO: check this
+
     if (vec->del_fn) {
         // Custom cleanup for each element
         for (u32 i = 0; i < vec->size; i++) { vec->del_fn(GET_PTR(vec, i)); }
     }
 
-    if (vec->data) {
-        free(vec->data);
-        vec->data = NULL;
-    }
+    free(vec->data);
+    vec->data = NULL;
     // dont free vec as on stk (don't own memory)
 }
 
@@ -532,22 +535,27 @@ void genVec_print(const genVec* vec, genVec_print_fn fn)
 }
 
 
+// TODO: how to fix like genVec_move ?
 void genVec_copy(genVec* dest, const genVec* src)
 {
-    CHECK_FATAL(!src, "src is null");
-    CHECK_FATAL(!dest, "dest is null");
-
     if (dest == src) { return; }
 
-    CHECK_FATAL(dest->data_size != src->data_size, "dest and src vec's data_size's don't match");
-    CHECK_FATAL(dest->copy_fn != src->copy_fn, "dest and src vec's copy_fn's don't match");
+    CHECK_FATAL(!src, "src is null");
+    // CHECK_FATAL(!dest, "dest is null");
+    if (dest) {
+        CHECK_FATAL(dest->data_size != src->data_size, "dest and src vec's data_size's don't match");
+        CHECK_FATAL(dest->copy_fn != src->copy_fn, "dest and src vec's copy_fn's don't match");
 
-    genVec_clear(dest);
-
-    if (dest->capacity < src->size) { genVec_reserve(dest, src->size); }
+        genVec_clear(dest);
+        if (dest->capacity < src->size) { genVec_reserve(dest, src->size); }
+    } else {
+        genVec_init(src->size, src->data_size, src->copy_fn, src->move_fn, src->del_fn);
+    }
 
     if (src->copy_fn) {
-        for (u32 i = 0; i < src->size; i++) { src->copy_fn(GET_PTR(dest, i), GET_PTR(src, i)); }
+        for (u32 i = 0; i < src->size; i++) { 
+            src->copy_fn(GET_PTR(dest, i), GET_PTR(src, i)); 
+        }
     } else {
         memcpy(dest->data, src->data, GET_SCALED(src, src->size));
     }
@@ -556,21 +564,20 @@ void genVec_copy(genVec* dest, const genVec* src)
 }
 
 
-// TODO: 
-void genVec_move(genVec** dest, genVec** src)
+// TODO:
+void genVec_move(genVec* dest, genVec** src)
 {
     CHECK_FATAL(!src, "src is null");
     CHECK_FATAL(!*src, "*src is null");
-    CHECK_FATAL(!dest, "dest is null");
-    CHECK_FATAL(!*dest, "*dest is null");
 
-    if (*dest == *src) { return; }
+    if (dest == *src) { return; }
 
-    if (*dest) {
-        genVec_destroy(*dest);
-    }
+    memcpy(dest, *src, sizeof(genVec));
 
-    *dest = *src;
+    genVec* s = *src;
+    s->data   = NULL;
+    genVec_destroy(s);
+
     *src = NULL;
 }
 
@@ -613,5 +620,3 @@ void genVec_shrink(genVec* vec)
     vec->data     = new_data;
     vec->capacity = reduced_cap;
 }
-
-

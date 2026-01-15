@@ -4,15 +4,14 @@
 
 
 
-Stack* stack_create(u32 n, u32 data_size, genVec_delete_fn del_fn)
+Stack* stack_create(u32 n, u16 data_size, genVec_delete_fn del_fn)
 {
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
 
     Stack* stk = malloc(sizeof(Stack));
     CHECK_FATAL(!stk, "stk malloc failed");
 
-    stk->arr = genVec_init(n, data_size,NULL, del_fn);
-    //CHECK_FATAL(!stk->arr, "stk arr init failed");
+    stk->arr = genVec_init(n, data_size,NULL, NULL, del_fn);
 
     return stk;
 }

@@ -11,7 +11,7 @@ typedef struct { // Circular Queue
 } Queue;
 
 
-Queue* queue_create(u32 n, u32 data_size, genVec_delete_fn del_fn);
+Queue* queue_create(u32 n, u16 data_size, genVec_delete_fn del_fn);
 void queue_destroy(Queue* q);
 void queue_clear(Queue* q);
 

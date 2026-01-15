@@ -15,14 +15,14 @@ typedef struct {
     custom_hash_fn  hash_fn;
     delete_fn       key_del_fn;
     delete_fn       val_del_fn;
-    compare_fn      compare_fn;
+    compare_fn      cmp_fn;
 
 } hashmap;
 
 
 
 hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
-                    delete_fn key_del, delete_fn val_del, compare_fn cmp);
+                        compare_fn cmp_fn, delete_fn key_del, delete_fn val_del);
 
 void     hashmap_destroy(hashmap* map);
 
