@@ -67,9 +67,6 @@ void string_destroy_stk(String* str)
     genVec_destroy_stk(&str->buffer);
 }
 
-// TODO: test this
-// Move semantics - transfer ownership
-// src must be heap allocated
 void string_move(String* dest, String** src)
 {
     CHECK_FATAL(!src, "src is null");
@@ -81,6 +78,9 @@ void string_move(String* dest, String** src)
         return;
     }
 
+    // no op if dest's data ptr is null (like stack inited)
+    string_destroy_stk(dest);
+
     // copy fields (including data ptr)
     memcpy(dest, *src, sizeof(String));
     
@@ -89,8 +89,7 @@ void string_move(String* dest, String** src)
     *src = NULL;
 }
 
-// TODO: test this
-// should work for String str; (data ptr is null)
+
 void string_copy(String* dest, String* src)
 {
     CHECK_FATAL(!src, "src is null");
@@ -112,7 +111,6 @@ void string_copy(String* dest, String* src)
 }
 
 
-// Returns a COPY with null terminator
 const char* string_to_cstr(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
@@ -135,7 +133,6 @@ const char* string_to_cstr(const String* str)
 }
 
 
-// Returns pointer to internal buffer (NO null terminator!)
 const char* string_to_cstr_ptr(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
@@ -157,6 +154,7 @@ void string_append_cstr(String* str, const char* cstr)
     genVec_insert_multi(&str->buffer, str->buffer.size, (const u8*)cstr, cstr_len);
 }
 
+
 void string_append_string(String* str, const String* other)
 {
     CHECK_FATAL(!str, "str is empty");
@@ -169,7 +167,6 @@ void string_append_string(String* str, const String* other)
 }
 
 // append and consume source string
-// TODO: why dont we use string_move() ?
 void string_append_string_move(String* str, String** other)
 {
     CHECK_FATAL(!str, "str is null");
@@ -177,8 +174,8 @@ void string_append_string_move(String* str, String** other)
     CHECK_FATAL(!*other, "*other is null");
 
     if ((*other)->buffer.size > 0) {
-        genVec_insert_multi(&str->buffer, str->buffer.size, (*other)->buffer.data,
-                            (*other)->buffer.size);
+        genVec_insert_multi(&str->buffer, str->buffer.size, 
+                            (*other)->buffer.data, (*other)->buffer.size);
     }
 
     string_destroy(*other);
@@ -327,7 +324,6 @@ u32 string_find_cstr(const String* str, const char* substr)
     u32 substr_len = (u32)strlen(substr);
     if (substr_len == 0 || substr_len > str->buffer.size) { return (u32)-1; }
 
-    // Simple Boyer-Moore-ish approach or just use memcmp
     for (u32 i = 0; i <= str->buffer.size - substr_len; i++) {
         if (memcmp(str->buffer.data + i, substr, substr_len) == 0) { return i; }
     }

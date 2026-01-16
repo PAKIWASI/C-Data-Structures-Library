@@ -3,33 +3,34 @@
 #include "gen_vector.h"
 
 
-
 typedef struct {
-    genVec buffer;  // Vector of chars - the actual string data
-}  String;
+    genVec buffer; // Vector of chars - the actual string data
+} String;
 
 
 // Construction/Destruction
 
-String*  string_create(void);
-void     string_create_stk(String* str, const char* cstr);
-String*  string_from_cstr(const char* cstr);
+String* string_create(void);
+void    string_create_stk(String* str, const char* cstr);
+String* string_from_cstr(const char* cstr);
 // get copy of a string (heap allocated)
-String*  string_from_string(const String* other);
-void     string_reserve(String* str, u32 capacity); 
-void     string_destroy(String* str);
-void     string_destroy_stk(String* str);
+String* string_from_string(const String* other);
+void    string_reserve(String* str, u32 capacity);
+void    string_destroy(String* str);
+void    string_destroy_stk(String* str);
 
 // move string contents (nulls source)
-void     string_move(String* dest, String** src);
+// Note: src must be heap allocated
+void string_move(String* dest, String** src);
 
 // make deep copy
-void     string_copy(String* dest, String* src);
+void string_copy(String* dest, String* src);
 
 
-// get cstr as COPY
+// get cstr as COPY ('\0' present)
 const char* string_to_cstr(const String* str);
 // get ptr to the cstr buffer
+// Note: NO NULL TERMINATOR
 const char* string_to_cstr_ptr(const String* str);
 
 // Modification
@@ -48,8 +49,6 @@ void string_remove_range(String* str, u32 l, u32 r);
 void string_clear(String* str);
 
 
-
-
 // Access
 char string_char_at(const String* str, u32 i);
 void string_set_char(String* str, u32 i, char c);
@@ -57,8 +56,8 @@ void string_set_char(String* str, u32 i, char c);
 // Comparison
 // 0 -> equal, 1 -> not equal
 int string_compare(const String* str1, const String* str2);
-b8 string_equals(const String* str1, const String* str2);
-b8 string_equals_cstr(const String* str, const char* cstr);
+b8  string_equals(const String* str1, const String* str2);
+b8  string_equals_cstr(const String* str, const char* cstr);
 
 // Search
 u32 string_find_char(const String* str, char c);
@@ -71,16 +70,17 @@ String* string_substr(const String* str, u32 start, u32 length);
 void string_print(const String* str);
 
 // Basic properties
-static inline u32 string_len(const String* str) 
+static inline u32 string_len(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
 
     return str->buffer.size;
 }
 
-static inline b8 string_empty(const String* str) 
+static inline b8 string_empty(const String* str)
 {
     return string_len(str) == 0;
 }
+
 
 

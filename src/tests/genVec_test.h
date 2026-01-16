@@ -1,7 +1,4 @@
 #include "String.h"
-#include "common.h"
-#include "gen_vector.h"
-#include <stdlib.h>
 #include <string.h>
 
 
