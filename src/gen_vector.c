@@ -105,7 +105,9 @@ void genVec_destroy_stk(genVec* vec)
 
     if (vec->del_fn) {
         // Custom cleanup for each element
-        for (u32 i = 0; i < vec->size; i++) { vec->del_fn(GET_PTR(vec, i)); }
+        for (u32 i = 0; i < vec->size; i++) { 
+            vec->del_fn(GET_PTR(vec, i)); 
+        }
     }
 
     free(vec->data);
@@ -536,9 +538,6 @@ void genVec_print(const genVec* vec, genVec_print_fn fn)
 }
 
 
-// by taking pre inited dest and not returing a genVec,
-// we can control the genVec being on stack or heap
-// dest should only have memory ? genVec vec; should work?
 void genVec_copy(genVec* dest, const genVec* src)
 {
     CHECK_FATAL(!dest, "dest is null");

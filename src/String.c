@@ -1,8 +1,5 @@
 #include "String.h"
-#include "common.h"
-#include "gen_vector.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 
@@ -16,7 +13,7 @@ String* string_create(void)
     return str;
 }
 
-void string_create_onstk(String* str, const char* cstr)
+void string_create_stk(String* str, const char* cstr)
 {
     // the difference is that we dont use string_create(), so str is not heap initilised
     CHECK_FATAL(!str, "str is null");
@@ -59,12 +56,12 @@ void string_reserve(String* str, u32 capacity)
 
 void string_destroy(String* str)
 {
-    string_destroy_fromstk(str);
+    string_destroy_stk(str);
     free(str);
 }
 
 // cant free the stack allocated string, but buffer is heap. So seperate delete
-void string_destroy_fromstk(String* str)
+void string_destroy_stk(String* str)
 {
     CHECK_FATAL(!str, "str is null");
     genVec_destroy_stk(&str->buffer);
@@ -102,7 +99,7 @@ void string_copy(String* dest, String* src)
     if (src == dest) { return; }
 
     // no op if data ptr is null
-    string_destroy_fromstk(dest);
+    string_destroy_stk(dest);
 
     // copy all fields (data ptr too)
     memcpy(dest, src, sizeof(String));
@@ -154,7 +151,7 @@ void string_append_cstr(String* str, const char* cstr)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
 
-    u32 cstr_len = strlen(cstr);
+    u32 cstr_len = (u32)strlen(cstr);
     if (cstr_len == 0) { return; }
 
     genVec_insert_multi(&str->buffer, str->buffer.size, (const u8*)cstr, cstr_len);
@@ -218,7 +215,7 @@ void string_insert_cstr(String* str, u32 i, const char* cstr)
     CHECK_FATAL(!cstr, "cstr is null");
     CHECK_FATAL(i > str->buffer.size, "index out of bounds");
 
-    u32 len = strlen(cstr);
+    u32 len = (u32)strlen(cstr);
     if (len == 0) { return; }
 
     genVec_insert_multi(&str->buffer, i, castptr(cstr), len);
@@ -304,7 +301,7 @@ b8 string_equals_cstr(const String* str, const char* cstr)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
 
-    u32 cstr_len = strlen(cstr);
+    u32 cstr_len = (u32)strlen(cstr);
 
     if (str->buffer.size != cstr_len) { return 0; }
 
@@ -319,7 +316,7 @@ u32 string_find_char(const String* str, char c)
         if (((char*)str->buffer.data)[i] == c) { return i; }
     }
 
-    return -1; // Not found
+    return (u32)-1; // Not found
 }
 
 u32 string_find_cstr(const String* str, const char* substr)
@@ -327,15 +324,15 @@ u32 string_find_cstr(const String* str, const char* substr)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!substr, "substr is null");
 
-    u32 substr_len = strlen(substr);
-    if (substr_len == 0 || substr_len > str->buffer.size) { return -1; }
+    u32 substr_len = (u32)strlen(substr);
+    if (substr_len == 0 || substr_len > str->buffer.size) { return (u32)-1; }
 
     // Simple Boyer-Moore-ish approach or just use memcmp
     for (u32 i = 0; i <= str->buffer.size - substr_len; i++) {
         if (memcmp(str->buffer.data + i, substr, substr_len) == 0) { return i; }
     }
 
-    return -1;
+    return (u32)-1;
 }
 
 String* string_substr(const String* str, u32 start, u32 length)
@@ -367,3 +364,6 @@ void string_print(const String* str)
     for (u32 i = 0; i < str->buffer.size; i++) { putchar(((char*)str->buffer.data)[i]); }
     printf("\"");
 }
+
+
+

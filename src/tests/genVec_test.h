@@ -6,11 +6,6 @@
 
 
 
-void str_print(const u8* elm)
-{
-    string_print((const String*)elm);
-}
-
 
 // === test vec of string (sizeof(String)) ===
 //============================================
@@ -34,14 +29,12 @@ void str_copy(u8* dest, const u8* src)
 
 // in case of String by val, buffer is malloced (but random)
 // we copy buffer entirely (all fields)
+// src must be heap allocated
 void str_move(u8* dest, u8** src)
 {
     memcpy(dest, *src, sizeof(String));
 
-    String* s = *(String**)src;
-
-    s->buffer.data = NULL;
-    string_destroy(s);
+    free(*src); 
     *src = NULL;
 }
 
@@ -49,7 +42,12 @@ void str_move(u8* dest, u8** src)
 // del buffer, not ptr
 void str_del(u8* elm)
 {
-    string_destroy_fromstk((String*)elm);
+    string_destroy_stk((String*)elm);
+}
+
+void str_print(const u8* elm)
+{
+    string_print((const String*)elm);
 }
 
 
@@ -107,18 +105,18 @@ int genVec_test_2(void)
 // === test vec of string* (sizeof(String*)) ===
 //==============================================
 
-// but we can choose how to get data into the vec (for copy move)
-// we will take simple String* (same as above) for copy
-// and String** (same) for move
+// when we try to copy elements from one vec to another, then src is also string**
+// so we take input as string**, always
+// so when we create stack str, then we have to assign ptr to it and pass address of that
+
 
 // vec stores pointers to strings, we get a ptr to the element, which is a ptr to string
 void str_copy_ptr(u8* dest, const u8* src)
 {
-    String* d = *(String**)dest;    // double ptr to str (vec contaier)
-    String* s = (String*)src;       // ptr to str (input) 
+    String* s = *(String**)src;       // double ptr to str (input) 
 
     // allocate memory for heap string, point d to it
-    d = malloc(sizeof(String));
+    String* d = malloc(sizeof(String));
 
     // copy all the fields
     memcpy(d, s, sizeof(String));
@@ -129,20 +127,17 @@ void str_copy_ptr(u8* dest, const u8* src)
 
     // copy all elements
     memcpy(d->buffer.data, s->buffer.data, n);
+
+    *(String**)dest = d;    // dest is double ptr to str
 }
 
 
-// src is &string*, same as str_move_val
+// dest & src are double ptrs
 void str_move_ptr(u8* dest, u8** src)
 {
-    String* d = *(String**)dest; // double ptr elm
-    String* s = *(String**)src;  // double ptr input
+    // give address of String to dest 
+    *(String**)dest = *(String**)src;
 
-    // d is ptr to String but not malloced    
-    // we point d to the string
-    d = s;  // d now copies address of string
-
-    // strip ownership from src
     *src = NULL;
 }
 
@@ -155,21 +150,33 @@ void str_del_ptr(u8* elm)
     // vec container just a ptr (vec owns it)
 }
 
+void str_print_ptr(const u8* elm)
+{
+    string_print(*(const String**)elm);
+}
+
 
 // test push (copy) 
 int genVec_test_3(void)
 {
     genVec* vec = genVec_init(10, sizeof(String*), str_copy_ptr, str_move_ptr, str_del_ptr);
 
-    String* str = string_from_cstr("hello");
-    genVec_push(vec, castptr(str)); // take simple String* for copy
+    String str;
+    u8* p = (u8*)&str;
+    string_create_stk((String*)p, "hello");
+    genVec_push(vec, (const u8*)&p); //  address of pointer to str (double ptr)
 
-    string_print(str);
-    string_destroy(str);
+    string_print((String*)p);
+    string_destroy_stk((String*)p);
 
-    // BUG: something wrong here
-    genVec_print(vec, str_print);
+    genVec v2;
+    genVec_copy(&v2, vec);
+
+    genVec_print(vec, str_print_ptr);
+    genVec_print(&v2, str_print_ptr);
+
     genVec_destroy(vec);
+    genVec_destroy_stk(&v2);
 
     return 0;
 }
@@ -182,23 +189,14 @@ int genVec_test_4(void)
     String* str = string_from_cstr("hello");
     genVec_push_move(vec, (u8**)&str); // take String** for move
 
-    genVec_print(vec, str_print);
-    genVec_destroy(vec);
+    genVec* v2 = malloc(sizeof(genVec));
+    genVec_move(v2, &vec);
+
+    
+    genVec_print(v2, str_print_ptr);
+    genVec_destroy(v2);
 
     return 0;
 }
     
-
-/*      COPY vs MOVE - PUSH vs PUSH_MOVE
- * If we are copying by value, then sizeof(String) is easier (copy_fn for push) 
- * If we are transfering, then sizeof(String*) is easier (move_fn for push_move)
- *
- * SIZEOF(STRING):
- * copy is easy as we just copy buffer, then copy data for size n
- * for move, space of dest is already inited. we memcpy src to dest, we get all fields. then set src's data to null and call destroy
- * genVec_copy
- * SIZEOF(STRING*):
- *
-*/
-
 

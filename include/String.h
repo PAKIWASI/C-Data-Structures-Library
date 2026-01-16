@@ -9,17 +9,16 @@ typedef struct {
 }  String;
 
 
-
 // Construction/Destruction
 
 String*  string_create(void);
-void     string_create_onstk(String* str, const char* cstr);
+void     string_create_stk(String* str, const char* cstr);
 String*  string_from_cstr(const char* cstr);
 // get copy of a string (heap allocated)
 String*  string_from_string(const String* other);
 void     string_reserve(String* str, u32 capacity); 
 void     string_destroy(String* str);
-void     string_destroy_fromstk(String* str);
+void     string_destroy_stk(String* str);
 
 // move string contents (nulls source)
 void     string_move(String* dest, String** src);
