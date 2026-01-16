@@ -1,5 +1,4 @@
 #include "hashmap.h"
-#include "common.h"
 #include "default_functions.h"
 
 
@@ -17,23 +16,28 @@ typedef struct {
 static void kv_destroy(hashmap* map, const KV* kv)
 {
     CHECK_FATAL(!kv, "kv is null");
-    CHECK_FATAL(!kv->key, "kv key is null");
-    CHECK_FATAL(!kv->val, "kv val is null");
+    //CHECK_FATAL(!kv->key, "kv key is null");
+    //CHECK_FATAL(!kv->val, "kv val is null");
 
-    if (map->key_del_fn) {
-        map->key_del_fn(kv->key); 
-    } else {
-        free(kv->key);
+    if (kv->key) {
+        if (map->key_del_fn) {
+            map->key_del_fn(kv->key); 
+        } else {
+            free(kv->key);
+        }
     }
 
-    if (map->val_del_fn) {
-        map->val_del_fn(kv->val);
-    } else {
-        free(kv->val);
+    if (kv->val) {
+        if (map->val_del_fn) {
+            map->val_del_fn(kv->val);
+        } else {
+            free(kv->val);
+        }
     }
+
     // now key/val del funcs have to free key/vals themselves
 
-    // dont free kv as managed by genVec
+    // dont free kv as owned by genVec
 }
 
 
@@ -95,9 +99,7 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
         .state = EMPTY
     };
 
-    map->buckets = genVec_init_val(new_capacity, (u8*)&kv, map->buckets->data_size, NULL, NULL, NULL);
-    // genVec init val fails and kills program or returns correct vec
-    //CHECK_FATAL(!map->buckets, "bucket init failed");
+    map->buckets = genVec_init_val(new_capacity, cast(kv), map->buckets->data_size, NULL, NULL, NULL);
 
     map->capacity = new_capacity;
     map->size = 0;          // recounted when we rehash
@@ -172,7 +174,6 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
     // resources owned by kv are cleaned by us, not genVec destroy
     // this is done because when resizing, we destroy the old container but dont free the mem kv point to
     map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&kv, sizeof(KV), NULL, NULL, NULL);
-    //CHECK_FATAL(!map->buckets, "bucket init failed");
     
     map->capacity = HASHMAP_INIT_CAPACITY;
     map->size = 0;
@@ -180,7 +181,7 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
     map->val_size = val_size;
 
     map->hash_fn = hash_fn ? hash_fn : fnv1a_hash;
-    map->cmp_fn = cmp_fn;
+    map->cmp_fn = cmp_fn ? cmp_fn : default_compare;
     map->key_del_fn = key_del; 
     map->val_del_fn = val_del;
 
@@ -203,6 +204,7 @@ void hashmap_destroy(hashmap* map)
 }
 
 
+// TODO: should use copy fns
 b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
 {
     CHECK_FATAL(!map, "map is null");
@@ -229,25 +231,24 @@ b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
         
         return 1; // found
     } 
-    else {
-        // New key - insert
-        KV kv = {
-            .key = malloc(map->key_size),
-            .val = malloc(map->val_size),
-            .state = FILLED
-        };
-        
-        CHECK_FATAL(!kv.key, "key malloc failed");
-        CHECK_FATAL(!kv.val, "val malloc failed");
-        
-        memcpy(kv.key, key, map->key_size);
-        memcpy(kv.val, val, map->val_size);
-        
-        genVec_replace(map->buckets, slot, (u8*)&kv);
-        map->size++;  
-        
-        return 0;  // not found -- new KV
-    }
+    // not found,  New key - insert
+    KV kv = {
+        .key = malloc(map->key_size),
+        .val = malloc(map->val_size),
+        .state = FILLED
+    };
+    
+    CHECK_FATAL(!kv.key, "key malloc failed");
+    CHECK_FATAL(!kv.val, "val malloc failed");
+    
+    memcpy(kv.key, key, map->key_size);
+    memcpy(kv.val, val, map->val_size);
+    
+    genVec_replace(map->buckets, slot, (u8*)&kv);
+    map->size++;  
+    
+    return 0;  // not found -- new KV
+   
 }
 
 b8 hashmap_get(const hashmap* map, const u8* key, u8* val)
@@ -267,9 +268,8 @@ b8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 
         return 1; //found
     }
-    else {
-        return 0; // not found
-    }
+
+    return 0; // not found
 }
 
 u8* hashmap_get_ptr(hashmap* map, const u8* key)
@@ -284,9 +284,8 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
     if (found) {
         return ((const KV*)genVec_get_ptr(map->buckets, slot))->val;
     } 
-    else {
-        return NULL;
-    }
+
+    return NULL;
 }
 
 
@@ -296,7 +295,7 @@ b8 hashmap_del(hashmap* map, const u8* key)
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
 
-    if (map->size == 0) { return -1; }
+    if (map->size == 0) { return (b8)-1; }
 
     b8 found = 0;
     int tombstone = -1;
@@ -318,9 +317,8 @@ b8 hashmap_del(hashmap* map, const u8* key)
 
         return 1; // found
     }
-    else {
-        return 0; // not found
-    }
+
+    return 0; // not found
 }
 
 b8 hashmap_has(const hashmap* map, const u8* key)

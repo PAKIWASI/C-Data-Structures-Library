@@ -1,10 +1,9 @@
-#include "string_test.h"
-
+#include "hashmap_test.h"
 
 
 int main(void)
 {
-    string_test_1();
+    hashmap_test_1();
 
     return 0;
 }
