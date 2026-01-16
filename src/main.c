@@ -4,7 +4,7 @@
 int main(void)
 {
 
-    genVec_test_1();
+    genVec_test_3();
 
     return 0;
 }
