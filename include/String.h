@@ -15,13 +15,18 @@ typedef struct {
 String*  string_create(void);
 void     string_create_onstk(String* str, const char* cstr);
 String*  string_from_cstr(const char* cstr);
-//String*  string_from_cstr_move(char** cstr);
+// get copy of a string (heap allocated)
 String*  string_from_string(const String* other);
 void     string_reserve(String* str, u32 capacity); 
 void     string_destroy(String* str);
 void     string_destroy_fromstk(String* str);
+
 // move string contents (nulls source)
-void     string_move(String* dest, String* src);
+void     string_move(String* dest, String** src);
+
+// make deep copy
+void     string_copy(String* dest, String* src);
+
 
 // get cstr as COPY
 const char* string_to_cstr(const String* str);
@@ -78,4 +83,5 @@ static inline b8 string_empty(const String* str)
 {
     return string_len(str) == 0;
 }
+
 

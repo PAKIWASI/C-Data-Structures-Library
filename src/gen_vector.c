@@ -1,6 +1,7 @@
 #include "gen_vector.h"
 #include "common.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -100,7 +101,7 @@ void genVec_destroy_stk(genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
 
-    if (!vec->data) { return; }     // TODO: check this
+    if (!vec->data) { return; } // TODO: check this
 
     if (vec->del_fn) {
         // Custom cleanup for each element
@@ -535,49 +536,57 @@ void genVec_print(const genVec* vec, genVec_print_fn fn)
 }
 
 
-// TODO: how to fix like genVec_move ?
+// by taking pre inited dest and not returing a genVec,
+// we can control the genVec being on stack or heap
+// dest should only have memory ? genVec vec; should work?
 void genVec_copy(genVec* dest, const genVec* src)
 {
+    CHECK_FATAL(!dest, "dest is null");
+    CHECK_FATAL(!src, "src is null");
+
     if (dest == src) { return; }
 
-    CHECK_FATAL(!src, "src is null");
-    // CHECK_FATAL(!dest, "dest is null");
-    if (dest) {
-        CHECK_FATAL(dest->data_size != src->data_size, "dest and src vec's data_size's don't match");
-        CHECK_FATAL(dest->copy_fn != src->copy_fn, "dest and src vec's copy_fn's don't match");
+    // if data ptr is null, no op
+    genVec_destroy_stk(dest);
 
-        genVec_clear(dest);
-        if (dest->capacity < src->size) { genVec_reserve(dest, src->size); }
-    } else {
-        genVec_init(src->size, src->data_size, src->copy_fn, src->move_fn, src->del_fn);
-    }
+    // copy all fields
+    memcpy(dest, src, sizeof(genVec));
 
+    // malloc data ptr
+    dest->data = malloc(GET_SCALED(src, src->size));
+
+    // Copy elements
     if (src->copy_fn) {
-        for (u32 i = 0; i < src->size; i++) { 
+        for (u32 i = 0; i < src->size; i++) {
             src->copy_fn(GET_PTR(dest, i), GET_PTR(src, i)); 
         }
     } else {
         memcpy(dest->data, src->data, GET_SCALED(src, src->size));
     }
-
-    dest->size = src->size;
 }
 
 
-// TODO:
 void genVec_move(genVec* dest, genVec** src)
 {
     CHECK_FATAL(!src, "src is null");
     CHECK_FATAL(!*src, "*src is null");
+    CHECK_FATAL(!dest, "dest is null");
 
-    if (dest == *src) { return; }
+    if (dest == *src) {
+        *src = NULL;
+        return;
+    }
 
+    // Transfer all fields from src to dest
     memcpy(dest, *src, sizeof(genVec));
 
-    genVec* s = *src;
-    s->data   = NULL;
-    genVec_destroy(s);
+    // Null out src's data pointer so it doesn't get freed
+    (*src)->data = NULL;
 
+    // Free src if it was heap-allocated
+    // This only frees the genVec struct itself, not the data
+    // (which was transferred to dest)
+    free(*src);
     *src = NULL;
 }
 
@@ -620,3 +629,5 @@ void genVec_shrink(genVec* vec)
     vec->data     = new_data;
     vec->capacity = reduced_cap;
 }
+
+

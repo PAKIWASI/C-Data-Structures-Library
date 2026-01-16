@@ -2,6 +2,7 @@
 #include "common.h"
 #include "gen_vector.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -69,24 +70,48 @@ void string_destroy_fromstk(String* str)
     genVec_destroy_stk(&str->buffer);
 }
 
+// TODO: test this
 // Move semantics - transfer ownership
-void string_move(String* dest, String* src)
+// src must be heap allocated
+void string_move(String* dest, String** src)
 {
-    CHECK_FATAL(!dest, "dest is null");
     CHECK_FATAL(!src, "src is null");
+    CHECK_FATAL(!*src, "src is null");
+    CHECK_FATAL(!dest, "dest is null");
 
-    // Clear dest first
-    genVec_clear(&dest->buffer);
+    if (dest == *src) {
+        *src = NULL;
+        return;
+    }
 
-    // Steal src's buffer
-    dest->buffer.data     = src->buffer.data;
-    dest->buffer.size     = src->buffer.size;
-    dest->buffer.capacity = src->buffer.capacity;
+    // copy fields (including data ptr)
+    memcpy(dest, *src, sizeof(String));
+    
+    (*src)->buffer.data = NULL;
+    free(*src);
+    *src = NULL;
+}
 
-    // Null out src
-    src->buffer.data     = NULL;
-    src->buffer.size     = 0;
-    src->buffer.capacity = 0;
+// TODO: test this
+// should work for String str; (data ptr is null)
+void string_copy(String* dest, String* src)
+{
+    CHECK_FATAL(!src, "src is null");
+    CHECK_FATAL(!dest, "dest is null");
+
+    if (src == dest) { return; }
+
+    // no op if data ptr is null
+    string_destroy_fromstk(dest);
+
+    // copy all fields (data ptr too)
+    memcpy(dest, src, sizeof(String));
+
+    // malloc new data ptr
+    dest->buffer.data = malloc(src->buffer.size);
+
+    // copy all data (arr of chars)
+    memcpy(dest->buffer.data, src->buffer.data, src->buffer.size);
 }
 
 

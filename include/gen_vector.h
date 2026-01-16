@@ -115,11 +115,12 @@ u8* genVec_back(const genVec* vec);
 // Print all elements using provided print function
 void genVec_print(const genVec* vec, genVec_print_fn fn);
 
-// Deep copy src vector into dest (cleans up dest's existing elements first)
+// Deep copy src vector into dest 
+// Note: cleans up dest (if already inited)
 void genVec_copy(genVec* dest, const genVec* src);
 
-// Move a vector from src to dest. 
-// Note: if dest is already inited, call genVec_destroy on it
+// transfers ownership from src to dest
+// Note: src must be heap-allocated
 void genVec_move(genVec* dest, genVec** src);
 
 
