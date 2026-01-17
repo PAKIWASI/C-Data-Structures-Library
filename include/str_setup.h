@@ -68,12 +68,3 @@ int string_custom_compare(const u8* a, const u8* b, u32 size)
     (void)size;
     return string_compare((String*)a, (String*)b); 
 }
-
-// ========== Delete function for String* ==========
-void string_custom_delete(u8* str_ptr) {
-    String* str = (String*)str_ptr;
-        //only destroy buffer and not String as hashmap stores String not String*
-    genVec_destroy(&str->buffer);
-}
-
-

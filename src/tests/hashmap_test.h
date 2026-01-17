@@ -1,29 +1,24 @@
 #include "String.h"
-#include "genVec_test.h"
+#include "common.h"
 #include "hashmap.h"
+#include "helpers.h"
+#include <string.h>
 
-
-#define PUT_INT_STR(map, key, val)             \
-    do {                                       \
-        int     k = key;                       \
-        String* v = string_from_cstr(val);     \
-        hashmap_put(map, cast(k), castptr(v)); \
-    } while (0)
-
-
-void int_print(const u8* elm)
-{
-    printf("%d", *(int*)elm);
-}
 
 int hashmap_test_1(void)
 {
-    hashmap* map = hashmap_create(sizeof(int), sizeof(String*), NULL, NULL, NULL, str_del_ptr);
+    hashmap* map = hashmap_create(sizeof(int), sizeof(String), NULL, str_cmp_val, NULL, str_copy,
+                                  NULL, str_move, NULL, str_del);
 
-    PUT_INT_STR(map, 1, "hello");
+    int a = 5;
+    String str;
+    string_create_stk(&str, "hello");
 
-    hashmap_print(map, int_print, str_print_ptr);
+    hashmap_put(map, cast(a), cast(str));
+
+    hashmap_print(map, int_print, str_print);
 
     hashmap_destroy(map);
+    
     return 0;
 }

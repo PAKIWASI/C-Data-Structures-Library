@@ -169,7 +169,7 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
     // we dont give custom delete fn for kv as kv is stored directly and not a pointer
     // resources owned by kv are cleaned by us, not genVec destroy
     // this is done because when resizing, we destroy the old container but dont free the mem kv point to
-    map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, (u8*)&kv, sizeof(KV), NULL, NULL, NULL);
+    map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, cast(kv), sizeof(KV), NULL, NULL, NULL);
     
     map->capacity = HASHMAP_INIT_CAPACITY;
     map->size = 0;

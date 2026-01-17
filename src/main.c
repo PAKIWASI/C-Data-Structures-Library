@@ -1,11 +1,8 @@
-// #include "hashmap_test.h"
-#include "hashmap_test_ai.h"
+#include "hashmap_test.h"
 
 int main(void)
 {
-    // hashmap_test_1();
-    
-    run();
+    hashmap_test_1();
 
     return 0;
 }
