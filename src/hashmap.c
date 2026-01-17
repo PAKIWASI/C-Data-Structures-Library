@@ -16,26 +16,20 @@ typedef struct {
 static void kv_destroy(hashmap* map, const KV* kv)
 {
     CHECK_FATAL(!kv, "kv is null");
-    //CHECK_FATAL(!kv->key, "kv key is null");
-    //CHECK_FATAL(!kv->val, "kv val is null");
 
     if (kv->key) {
         if (map->key_del_fn) {
             map->key_del_fn(kv->key); 
-        } else {
-            free(kv->key);
         }
+        free(kv->key);
     }
 
     if (kv->val) {
         if (map->val_del_fn) {
             map->val_del_fn(kv->val);
-        } else {
-            free(kv->val);
         }
+        free(kv->val);
     }
-
-    // now key/val del funcs have to free key/vals themselves
 
     // dont free kv as owned by genVec
 }
@@ -156,7 +150,9 @@ static void hashmap_maybe_resize(hashmap* map)
 */
 
 hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
-                        compare_fn cmp_fn, delete_fn key_del, delete_fn val_del)
+                        compare_fn cmp_fn, copy_fn key_copy, copy_fn val_copy,
+                        move_fn key_move, move_fn val_move,
+                        delete_fn key_del, delete_fn val_del)
 {
     CHECK_FATAL(key_size == 0, "key size can't be zero");
     CHECK_FATAL(val_size == 0, "val size can't be zero");
@@ -182,7 +178,13 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
 
     map->hash_fn = hash_fn ? hash_fn : fnv1a_hash;
     map->cmp_fn = cmp_fn ? cmp_fn : default_compare;
-    map->key_del_fn = key_del; 
+    
+    map->key_copy_fn = key_copy;
+    map->key_move_fn = key_move;
+    map->key_del_fn = key_del;
+    
+    map->val_copy_fn = val_copy;
+    map->val_move_fn = val_move;
     map->val_del_fn = val_del;
 
     return map;
@@ -195,16 +197,18 @@ void hashmap_destroy(hashmap* map)
 
     // destroy each kv pair (if kv own resources, clean them)
     for (u32 i = 0; i < map->capacity; i++) {
-        kv_destroy(map, (const KV*)genVec_get_ptr(map->buckets, i));
+        const KV* kv = (const KV*)genVec_get_ptr(map->buckets, i);
+        if (kv->state == FILLED) {
+            kv_destroy(map, kv);
+        }
     }
-    // destroy the KV containers them selves (no del fn)
+    // destroy the KV containers themselves (no del fn)
     genVec_destroy(map->buckets);
 
     free(map);
 }
 
 
-// TODO: should use copy fns
 b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
 {
     CHECK_FATAL(!map, "map is null");
@@ -220,18 +224,22 @@ b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     if (found) {
         KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
         
-        // If we have a delete function, the value owns resources
+        // Free old value's resources
         if (map->val_del_fn) {
-            // Free old value's resources
             map->val_del_fn(kv->val);
         }
         
-        // Update value in place (memory already allocated)
-        memcpy(kv->val, val, map->val_size);
+        // Update value using copy semantics
+        if (map->val_copy_fn) {
+            map->val_copy_fn(kv->val, val);
+        } else {
+            memcpy(kv->val, val, map->val_size);
+        }
         
-        return 1; // found
+        return 1; // found - updated
     } 
-    // not found,  New key - insert
+    
+    // New key - insert
     KV kv = {
         .key = malloc(map->key_size),
         .val = malloc(map->val_size),
@@ -241,22 +249,105 @@ b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     CHECK_FATAL(!kv.key, "key malloc failed");
     CHECK_FATAL(!kv.val, "val malloc failed");
     
-    memcpy(kv.key, key, map->key_size);
-    memcpy(kv.val, val, map->val_size);
+    // Copy key
+    if (map->key_copy_fn) {
+        map->key_copy_fn(kv.key, key);
+    } else {
+        memcpy(kv.key, key, map->key_size);
+    }
+    
+    // Copy value
+    if (map->val_copy_fn) {
+        map->val_copy_fn(kv.val, val);
+    } else {
+        memcpy(kv.val, val, map->val_size);
+    }
     
     genVec_replace(map->buckets, slot, (u8*)&kv);
     map->size++;  
     
-    return 0;  // not found -- new KV
-   
+    return 0;  // not found - inserted
 }
+
+
+b8 hashmap_put_move(hashmap* map, u8** key, u8** val)
+{
+    CHECK_FATAL(!map, "map is null");
+    CHECK_FATAL(!key, "key is null");
+    CHECK_FATAL(!*key, "*key is null");
+    CHECK_FATAL(!val, "val is null");
+    CHECK_FATAL(!*val, "*val is null");
+    
+    hashmap_maybe_resize(map);
+    
+    b8 found = 0;
+    int tombstone = -1;
+    u32 slot = find_slot(map, *key, &found, &tombstone);
+    
+    if (found) {
+        KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
+        
+        // Free old value's resources
+        if (map->val_del_fn) {
+            map->val_del_fn(kv->val);
+        }
+        
+        // Move value
+        if (map->val_move_fn) {
+            map->val_move_fn(kv->val, val);
+        } else {
+            memcpy(kv->val, *val, map->val_size);
+            *val = NULL;
+        }
+        
+        // Key already exists, so we still need to clean up the passed key
+        if (map->key_del_fn) {
+            map->key_del_fn(*key);
+        }
+        free(*key);
+        *key = NULL;
+        
+        return 1; // found - updated
+    }
+    
+    // New key - insert with move semantics
+    KV kv = {
+        .key = malloc(map->key_size),
+        .val = malloc(map->val_size),
+        .state = FILLED
+    };
+    
+    CHECK_FATAL(!kv.key, "key malloc failed");
+    CHECK_FATAL(!kv.val, "val malloc failed");
+    
+    // Move key
+    if (map->key_move_fn) {
+        map->key_move_fn(kv.key, key);
+    } else {
+        memcpy(kv.key, *key, map->key_size);
+        *key = NULL;
+    }
+    
+    // Move value
+    if (map->val_move_fn) {
+        map->val_move_fn(kv.val, val);
+    } else {
+        memcpy(kv.val, *val, map->val_size);
+        *val = NULL;
+    }
+    
+    genVec_replace(map->buckets, slot, (u8*)&kv);
+    map->size++;
+    
+    return 0;  // not found - inserted
+}
+
 
 b8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
     CHECK_FATAL(!val, "val is null");
-
     
     b8 found = 0;
     int tombstone = -1;
@@ -264,7 +355,13 @@ b8 hashmap_get(const hashmap* map, const u8* key, u8* val)
 
     if (found) {
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, slot);
-        memcpy(val, kv->val, map->val_size);
+        
+        // Copy value out
+        if (map->val_copy_fn) {
+            map->val_copy_fn(val, kv->val);
+        } else {
+            memcpy(val, kv->val, map->val_size);
+        }
 
         return 1; //found
     }
@@ -289,13 +386,12 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
 }
 
 
-
 b8 hashmap_del(hashmap* map, const u8* key)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
 
-    if (map->size == 0) { return (b8)-1; }
+    if (map->size == 0) { return 0; }
 
     b8 found = 0;
     int tombstone = -1;
@@ -340,14 +436,15 @@ void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_f
     CHECK_FATAL(!val_print, "val_print is null");
 
     printf("\t=========\n");
+    printf("\tSize: %u / Capacity: %u\n", map->size, map->capacity);
+    printf("\t=========\n");
 
     for (u32 i = 0; i < map->capacity; i++) {
-
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, i);
         if (kv->state == FILLED) {
             printf("\t");
             key_print(kv->key);
-            printf(" ==> ");
+            printf(" => ");
             val_print(kv->val);
             printf("\n");
         }
@@ -355,5 +452,6 @@ void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_f
 
     printf("\t=========\n");
 }
+
 
 
