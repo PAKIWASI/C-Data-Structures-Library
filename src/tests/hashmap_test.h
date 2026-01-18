@@ -45,7 +45,7 @@ int hashmap_test_1(void)
     string_print(&s2);
     printf("\n");
 
-    hashmap_del(map, cast(a));
+    hashmap_del(map, cast(a), NULL);
 
     printf("%d\n", hashmap_has(map, cast(a)));
 
@@ -72,7 +72,16 @@ int hashmap_test_2(void)
     
     hashmap_print(map, int_print, str_print);
 
+    String s;
+    hashmap_del(map, cast(a), cast(s)); // in this case s is output so (u8*)
+    string_print(&s);
+    printf("\n");
+
+    hashmap_print(map, int_print, str_print);
+
+
     
+    string_destroy_stk(&s);
     hashmap_destroy(map);
     return 0;
 }

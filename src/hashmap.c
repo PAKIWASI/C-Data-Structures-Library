@@ -361,43 +361,10 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
 }
 
 
-b8 hashmap_del(hashmap* map, const u8* key)
+b8 hashmap_del(hashmap* map, const u8* key, u8* out)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
-
-    if (map->size == 0) { return 0; }
-
-    b8 found = 0;
-    int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
-
-    if (found) {
-        const KV* kv = (const KV*)genVec_get_ptr(map->buckets, slot);
-        kv_destroy(map, kv);
-
-        KV newkv = {
-            .key = NULL,
-            .val = NULL,
-            .state = TOMBSTONE
-        };
-        genVec_replace(map->buckets, slot, (u8*)&newkv);
-        map->size--;
-
-        hashmap_maybe_resize(map);
-
-        return 1; // found
-    }
-
-    return 0; // not found
-}
-
-
-b8 hashmap_del_move(hashmap* map, const u8* key, u8* out)
-{
-    CHECK_FATAL(!map, "map is null");
-    CHECK_FATAL(!key, "key is null");
-    CHECK_FATAL(!out, "out is null, use hashmap_del instead");
 
     if (map->size == 0) { return 0; }
 
@@ -408,10 +375,12 @@ b8 hashmap_del_move(hashmap* map, const u8* key, u8* out)
     if (found) {
         KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
 
-        if (map->val_move_fn) {
-            map->val_move_fn(out, &kv->val);
-        } else {
-            memcpy(out, kv->val, map->val_size);
+        if (out) {
+            if (map->val_move_fn) {
+                map->val_move_fn(out, &kv->val);
+            } else {
+                memcpy(out, kv->val, map->val_size);
+            }
         }
         
         kv_destroy(map, kv);
