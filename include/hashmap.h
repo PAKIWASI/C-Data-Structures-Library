@@ -56,26 +56,15 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
 void hashmap_destroy(hashmap* map);
 
 /**
- * Insert or update key-value pair (copy semantics)
+ * Insert or update key-value pair 
  * 
+ * @param key      - Pointer to key 
+ * @param key_move - 0: key copy semantics (u8*), 1: key move semantics (u8**) 
+ * @param val      - Pointer to value 
+ * @param val_move - 0: val copy semantics (u8*), 1: val move semantics (u8**) 
  * @return 1 if key existed (updated), 0 if new key inserted
  */
-b8 hashmap_put(hashmap* map, const u8* key, const u8* val);
-
-// TODO: unify this function and pass bools to move key/val or not
-
-b8 hashmap_put_unified(hashmap* map, u8* key, b8 key_move,
-                        u8* val, b8 val_move);
-
-/**
- * Insert or update key-value pair (move semantics)
- * Transfers ownership of key and value, nulls source pointers
- * 
- * @param key - Pointer to key pointer (will be nulled)
- * @param val - Pointer to value pointer (will be nulled)
- * @return 1 if key existed (updated), 0 if new key inserted
- */
-b8 hashmap_put_move(hashmap* map, u8** key, u8** val);
+b8 hashmap_put(hashmap* map, u8* key, b8 key_move, u8* val, b8 val_move);
 
 /**
  * Get value for key (copy semantics)
@@ -94,19 +83,12 @@ b8 hashmap_get(const hashmap* map, const u8* key, u8* val);
 u8* hashmap_get_ptr(hashmap* map, const u8* key);
 
 /**
- * Delete key-value pair
+ * Delete key-value pair and optionally move val to out ptr
  * 
+ * @param val (Optional)- Output buffer for value
  * @return 1 if found and deleted, 0 if not found
  */
-b8 hashmap_del(hashmap* map, const u8* key);
-
-/**
- * Delete key-value pair and move val to out ptr
- * 
- * @param val - Output buffer for value
- * @return 1 if found and deleted, 0 if not found
- */
-b8 hashmap_del_move(hashmap* map, const u8* key, u8* out);
+b8 hashmap_del(hashmap* map, const u8* key, u8* out);
 
 /**
  * Check if key exists

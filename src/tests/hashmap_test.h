@@ -16,19 +16,19 @@ int hashmap_test_1(void)
     String str;
     string_create_stk(&str, "hello");
 
-    hashmap_put(map, cast(a), cast(str));
+    hashmap_put(map, cast(a), 0, cast(str), 0);
     a++;
-    hashmap_put(map, cast(a), cast(str));
+    hashmap_put(map, cast(a), 0, cast(str), 0);
     a++;
-    hashmap_put(map, cast(a), cast(str));
+    hashmap_put(map, cast(a), 0, cast(str), 0);
     a++;
-    hashmap_put(map, cast(a), cast(str));
+    hashmap_put(map, cast(a), 0, cast(str), 0);
     a++;
-    hashmap_put(map, cast(a), cast(str));
+    hashmap_put(map, cast(a), 0, cast(str), 0);
     a++;
-    hashmap_put(map, cast(a), cast(str));
+    hashmap_put(map, cast(a), 0, cast(str), 0);
     a++;
-    hashmap_put(map, cast(a), cast(str));
+    hashmap_put(map, cast(a), 0, cast(str), 0);
 
     hashmap_print(map, int_print, str_print);
 
@@ -63,9 +63,12 @@ int hashmap_test_2(void)
                                   NULL, str_move, NULL, str_del);
 
     int a = 7;
-    int* p = &a;
     String* str = string_from_cstr("hello");
-    hashmap_put_move(map, (u8**)&p, (u8**)&str);
+    hashmap_put(map, cast(a), 0, cast(str), 1);
+
+    str = string_from_cstr("what is up");
+    a += 2;
+    hashmap_put(map, cast(a), 0, cast(str), 1);
     
     hashmap_print(map, int_print, str_print);
 
@@ -73,3 +76,6 @@ int hashmap_test_2(void)
     hashmap_destroy(map);
     return 0;
 }
+
+
+

@@ -211,143 +211,7 @@ void hashmap_destroy(hashmap* map)
 }
 
 
-b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
-{
-    CHECK_FATAL(!map, "map is null");
-    CHECK_FATAL(!key, "key is null");
-    CHECK_FATAL(!val, "val is null");
-    
-    hashmap_maybe_resize(map);
-    
-    b8 found = 0;
-    int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
-    
-    if (found) {
-        KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
-        
-        // Free old value's resources
-        if (map->val_del_fn) {
-            map->val_del_fn(kv->val);
-        }
-        
-        // Update value using copy semantics
-        if (map->val_copy_fn) {
-            map->val_copy_fn(kv->val, val);
-        } else {
-            memcpy(kv->val, val, map->val_size);
-        }
-        
-        return 1; // found - updated
-    } 
-    
-    // New key - insert
-    KV kv = {
-        .key = malloc(map->key_size),
-        .val = malloc(map->val_size),
-        .state = FILLED
-    };
-    
-    CHECK_FATAL(!kv.key, "key malloc failed");
-    CHECK_FATAL(!kv.val, "val malloc failed");
-    
-    // Copy key
-    if (map->key_copy_fn) {
-        map->key_copy_fn(kv.key, key);
-    } else {
-        memcpy(kv.key, key, map->key_size);
-    }
-    
-    // Copy value
-    if (map->val_copy_fn) {
-        map->val_copy_fn(kv.val, val);
-    } else {
-        memcpy(kv.val, val, map->val_size);
-    }
-    
-    genVec_replace(map->buckets, slot, (u8*)&kv);
-    map->size++;  
-    
-    return 0;  // not found - inserted
-}
-
-
-b8 hashmap_put_move(hashmap* map, u8** key, u8** val)
-{
-    CHECK_FATAL(!map, "map is null");
-    CHECK_FATAL(!key, "key is null");
-    CHECK_FATAL(!*key, "*key is null");
-    CHECK_FATAL(!val, "val is null");
-    CHECK_FATAL(!*val, "*val is null");
-    
-    hashmap_maybe_resize(map);
-    
-    b8 found = 0;
-    int tombstone = -1;
-    u32 slot = find_slot(map, *key, &found, &tombstone);
-    
-    if (found) {
-        KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
-        
-        // Free old value's resources
-        if (map->val_del_fn) {
-            map->val_del_fn(kv->val);
-        }
-        
-        // Move value
-        if (map->val_move_fn) {
-            map->val_move_fn(kv->val, val);
-        } else {
-            memcpy(kv->val, *val, map->val_size);
-            *val = NULL;
-        }
-        
-        // Key already exists, so we still need to clean up the passed key
-        if (map->key_del_fn) {
-            map->key_del_fn(*key);
-        }
-        free(*key);
-        *key = NULL;
-        
-        return 1; // found - updated
-    }
-    
-    // New key - insert with move semantics
-    KV kv = {
-        .key = malloc(map->key_size),
-        .val = malloc(map->val_size),
-        .state = FILLED
-    };
-    
-    CHECK_FATAL(!kv.key, "key malloc failed");
-    CHECK_FATAL(!kv.val, "val malloc failed");
-    
-    // Move key
-    if (map->key_move_fn) {
-        map->key_move_fn(kv.key, key);
-    } else {
-        memcpy(kv.key, *key, map->key_size);
-        *key = NULL;
-    }
-    
-    // Move value
-    if (map->val_move_fn) {
-        map->val_move_fn(kv.val, val);
-    } else {
-        memcpy(kv.val, *val, map->val_size);
-        *val = NULL;
-    }
-    
-    genVec_replace(map->buckets, slot, (u8*)&kv);
-    map->size++;
-    
-    return 0;  // not found - inserted
-}
-
-
-// if move bool is true, then it is assumed that u8** is passed
-b8 hashmap_put_unified(hashmap* map, u8* key, b8 key_move,
-                        u8* val, b8 val_move)
+b8 hashmap_put(hashmap* map, u8* key, b8 key_move, u8* val, b8 val_move)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
@@ -372,14 +236,30 @@ b8 hashmap_put_unified(hashmap* map, u8* key, b8 key_move,
         }
 
         if (val_move) {
-                            
+            // Move value
+            if (map->val_move_fn) {
+                map->val_move_fn(kv->val, (u8**)val);
+            } else {
+                memcpy(kv->val, *(u8**)val, map->val_size);
+            }
+            *(u8**)val = NULL;
         }
-        
-        // Update value using copy semantics
-        if (map->val_copy_fn) {
-            map->val_copy_fn(kv->val, val);
-        } else {
-            memcpy(kv->val, val, map->val_size);
+        else {
+            // Update value using copy semantics
+            if (map->val_copy_fn) {
+                map->val_copy_fn(kv->val, val);
+            } else {
+                memcpy(kv->val, val, map->val_size);
+            }
+        }
+
+        if (key_move) {
+            // Key already exists, so we still need to clean up the passed key
+            if (map->key_del_fn) {
+                map->key_del_fn(*(u8**)key);
+            }
+            free(*(u8**)key);
+            *(u8**)key = NULL;
         }
         
         return 1; // found - updated
@@ -395,20 +275,42 @@ b8 hashmap_put_unified(hashmap* map, u8* key, b8 key_move,
     CHECK_FATAL(!kv.key, "key malloc failed");
     CHECK_FATAL(!kv.val, "val malloc failed");
     
-    // Copy key
-    if (map->key_copy_fn) {
-        map->key_copy_fn(kv.key, key);
-    } else {
-        memcpy(kv.key, key, map->key_size);
+    if (key_move) {
+        // Move key
+        if (map->key_move_fn) {
+            map->key_move_fn(kv.key, (u8**)key);
+        } else {
+            memcpy(kv.key, *(u8**)key, map->key_size);
+            *(u8**)key = NULL;
+        }
+    } 
+    else {
+        // Copy key
+        if (map->key_copy_fn) {
+            map->key_copy_fn(kv.key, key);
+        } else {
+            memcpy(kv.key, key, map->key_size);
+        }
     }
-    
-    // Copy value
-    if (map->val_copy_fn) {
-        map->val_copy_fn(kv.val, val);
-    } else {
-        memcpy(kv.val, val, map->val_size);
+
+    if (val_move) {
+        // Move value
+        if (map->val_move_fn) {
+            map->val_move_fn(kv.val, (u8**)val);
+        } else {
+            memcpy(kv.val, *(u8**)val, map->val_size);
+            *(u8**)val = NULL;
+        }
+    } 
+    else {
+        // Copy value
+        if (map->val_copy_fn) {
+            map->val_copy_fn(kv.val, val);
+        } else {
+            memcpy(kv.val, val, map->val_size);
+        }
     }
-    
+
     genVec_replace(map->buckets, slot, (u8*)&kv);
     map->size++;  
     
