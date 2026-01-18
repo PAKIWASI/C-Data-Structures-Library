@@ -79,7 +79,7 @@ int hashmap_test_2(void)
 
     hashmap_print(map, int_print, str_print);
 
-
+    printf("%d\n", hashmap_size(map));
     
     string_destroy_stk(&s);
     hashmap_destroy(map);

@@ -1,7 +1,4 @@
 #include "hashmap.h"
-#include "common.h"
-#include "default_functions.h"
-#include <string.h>
 
 
 typedef struct {

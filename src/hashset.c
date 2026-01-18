@@ -1,7 +1,4 @@
 #include "hashset.h"
-#include "default_functions.h"
-#include "gen_vector.h"
-#include "map_setup.h"
 
 
 

@@ -1,503 +1,652 @@
-#include "hashmap.h"
+#pragma once
+
 #include "String.h"
 #include "common.h"
+#include "hashmap.h"
+#include "helpers.h"
+#include "str_setup.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <assert.h>
 
 
-// Helper macros
-#define TEST_START(name) printf("\n=== Testing %s ===\n", name)
-#define TEST_PASS() printf("✓ PASSED\n")
-#define TEST_FAIL(msg) printf("✗ FAILED: %s\n", msg)
-#define ASSERT(cond, msg) if (!(cond)) { TEST_FAIL(msg); return 1; }
-
-// Print functions
-void print_int(const u8* elm) {
-    printf("%d", *(int*)elm);
-}
-
-void print_str(const u8* elm) {
-    printf("\"%s\"", (char*)elm);
-}
-
-void print_string_ptr(const u8* elm) {
-    String* s = *(String**)elm;
-    string_print(s);
-}
-
-// String copy/move/delete for when String is stored by value
-void string_copy_val(u8* dest, const u8* src) {
-    String* d = (String*)dest;
-    String* s = (String*)src;
-    string_copy(d, s);
-}
-
-void string_move_val(u8* dest, u8** src) {
-    String* s = *(String**)src;
-    memcpy(dest, s, sizeof(String));
-    s->buffer.data = NULL;
-    free(s);
-    *src = NULL;
-}
-
-void string_del_val(u8* elm) {
-    string_destroy_stk((String*)elm);
-}
-
-// String copy/move/delete for when String* is stored
-void string_copy_ptr(u8* dest, const u8* src) {
-    String* s = *(String**)src;
-    String* d = malloc(sizeof(String));
-    string_copy(d, s);
-    *(String**)dest = d;
-}
-
-void string_move_ptr(u8* dest, u8** src) {
-    *(String**)dest = *(String**)src;
-    *src = NULL;
-}
-
-void string_del_ptr(u8* elm) {
-    String* s = *(String**)elm;
-    if (s) {
-        string_destroy(s);
+// ============================================================================
+// TEST 1: Basic int->int operations (copy semantics)
+// ============================================================================
+int hashmap_test_basic_int(void)
+{
+    printf("\n=== TEST 1: Basic int->int operations ===\n");
+    
+    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL, 
+                                  NULL, NULL, NULL, NULL, NULL, NULL);
+    
+    // Insert some key-value pairs
+    for (int i = 0; i < 20; i++) {
+        int val = i * 10;
+        b8 existed = hashmap_put(map, cast(i), 0, cast(val), 0);
+        assert(existed == 0); // Should be new insertions
     }
-}
-
-
-// Test 1: Basic int -> int hashmap
-int hashmap_test_basic(void)
-{
-    TEST_START("basic int->int operations");
     
-    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
+    printf("After inserting 20 elements:\n");
+    printf("Size: %u, Capacity: %u\n", hashmap_size(map), hashmap_capacity(map));
     
-    ASSERT(hashmap_empty(map), "new map should be empty");
-    ASSERT(hashmap_size(map) == 0, "new map size should be 0");
+    // Test retrieval
+    for (int i = 0; i < 20; i++) {
+        int val;
+        b8 found = hashmap_get(map, cast(i), cast(val));
+        assert(found == 1);
+        assert(val == i * 10);
+    }
+    printf("✓ All 20 elements retrieved correctly\n");
     
-    // Insert some values
-    int key1 = 10, val1 = 100;
-    b8 result = hashmap_put(map, (u8*)&key1, (u8*)&val1);
-    ASSERT(result == 0, "put new key should return 0");
-    ASSERT(hashmap_size(map) == 1, "size should be 1");
+    // Test update
+    int key = 5;
+    int new_val = 999;
+    b8 existed = hashmap_put(map, cast(key), 0, cast(new_val), 0);
+    assert(existed == 1); // Should be an update
     
-    int key2 = 20, val2 = 200;
-    hashmap_put(map, (u8*)&key2, (u8*)&val2);
-    ASSERT(hashmap_size(map) == 2, "size should be 2");
-    
-    // Get values
-    int out;
-    result = hashmap_get(map, (u8*)&key1, (u8*)&out);
-    ASSERT(result == 1, "get should find key");
-    ASSERT(out == 100, "value should be 100");
-    
-    result = hashmap_get(map, (u8*)&key2, (u8*)&out);
-    ASSERT(result == 1, "get should find key2");
-    ASSERT(out == 200, "value should be 200");
-    
-    // Update existing key
-    int val3 = 999;
-    result = hashmap_put(map, (u8*)&key1, (u8*)&val3);
-    ASSERT(result == 1, "put existing key should return 1");
-    ASSERT(hashmap_size(map) == 2, "size should still be 2");
-    
-    hashmap_get(map, (u8*)&key1, (u8*)&out);
-    ASSERT(out == 999, "value should be updated to 999");
-    
-    hashmap_destroy(map);
-    
-    TEST_PASS();
-    return 0;
-}
-
-
-// Test 2: String key operations (cstr -> int)
-int hashmap_test_string_key(void)
-{
-    TEST_START("string key operations");
-    
-    hashmap* map = hashmap_create(20, sizeof(int), NULL, NULL,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
-    
-    // Insert with string keys
-    char key1[] = "hello";
-    int val1 = 42;
-    hashmap_put(map, (u8*)key1, (u8*)&val1);
-    
-    char key2[] = "world";
-    int val2 = 84;
-    hashmap_put(map, (u8*)key2, (u8*)&val2);
-    
-    ASSERT(hashmap_size(map) == 2, "should have 2 entries");
-    
-    // Retrieve values
-    int out;
-    ASSERT(hashmap_get(map, (u8*)key1, (u8*)&out), "should find 'hello'");
-    ASSERT(out == 42, "value for 'hello' should be 42");
-    
-    ASSERT(hashmap_get(map, (u8*)key2, (u8*)&out), "should find 'world'");
-    ASSERT(out == 84, "value for 'world' should be 84");
+    int retrieved;
+    hashmap_get(map, cast(key), cast(retrieved));
+    assert(retrieved == 999);
+    printf("✓ Update operation works\n");
     
     // Test has
-    ASSERT(hashmap_has(map, (u8*)key1), "should have 'hello'");
-    ASSERT(hashmap_has(map, (u8*)key2), "should have 'world'");
+    assert(hashmap_has(map, cast(key)) == 1);
+    int nonexistent = 100;
+    assert(hashmap_has(map, cast(nonexistent)) == 0);
+    printf("✓ Has operation works\n");
     
-    char key3[] = "missing";
-    ASSERT(!hashmap_has(map, (u8*)key3), "should not have 'missing'");
+    // Test deletion
+    b8 deleted = hashmap_del(map, cast(key), NULL);
+    assert(deleted == 1);
+    assert(hashmap_has(map, cast(key)) == 0);
+    printf("✓ Deletion works\n");
+    
+    printf("Final size: %u\n", hashmap_size(map));
     
     hashmap_destroy(map);
-    
-    TEST_PASS();
+    printf("✓ Test passed!\n");
     return 0;
 }
 
-
-// Test 3: Delete operations
-int hashmap_test_delete(void)
+// ============================================================================
+// TEST 2: int->String VALUE (copy semantics)
+// ============================================================================
+int hashmap_test_string_val_copy(void)
 {
-    TEST_START("delete operations");
+    printf("\n=== TEST 2: int->String VALUE (copy semantics) ===\n");
     
-    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
+    hashmap* map = hashmap_create(sizeof(int), sizeof(String), NULL, NULL, 
+                                  NULL, str_copy, NULL, str_move, NULL, str_del);
     
-    // Insert multiple values
+    // Insert strings by value
     for (int i = 0; i < 10; i++) {
-        int key = i * 10;
+        String str;
+        char buf[50];
+        snprintf(buf, sizeof(buf), "String_%d", i);
+        string_create_stk(&str, buf);
+        
+        hashmap_put(map, cast(i), 0, cast(str), 0);
+        string_destroy_stk(&str);
+    }
+    
+    printf("Inserted 10 strings (by value)\n");
+    hashmap_print(map, int_print, str_print);
+    
+    // Verify retrieval
+    int key = 5;
+    String retrieved = {0};
+    b8 found = hashmap_get(map, cast(key), cast(retrieved));
+    assert(found == 1);
+    
+    printf("Retrieved: ");
+    string_print(&retrieved);
+    printf("\n");
+    assert(string_equals_cstr(&retrieved, "String_5"));
+    
+    string_destroy_stk(&retrieved);
+    
+    // Test updating with different string
+    String new_str;
+    string_create_stk(&new_str, "UPDATED_STRING");
+    hashmap_put(map, cast(key), 0, cast(new_str), 0);
+    string_destroy_stk(&new_str);
+    
+    String check = {0};
+    hashmap_get(map, cast(key), cast(check));
+    assert(string_equals_cstr(&check, "UPDATED_STRING"));
+    printf("✓ Update with new string works\n");
+    string_destroy_stk(&check);
+    
+    hashmap_destroy(map);
+    printf("✓ Test passed!\n");
+    return 0;
+}
+
+// ============================================================================
+// TEST 3: int->String VALUE (move semantics)
+// ============================================================================
+int hashmap_test_string_val_move(void)
+{
+    printf("\n=== TEST 3: int->String VALUE (move semantics) ===\n");
+    
+    hashmap* map = hashmap_create(sizeof(int), sizeof(String), NULL, NULL,
+                                  NULL, str_copy, NULL, str_move, NULL, str_del);
+    
+    // Insert with move - String objects on heap
+    for (int i = 0; i < 5; i++) {
+        char buf[50];
+        snprintf(buf, sizeof(buf), "MovedString_%d", i);
+        String* str = string_from_cstr(buf);
+        
+        // For move, pass address of the heap String* pointer
+        hashmap_put(map, cast(i), 0, (u8*)&str, 1);
+        assert(str == NULL); // Should be nulled after move
+    }
+    
+    printf("Inserted 5 strings using move semantics\n");
+    hashmap_print(map, int_print, str_print);
+    
+    // Update with move
+    int key = 2;
+    String* new_str = string_from_cstr("MOVED_UPDATE");
+    hashmap_put(map, cast(key), 0, (u8*)&new_str, 1);
+    assert(new_str == NULL);
+    
+    String check = {0};
+    hashmap_get(map, cast(key), cast(check));
+    assert(string_equals_cstr(&check, "MOVED_UPDATE"));
+    printf("✓ Move update works\n");
+    string_destroy_stk(&check);
+    
+    // Test del with output
+    String deleted_val = {0};
+    b8 found = hashmap_del(map, cast(key), cast(deleted_val));
+    assert(found == 1);
+    printf("Deleted value: ");
+    string_print(&deleted_val);
+    printf("\n");
+    string_destroy_stk(&deleted_val);
+    
+    hashmap_destroy(map);
+    printf("✓ Test passed!\n");
+    return 0;
+}
+
+// ============================================================================
+// TEST 4: String VALUE key -> int value (custom hash for value)
+// ============================================================================
+int hashmap_test_string_val_key(void)
+{
+    printf("\n=== TEST 4: String VALUE key -> int (custom hash) ===\n");
+    
+    hashmap* map = hashmap_create(sizeof(String), sizeof(int), 
+                                  murmurhash3_str_val, str_cmp_val,
+                                  str_copy, NULL, str_move, NULL, 
+                                  str_del, NULL);
+    
+    // Insert with string keys (by value)
+    const char* keys[] = {"apple", "banana", "cherry", "date", "elderberry"};
+    for (int i = 0; i < 5; i++) {
+        String key;
+        string_create_stk(&key, keys[i]);
         int val = i * 100;
-        hashmap_put(map, (u8*)&key, (u8*)&val);
+        
+        hashmap_put(map, cast(key), 0, cast(val), 0);
+        string_destroy_stk(&key);
     }
     
-    ASSERT(hashmap_size(map) == 10, "should have 10 entries");
+    printf("Inserted 5 fruit->value pairs\n");
+    hashmap_print(map, str_print, int_print);
     
-    // Delete a key
-    int key = 50;
-    b8 result = hashmap_del(map, (u8*)&key);
-    ASSERT(result == 1, "delete should succeed");
-    ASSERT(hashmap_size(map) == 9, "size should be 9");
-    ASSERT(!hashmap_has(map, (u8*)&key), "key should not exist");
+    // Lookup
+    String search_key;
+    string_create_stk(&search_key, "cherry");
+    int val;
+    b8 found = hashmap_get(map, cast(search_key), cast(val));
+    assert(found == 1);
+    assert(val == 200);
+    printf("✓ Found 'cherry' -> %d\n", val);
     
-    // Try to delete non-existent key
-    int missing = 999;
-    result = hashmap_del(map, (u8*)&missing);
-    ASSERT(result == 0, "delete non-existent should return 0");
-    ASSERT(hashmap_size(map) == 9, "size should still be 9");
+    // Test has
+    assert(hashmap_has(map, cast(search_key)) == 1);
+    string_destroy_stk(&search_key);
     
-    // Delete all remaining
-    for (int i = 0; i < 10; i++) {
-        if (i == 5) continue; // already deleted
-        int k = i * 10;
-        hashmap_del(map, (u8*)&k);
-    }
-    
-    ASSERT(hashmap_empty(map), "map should be empty");
+    String nonexistent;
+    string_create_stk(&nonexistent, "mango");
+    assert(hashmap_has(map, cast(nonexistent)) == 0);
+    string_destroy_stk(&nonexistent);
+    printf("✓ Has works for string keys\n");
     
     hashmap_destroy(map);
-    
-    TEST_PASS();
+    printf("✓ Test passed!\n");
     return 0;
 }
 
-
-// Test 4: Get pointer
-int hashmap_test_get_ptr(void)
+// ============================================================================
+// TEST 5: String VALUE -> String VALUE (both copy)
+// ============================================================================
+int hashmap_test_string_val_both_copy(void)
 {
-    TEST_START("get pointer operations");
+    printf("\n=== TEST 5: String VAL->String VAL (both copy) ===\n");
     
-    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
+    hashmap* map = hashmap_create(sizeof(String), sizeof(String),
+                                  murmurhash3_str_val, str_cmp_val,
+                                  str_copy, str_copy, str_move, str_move,
+                                  str_del, str_del);
     
-    int key = 42, val = 100;
-    hashmap_put(map, (u8*)&key, (u8*)&val);
+    // Insert String objects (not pointers)
+    const char* keys[] = {"red", "green", "blue"};
+    const char* vals[] = {"#FF0000", "#00FF00", "#0000FF"};
     
-    // Get pointer to value
-    int* ptr = (int*)hashmap_get_ptr(map, (u8*)&key);
-    ASSERT(ptr != NULL, "should get valid pointer");
-    ASSERT(*ptr == 100, "dereferenced value should be 100");
+    for (int i = 0; i < 3; i++) {
+        String key;
+        String val;
+        string_create_stk(&key, keys[i]);
+        string_create_stk(&val, vals[i]);
+        
+        // Copy semantics - passing the String objects themselves
+        hashmap_put(map, cast(key), 0, cast(val), 0);
+        
+        string_destroy_stk(&key);
+        string_destroy_stk(&val);
+    }
     
-    // Modify through pointer
-    *ptr = 200;
+    printf("Inserted 3 color mappings with copy semantics\n");
+    hashmap_print(map, str_print, str_print);
     
-    int out;
-    hashmap_get(map, (u8*)&key, (u8*)&out);
-    ASSERT(out == 200, "value should be modified to 200");
+    // Update existing key with copy
+    String update_key;
+    String update_val;
+    string_create_stk(&update_key, "red");
+    string_create_stk(&update_val, "#FFFFFF");
     
-    // Non-existent key
-    int missing = 999;
-    ptr = (int*)hashmap_get_ptr(map, (u8*)&missing);
-    ASSERT(ptr == NULL, "should return NULL for missing key");
+    b8 existed = hashmap_put(map, cast(update_key), 0, cast(update_val), 0);
+    assert(existed == 1); // Should be an update
+    
+    string_destroy_stk(&update_key);
+    string_destroy_stk(&update_val);
+    
+    // Lookup and verify
+    String lookup_key;
+    string_create_stk(&lookup_key, "red");
+    String result = {0};
+    hashmap_get(map, cast(lookup_key), cast(result));
+    assert(string_equals_cstr(&result, "#FFFFFF"));
+    printf("✓ Update works for String keys\n");
+    string_destroy_stk(&lookup_key);
+    string_destroy_stk(&result);
     
     hashmap_destroy(map);
-    
-    TEST_PASS();
+    printf("✓ Test passed!\n");
     return 0;
 }
 
-
-// Test 5: Resize and stress test
-int hashmap_test_resize(void)
+// ============================================================================
+// TEST 6: String VALUE -> String VALUE (both move)
+// ============================================================================
+int hashmap_test_string_val_both_move(void)
 {
-    TEST_START("resize and stress test");
+    printf("\n=== TEST 6: String VAL->String VAL (both move) ===\n");
     
-    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
+    hashmap* map = hashmap_create(sizeof(String), sizeof(String),
+                                  murmurhash3_str_val, str_cmp_val,
+                                  str_copy, str_copy, str_move, str_move,
+                                  str_del, str_del);
     
-    u32 initial_capacity = hashmap_capacity(map);
+    // Insert with both key and value moved
+    const char* keys[] = {"red", "green", "blue"};
+    const char* vals[] = {"#FF0000", "#00FF00", "#0000FF"};
     
-    // Insert many elements to trigger resize
-    for (int i = 0; i < 100; i++) {
-        int key = i;
-        int val = i * 10;
-        hashmap_put(map, (u8*)&key, (u8*)&val);
+    for (int i = 0; i < 3; i++) {
+        String* key = string_from_cstr(keys[i]);
+        String* val = string_from_cstr(vals[i]);
+        
+        // For move, pass address of String* pointers
+        hashmap_put(map, (u8*)&key, 1, (u8*)&val, 1);
+        assert(key == NULL);
+        assert(val == NULL);
     }
     
-    ASSERT(hashmap_size(map) == 100, "should have 100 entries");
-    ASSERT(hashmap_capacity(map) > initial_capacity, "capacity should have grown");
+    printf("Inserted 3 color mappings with move semantics\n");
+    hashmap_print(map, str_print, str_print);
     
-    // Verify all values are still accessible
-    for (int i = 0; i < 100; i++) {
-        int key = i;
-        int out;
-        ASSERT(hashmap_get(map, (u8*)&key, (u8*)&out), "should find key");
-        ASSERT(out == i * 10, "value should match");
-    }
+    // Update existing key with move
+    String* update_key = string_from_cstr("red");
+    String* update_val = string_from_cstr("#FFFFFF");
     
-    // Delete most elements to trigger shrink
-    for (int i = 0; i < 90; i++) {
-        int key = i;
-        hashmap_del(map, (u8*)&key);
-    }
+    b8 existed = hashmap_put(map, (u8*)&update_key, 1, (u8*)&update_val, 1);
+    assert(existed == 1); // Should be an update
+    assert(update_key == NULL); // Key should be freed since it existed
+    assert(update_val == NULL);
     
-    ASSERT(hashmap_size(map) == 10, "should have 10 entries left");
-    
-    // Verify remaining values
-    for (int i = 90; i < 100; i++) {
-        int key = i;
-        int out;
-        ASSERT(hashmap_get(map, (u8*)&key, (u8*)&out), "should find remaining key");
-        ASSERT(out == i * 10, "value should still match");
-    }
+    String lookup_key;
+    string_create_stk(&lookup_key, "red");
+    String result = {0};
+    hashmap_get(map, cast(lookup_key), cast(result));
+    assert(string_equals_cstr(&result, "#FFFFFF"));
+    printf("✓ Move update works for existing key\n");
+    string_destroy_stk(&lookup_key);
+    string_destroy_stk(&result);
     
     hashmap_destroy(map);
-    
-    TEST_PASS();
+    printf("✓ Test passed!\n");
     return 0;
 }
 
-
-// Test 6: String values with custom delete (int -> String*)
-int hashmap_test_string_values(void)
+// ============================================================================
+// TEST 7: int->String* POINTER (copy semantics)
+// ============================================================================
+int hashmap_test_string_ptr_copy(void)
 {
-    TEST_START("String* values with custom functions");
+    printf("\n=== TEST 7: int->String* POINTER (copy semantics) ===\n");
     
     hashmap* map = hashmap_create(sizeof(int), sizeof(String*), NULL, NULL,
-                                   NULL, string_copy_ptr,
-                                   NULL, string_move_ptr,
-                                   NULL, string_del_ptr);
+                                  NULL, str_copy_ptr, NULL, str_move_ptr, 
+                                  NULL, str_del_ptr);
     
-    // Insert String values
-    int key1 = 1;
-    String* str1 = string_from_cstr("first value");
-    hashmap_put(map, (u8*)&key1, (u8*)&str1);
+    // Insert String pointers
+    for (int i = 0; i < 5; i++) {
+        char buf[50];
+        snprintf(buf, sizeof(buf), "PtrString_%d", i);
+        String* str = string_from_cstr(buf);
+        
+        // For pointers, pass address of the pointer (which is String**)
+        hashmap_put(map, cast(i), 0, (u8*)&str, 0);
+        
+        // We can still use the original since it was copied
+        string_destroy(str);
+    }
     
-    int key2 = 2;
-    String* str2 = string_from_cstr("second value");
-    hashmap_put(map, (u8*)&key2, (u8*)&str2);
+    printf("Inserted 5 String pointers\n");
+    hashmap_print(map, int_print, str_print_ptr);
     
-    ASSERT(hashmap_size(map) == 2, "should have 2 entries");
+    // Retrieve
+    int key = 2;
+    String* retrieved = NULL;
+    hashmap_get(map, cast(key), (u8*)&retrieved);
+    assert(retrieved != NULL);
+    printf("Retrieved: ");
+    string_print(retrieved);
+    printf("\n");
     
-    // Get values
-    String* out;
-    ASSERT(hashmap_get(map, (u8*)&key1, (u8*)&out), "should find key1");
-    ASSERT(string_equals_cstr(out, "first value"), "value should match");
-    string_destroy(out); // We got a copy, must free it
+    // Don't destroy retrieved - it's owned by the map
     
-    // Update value (old should be cleaned up)
-    String* str3 = string_from_cstr("updated value");
-    hashmap_put(map, (u8*)&key1, (u8*)&str3);
-    
-    ASSERT(hashmap_get(map, (u8*)&key1, (u8*)&out), "should find updated key1");
-    ASSERT(string_equals_cstr(out, "updated value"), "value should be updated");
-    string_destroy(out);
-    
-    // Cleanup originals (map made copies)
-    string_destroy(str1);
-    string_destroy(str2);
-    string_destroy(str3);
-    
-    hashmap_destroy(map); // Should cleanup all String* values
-    
-    TEST_PASS();
+    hashmap_destroy(map);
+    printf("✓ Test passed!\n");
     return 0;
 }
 
-
-// Test 7: Move semantics
-int hashmap_test_move(void)
+// ============================================================================
+// TEST 8: int->String* POINTER (move semantics)
+// ============================================================================
+int hashmap_test_string_ptr_move(void)
 {
-    TEST_START("move semantics");
+    printf("\n=== TEST 8: int->String* POINTER (move semantics) ===\n");
     
     hashmap* map = hashmap_create(sizeof(int), sizeof(String*), NULL, NULL,
-                                   NULL, string_copy_ptr,
-                                   NULL, string_move_ptr,
-                                   NULL, string_del_ptr);
+                                  NULL, str_copy_ptr, NULL, str_move_ptr,
+                                  NULL, str_del_ptr);
     
+    // Insert with move - String* pointers
+    for (int i = 0; i < 5; i++) {
+        char buf[50];
+        snprintf(buf, sizeof(buf), "MovedPtr_%d", i);
+        String* str = string_from_cstr(buf);
+        
+        // For move of pointer, pass String** (address of String* pointer)
+        hashmap_put(map, cast(i), 0, (u8*)&str, 1);
+        assert(str == NULL); // Should be nulled
+    }
+    
+    printf("Inserted 5 String* with move semantics\n");
+    hashmap_print(map, int_print, str_print_ptr);
+    
+    hashmap_destroy(map);
+    printf("✓ Test passed!\n");
+    return 0;
+}
+
+// ============================================================================
+// TEST 9: String* POINTER key -> int value
+// ============================================================================
+int hashmap_test_string_ptr_key(void)
+{
+    printf("\n=== TEST 9: String* POINTER key -> int ===\n");
+    
+    hashmap* map = hashmap_create(sizeof(String*), sizeof(int),
+                                  murmurhash3_str_ptr, str_cmp_ptr,
+                                  str_copy_ptr, NULL, str_move_ptr, NULL,
+                                  str_del_ptr, NULL);
+    
+    // Insert with String* keys
+    const char* keys[] = {"alpha", "beta", "gamma", "delta"};
+    for (int i = 0; i < 4; i++) {
+        String* key = string_from_cstr(keys[i]);
+        int val = i * 50;
+        
+        hashmap_put(map, (u8*)&key, 0, cast(val), 0);
+        
+        // Original key is copied, so we can free it
+        string_destroy(key);
+    }
+    
+    printf("Inserted 4 String* keys\n");
+    hashmap_print(map, str_print_ptr, int_print);
+    
+    // Lookup
+    String* search_key = string_from_cstr("gamma");
+    int val;
+    b8 found = hashmap_get(map, (u8*)&search_key, cast(val));
+    assert(found == 1);
+    assert(val == 100);
+    printf("✓ Found 'gamma' -> %d\n", val);
+    
+    string_destroy(search_key);
+    
+    hashmap_destroy(map);
+    printf("✓ Test passed!\n");
+    return 0;
+}
+
+// ============================================================================
+// TEST 10: Stress test - many insertions and deletions
+// ============================================================================
+int hashmap_test_stress(void)
+{
+    printf("\n=== TEST 10: Stress test (1000 operations) ===\n");
+    
+    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
+                                  NULL, NULL, NULL, NULL, NULL, NULL);
+    
+    // Insert 1000 elements
+    for (int i = 0; i < 1000; i++) {
+        int val = i * 7;
+        hashmap_put(map, cast(i), 0, cast(val), 0);
+    }
+    printf("Inserted 1000 elements\n");
+    printf("Size: %u, Capacity: %u\n", hashmap_size(map), hashmap_capacity(map));
+    
+    // Verify all exist
+    for (int i = 0; i < 1000; i++) {
+        assert(hashmap_has(map, cast(i)) == 1);
+    }
+    printf("✓ All 1000 elements verified\n");
+    
+    // Delete every other element
+    for (int i = 0; i < 1000; i += 2) {
+        b8 deleted = hashmap_del(map, cast(i), NULL);
+        assert(deleted == 1);
+    }
+    printf("Deleted 500 elements\n");
+    printf("Size: %u, Capacity: %u\n", hashmap_size(map), hashmap_capacity(map));
+    
+    // Verify deletions
+    for (int i = 0; i < 1000; i++) {
+        if (i % 2 == 0) {
+            assert(hashmap_has(map, cast(i)) == 0);
+        } else {
+            assert(hashmap_has(map, cast(i)) == 1);
+        }
+    }
+    printf("✓ Deletions verified\n");
+    
+    // Re-insert deleted elements
+    for (int i = 0; i < 1000; i += 2) {
+        int val = i * 13;
+        hashmap_put(map, cast(i), 0, cast(val), 0);
+    }
+    printf("Re-inserted 500 elements\n");
+    printf("Final size: %u, Capacity: %u\n", hashmap_size(map), hashmap_capacity(map));
+    assert(hashmap_size(map) == 1000);
+    
+    hashmap_destroy(map);
+    printf("✓ Test passed!\n");
+    return 0;
+}
+
+// ============================================================================
+// TEST 11: Edge cases
+// ============================================================================
+int hashmap_test_edge_cases(void)
+{
+    printf("\n=== TEST 11: Edge cases ===\n");
+    
+    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
+                                  NULL, NULL, NULL, NULL, NULL, NULL);
+    
+    // Empty map operations
     int key = 42;
-    String* str = string_from_cstr("move me");
+    int val;
+    assert(hashmap_get(map, cast(key), cast(val)) == 0);
+    assert(hashmap_has(map, cast(key)) == 0);
+    assert(hashmap_del(map, cast(key), NULL) == 0);
+    assert(hashmap_empty(map) == 1);
+    printf("✓ Empty map operations work\n");
+    
+    // Single element
+    val = 100;
+    hashmap_put(map, cast(key), 0, cast(val), 0);
+    assert(hashmap_size(map) == 1);
+    assert(hashmap_has(map, cast(key)) == 1);
+    
+    int retrieved;
+    hashmap_get(map, cast(key), cast(retrieved));
+    assert(retrieved == 100);
+    printf("✓ Single element operations work\n");
+    
+    // Delete and verify empty again
+    hashmap_del(map, cast(key), NULL);
+    assert(hashmap_empty(map) == 1);
+    printf("✓ Delete to empty works\n");
+    
+    // Multiple updates to same key
+    for (int i = 0; i < 10; i++) {
+        int v = i * 2;
+        hashmap_put(map, cast(key), 0, cast(v), 0);
+    }
+    assert(hashmap_size(map) == 1);
+    hashmap_get(map, cast(key), cast(retrieved));
+    assert(retrieved == 18);
+    printf("✓ Multiple updates work\n");
+    
+    // Get pointer and modify
+    int* ptr = (int*)hashmap_get_ptr(map, cast(key));
+    assert(ptr != NULL);
+    *ptr = 999;
+    hashmap_get(map, cast(key), cast(retrieved));
+    assert(retrieved == 999);
+    printf("✓ Get pointer and modify works\n");
+    
+    hashmap_destroy(map);
+    printf("✓ Test passed!\n");
+    return 0;
+}
+
+// ============================================================================
+// TEST 12: Mixed copy and move operations
+// ============================================================================
+int hashmap_test_mixed_semantics(void)
+{
+    printf("\n=== TEST 12: Mixed copy/move semantics ===\n");
+    
+    hashmap* map = hashmap_create(sizeof(int), sizeof(String), NULL, NULL,
+                                  NULL, str_copy, NULL, str_move, NULL, str_del);
+    
+    // Copy insert
+    int key1 = 1;
+    String str1;
+    string_create_stk(&str1, "copy_insert");
+    hashmap_put(map, cast(key1), 0, cast(str1), 0);
+    string_destroy_stk(&str1);
     
     // Move insert
-    hashmap_put_move(map, (u8**)&key, (u8**)&str);
+    int key2 = 2;
+    String* str2 = string_from_cstr("move_insert");
+    hashmap_put(map, cast(key2), 0, (u8*)&str2, 1);
+    assert(str2 == NULL);
     
-    ASSERT(str == NULL, "source should be nulled after move");
-    ASSERT(hashmap_size(map) == 1, "should have 1 entry");
+    // Copy update
+    String update1;
+    string_create_stk(&update1, "copy_update");
+    hashmap_put(map, cast(key1), 0, cast(update1), 0);
+    string_destroy_stk(&update1);
     
-    // Verify value was moved
-    String* out;
-    int query_key = 42;
-    ASSERT(hashmap_get(map, (u8*)&query_key, (u8*)&out), "should find key");
-    ASSERT(string_equals_cstr(out, "move me"), "value should match");
-    string_destroy(out);
+    // Move update
+    String* update2 = string_from_cstr("move_update");
+    hashmap_put(map, cast(key2), 0, (u8*)&update2, 1);
+    assert(update2 == NULL);
+    
+    printf("After mixed operations:\n");
+    hashmap_print(map, int_print, str_print);
+    
+    // Verify
+    String result1 = {0};
+    hashmap_get(map, cast(key1), cast(result1));
+    assert(string_equals_cstr(&result1, "copy_update"));
+    string_destroy_stk(&result1);
+    
+    String result2 = {0};
+    hashmap_get(map, cast(key2), cast(result2));
+    assert(string_equals_cstr(&result2, "move_update"));
+    string_destroy_stk(&result2);
+    
+    printf("✓ Mixed semantics work correctly\n");
     
     hashmap_destroy(map);
-    
-    TEST_PASS();
+    printf("✓ Test passed!\n");
     return 0;
 }
 
-
-// Test 8: Collision handling
-int hashmap_test_collisions(void)
-{
-    TEST_START("collision handling");
-    
-    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
-    
-    // Insert many values that might collide
-    for (int i = 0; i < 50; i++) {
-        int key = i;
-        int val = i * 2;
-        hashmap_put(map, (u8*)&key, (u8*)&val);
-    }
-    
-    // Verify all are retrievable
-    for (int i = 0; i < 50; i++) {
-        int key = i;
-        int out;
-        ASSERT(hashmap_get(map, (u8*)&key, (u8*)&out), "should find all keys");
-        ASSERT(out == i * 2, "all values should be correct");
-    }
-    
-    // Delete some and verify others still work
-    for (int i = 0; i < 25; i++) {
-        int key = i;
-        hashmap_del(map, (u8*)&key);
-    }
-    
-    for (int i = 25; i < 50; i++) {
-        int key = i;
-        int out;
-        ASSERT(hashmap_get(map, (u8*)&key, (u8*)&out), "remaining keys should work");
-        ASSERT(out == i * 2, "remaining values should be correct");
-    }
-    
-    hashmap_destroy(map);
-    
-    TEST_PASS();
-    return 0;
-}
-
-
-// Test 9: Update operations
-int hashmap_test_updates(void)
-{
-    TEST_START("update operations");
-    
-    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
-    
-    int key = 100;
-    
-    // Insert initial value
-    int val1 = 1;
-    b8 result = hashmap_put(map, (u8*)&key, (u8*)&val1);
-    ASSERT(result == 0, "first put should return 0 (new)");
-    
-    // Update multiple times
-    for (int i = 2; i <= 10; i++) {
-        result = hashmap_put(map, (u8*)&key, (u8*)&i);
-        ASSERT(result == 1, "update should return 1 (existing)");
-        ASSERT(hashmap_size(map) == 1, "size should stay 1");
-    }
-    
-    int out;
-    hashmap_get(map, (u8*)&key, (u8*)&out);
-    ASSERT(out == 10, "final value should be 10");
-    
-    hashmap_destroy(map);
-    
-    TEST_PASS();
-    return 0;
-}
-
-
-// Test 10: Empty map operations
-int hashmap_test_empty(void)
-{
-    TEST_START("empty map operations");
-    
-    hashmap* map = hashmap_create(sizeof(int), sizeof(int), NULL, NULL,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
-    
-    ASSERT(hashmap_empty(map), "new map should be empty");
-    
-    int key = 42, out;
-    
-    // Get from empty map
-    ASSERT(!hashmap_get(map, (u8*)&key, (u8*)&out), "get from empty should fail");
-    ASSERT(!hashmap_has(map, (u8*)&key), "has on empty should return false");
-    ASSERT(hashmap_get_ptr(map, (u8*)&key) == NULL, "get_ptr on empty should return NULL");
-    
-    // Delete from empty map
-    ASSERT(!hashmap_del(map, (u8*)&key), "delete from empty should return 0");
-    
-    hashmap_destroy(map);
-    
-    TEST_PASS();
-    return 0;
-}
-
-
-// Test runner
+// ============================================================================
+// RUN ALL TESTS
+// ============================================================================
 int run(void)
 {
-    printf("\n╔════════════════════════════════════╗\n");
-    printf("║     HASHMAP TEST SUITE             ║\n");
-    printf("╚════════════════════════════════════╝\n");
+    printf("\n");
+    printf("╔════════════════════════════════════════════════════════╗\n");
+    printf("║      COMPREHENSIVE HASHMAP TEST SUITE                 ║\n");
+    printf("╚════════════════════════════════════════════════════════╝\n");
     
-    int failed = 0;
+    hashmap_test_basic_int();
+    hashmap_test_string_val_copy();
+    hashmap_test_string_val_move();
+    hashmap_test_string_val_key();
+    hashmap_test_string_val_both_copy();
+    hashmap_test_string_val_both_move();
+    hashmap_test_string_ptr_copy();
+    hashmap_test_string_ptr_move();
+    hashmap_test_string_ptr_key();
+    hashmap_test_stress();
+    hashmap_test_edge_cases();
+    hashmap_test_mixed_semantics();
     
-    failed += hashmap_test_basic();
-    failed += hashmap_test_string_key();
-    failed += hashmap_test_delete();
-    failed += hashmap_test_get_ptr();
-    failed += hashmap_test_resize();
-    failed += hashmap_test_string_values();
-    failed += hashmap_test_move();
-    failed += hashmap_test_collisions();
-    failed += hashmap_test_updates();
-    failed += hashmap_test_empty();
+    printf("\n");
+    printf("╔════════════════════════════════════════════════════════╗\n");
+    printf("║      ALL TESTS PASSED! ✓                              ║\n");
+    printf("╚════════════════════════════════════════════════════════╝\n");
+    printf("\n");
     
-    printf("\n╔════════════════════════════════════╗\n");
-    if (failed == 0) {
-        printf("║  ✓ ALL TESTS PASSED                ║\n");
-    } else {
-        printf("║  ✗ %d TEST(S) FAILED               ║\n", failed);
-    }
-    printf("╚════════════════════════════════════╝\n\n");
-    
-    return failed;
+    return 0;
 }
 
 
