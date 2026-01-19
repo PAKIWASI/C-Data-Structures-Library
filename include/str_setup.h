@@ -5,6 +5,7 @@
 
 // TODO: fix key passed as ptr/val
 
+
 // ========== Hash function for String* ==========
 u32 murmurhash3_str_ptr(const u8* key, u32 size) 
 {

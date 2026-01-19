@@ -238,8 +238,8 @@ b8 hashmap_put(hashmap* map, u8* key, b8 key_move, u8* val, b8 val_move)
                 map->val_move_fn(kv->val, (u8**)val);
             } else {
                 memcpy(kv->val, *(u8**)val, map->val_size);
+                *(u8**)val = NULL;  // move_fn does this in the if ?
             }
-            *(u8**)val = NULL;
         }
         else {
             // Update value using copy semantics
@@ -278,9 +278,9 @@ b8 hashmap_put(hashmap* map, u8* key, b8 key_move, u8* val, b8 val_move)
             map->key_move_fn(kv.key, (u8**)key);
         } else {
             memcpy(kv.key, *(u8**)key, map->key_size);
+            *(u8**)key = NULL;
         }
 
-        *(u8**)key = NULL;
     } 
     else {
         // Copy key
@@ -297,8 +297,8 @@ b8 hashmap_put(hashmap* map, u8* key, b8 key_move, u8* val, b8 val_move)
             map->val_move_fn(kv.val, (u8**)val);
         } else {
             memcpy(kv.val, *(u8**)val, map->val_size);
+            *(u8**)val = NULL;
         }
-        *(u8**)val = NULL;
     } 
     else {
         // Copy value

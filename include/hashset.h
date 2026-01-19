@@ -37,7 +37,7 @@ hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn, compare_fn cmp_fn,
                          copy_fn copy_fn, move_fn move_fn, delete_fn del_fn) ;
 
 /**
- * Destroy hashmap and clean up all resources
+ * Destroy hashset and clean up all resources
  */
 void hashset_destroy(hashset* set);
 
@@ -72,19 +72,19 @@ void hashset_print(const hashset* set, genVec_print_fn print_fn);
 
 
 // Inline utility functions
-static inline u32 hashmap_size(const hashset* set)
+static inline u32 hashset_size(const hashset* set)
 {
     CHECK_FATAL(!set, "set is null");
     return set->size;
 }
 
-static inline u32 hashmap_capacity(const hashset* set)
+static inline u32 hashset_capacity(const hashset* set)
 {
     CHECK_FATAL(!set, "set is null");
     return set->capacity;
 }
 
-static inline b8 hashmap_empty(const hashset* set)
+static inline b8 hashset_empty(const hashset* set)
 {
     CHECK_FATAL(!set, "set is null");
     return set->size == 0;

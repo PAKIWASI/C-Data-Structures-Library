@@ -22,9 +22,8 @@ static void elm_destroy(hashset* set, ELM* elm)
     if (elm->elm) {
         if (set->del_fn) {
             set->del_fn(elm->elm);
-        } else {
-            free(elm->elm);
         }
+        free(elm->elm);
     }
 
     // dont free elm
@@ -190,12 +189,12 @@ void hashset_destroy(hashset *set)
 }
 
 
-b8 hashset_insert(hashset* set, const u8* elm, const b8 elm_move)
+b8 hashset_insert(hashset* set, const u8* elm, b8 elm_move)
 {
     CHECK_FATAL(!set, "set is null");
     CHECK_FATAL(!elm, "elm is null");
     
-    if (elm_move) { CHECK_FATAL(!*elm, "*elm is null"); }
+    if (elm_move) { CHECK_FATAL(!*(u8**)elm, "*elm is null"); }
     
 
     hashset_maybe_resize(set);
@@ -205,15 +204,24 @@ b8 hashset_insert(hashset* set, const u8* elm, const b8 elm_move)
     u32 slot = find_slot(set, elm, &found, &tombstone);
 
     if (found) {
-        return 1; // found, do nothing
+        // Element already exists - do nothing
+        // But if move semantics, we need to clean up the passed element
+        if (elm_move) {
+            if (set->del_fn) {
+                set->del_fn(*(u8**)elm);
+            }
+            free(*(u8**)elm);
+            *(u8**)elm = NULL;
+        }
+        return 1; // found
     }
+
         // not found - new elm insert
-        
     ELM e = {
         .elm = malloc(set->elm_size),
         .state = FILLED
     };
-    CHECK_FATAL(!elm, "elm malloc failed");
+    CHECK_FATAL(!e.elm, "elm malloc failed");
 
     if (elm_move) {
                 // move value (u8** passed)
@@ -221,8 +229,8 @@ b8 hashset_insert(hashset* set, const u8* elm, const b8 elm_move)
             set->move_fn(e.elm, (u8**)elm);    
         } else {
             memcpy(e.elm, *(u8**)elm, set->elm_size);
+            *(u8**)elm = NULL;
         }
-        *(u8**)elm = NULL;
     }
     else {
             // copy value (u8* passed)
@@ -232,7 +240,6 @@ b8 hashset_insert(hashset* set, const u8* elm, const b8 elm_move)
             memcpy(e.elm, elm, set->elm_size);
         }
     }
-
     
     genVec_replace(set->buckets, slot, (u8*)&e);
     set->size++;

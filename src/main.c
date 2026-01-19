@@ -1,8 +1,10 @@
-#include "hashmap_test.h"
+#include "hashset_test.h"
+
+
 
 int main(void)
 {
-    hashmap_test_2();
+    hashset_test_1();
 
     return 0;
 }

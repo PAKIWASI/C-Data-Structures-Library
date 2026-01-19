@@ -5,6 +5,10 @@
 #include <stdio.h>
 
 
+/* TODO:
+    YES! Your hashmap has the same issue! When you use key_move = 1, you're passing a different pointer type 
+    than when key_move = 0, which would cause inconsistent hashing.
+*/
 
 // test push (copy) - string stored as value
 int hashmap_test_1(void)
@@ -16,19 +20,19 @@ int hashmap_test_1(void)
     String str;
     string_create_stk(&str, "hello");
 
-    hashmap_put(map, cast(a), 0, cast(str), 0);
+    hashmap_put(map, cast(a), false, cast(str), false);
     a++;
-    hashmap_put(map, cast(a), 0, cast(str), 0);
+    hashmap_put(map, cast(a), false, cast(str), false);
     a++;
-    hashmap_put(map, cast(a), 0, cast(str), 0);
+    hashmap_put(map, cast(a), false, cast(str), false);
     a++;
-    hashmap_put(map, cast(a), 0, cast(str), 0);
+    hashmap_put(map, cast(a), false, cast(str), false);
     a++;
-    hashmap_put(map, cast(a), 0, cast(str), 0);
+    hashmap_put(map, cast(a), false, cast(str), false);
     a++;
-    hashmap_put(map, cast(a), 0, cast(str), 0);
+    hashmap_put(map, cast(a), false, cast(str), false);
     a++;
-    hashmap_put(map, cast(a), 0, cast(str), 0);
+    hashmap_put(map, cast(a), false, cast(str), false);
 
     hashmap_print(map, int_print, str_print);
 
@@ -64,11 +68,11 @@ int hashmap_test_2(void)
 
     int a = 7;
     String* str = string_from_cstr("hello");
-    hashmap_put(map, cast(a), 0, cast(str), 1);
+    hashmap_put(map, cast(a), false, cast(str), true);
 
     str = string_from_cstr("what is up");
     a += 2;
-    hashmap_put(map, cast(a), 0, cast(str), 1);
+    hashmap_put(map, cast(a), false, cast(str), true);
     
     hashmap_print(map, int_print, str_print);
 
