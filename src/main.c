@@ -1,10 +1,10 @@
-#include "hashset_test.h"
+#include "genVec_test.h"
 
 
 
 int main(void)
 {
-    hashset_test_1();
+    genVec_test_6();
 
     return 0;
 }

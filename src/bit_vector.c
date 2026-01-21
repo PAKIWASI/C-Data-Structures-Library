@@ -11,7 +11,6 @@ bitVec* bitVec_create(void)
     CHECK_FATAL(!bvec, "bvec init failed");
 
     bvec->arr = genVec_init(0, sizeof(u8), NULL, NULL, NULL);
-    //CHECK_FATAL(!bvec->arr, "bvec arr init failed");
 
     bvec->size = 0;
 
@@ -130,7 +129,7 @@ void bitVec_print(bitVec *bvec, u32 byteI)
     // If this is the last byte, only print the valid bits
     if (byteI == bvec->arr->size - 1) {
         u32 remaining = bvec->size % 8;
-        bits_to_print = (remaining == 0) ? 8 : remaining;
+        bits_to_print = (remaining == 0) ? 8 : (u8)remaining;
     }
 
     for (u8 i = 0; i < bits_to_print; i++) {
