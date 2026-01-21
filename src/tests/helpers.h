@@ -101,7 +101,7 @@ void str_print_ptr(const u8* elm)
     string_print(*(const String**)elm);
 }
 
-int str_cmp_val(const u8* a, const u8* b, u32 size) 
+int str_cmp(const u8* a, const u8* b, u32 size) 
 {
     (void)size;
     return string_compare((const String*)a, (const String*)b); 

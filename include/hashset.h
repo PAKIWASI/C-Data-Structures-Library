@@ -49,6 +49,8 @@ void hashset_destroy(hashset* set);
  * @return 1 if key existed (do nothing), 0 if new key inserted
  */
 b8 hashset_insert(hashset* set, const u8* elm);
+
+
 b8 hashset_insert_move(hashset* set, u8** elm);
 
 /**
