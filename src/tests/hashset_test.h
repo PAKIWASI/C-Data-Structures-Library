@@ -13,7 +13,7 @@ int hashset_test_1(void)
                                   str_move_ptr, str_del_ptr);
 
     String* s = string_from_cstr("hello");
-    hashset_insert(set, cast(s), false);
+    hashset_insert(set, (u8*)s);
 
     hashset_print(set, str_print_ptr);
 
