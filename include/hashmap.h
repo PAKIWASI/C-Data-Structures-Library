@@ -72,7 +72,7 @@ b8 hashmap_put(hashmap* map, u8* key, b8 key_move, u8* val, b8 val_move);
  * @param val - Output buffer for value
  * @return 1 if found, 0 if not found
  */
-b8 hashmap_get(const hashmap* map, const u8* key, u8* val);
+b8 hashmap_get(const hashmap* map, const u8* key, b8 key_move, u8* val);
 
 /**
  * Get pointer to value (no copy)
@@ -80,7 +80,7 @@ b8 hashmap_get(const hashmap* map, const u8* key, u8* val);
  * @return Pointer to value or NULL if not found
  * @warning Pointer invalidated by put/del operations
  */
-u8* hashmap_get_ptr(hashmap* map, const u8* key);
+u8* hashmap_get_ptr(hashmap* map, const u8* key, b8 key_move);
 
 /**
  * Delete key-value pair and optionally move val to out ptr
@@ -88,14 +88,14 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key);
  * @param val (Optional)- Output buffer for value
  * @return 1 if found and deleted, 0 if not found
  */
-b8 hashmap_del(hashmap* map, const u8* key, u8* out);
+b8 hashmap_del(hashmap* map, const u8* key, b8 key_move, u8* out);
 
 /**
  * Check if key exists
  * 
  * @return 1 if key exists, 0 otherwise
  */
-b8 hashmap_has(const hashmap* map, const u8* key);
+b8 hashmap_has(const hashmap* map, const u8* key, b8 key_move);
 
 /**
  * Print all key-value pairs

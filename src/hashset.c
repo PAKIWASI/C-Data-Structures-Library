@@ -189,7 +189,7 @@ void hashset_destroy(hashset *set)
 }
 
 
-b8 hashset_insert(hashset* set, const u8* elm, b8 elm_move)
+b8 hashset_insert(hashset* set, u8* elm, b8 elm_move)
 {
     CHECK_FATAL(!set, "set is null");
     CHECK_FATAL(!elm, "elm is null");
@@ -201,7 +201,13 @@ b8 hashset_insert(hashset* set, const u8* elm, b8 elm_move)
 
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(set, elm, &found, &tombstone);
+
+    u32 slot = 0; 
+    if (elm_move) {
+        slot = find_slot(set, *(u8**)elm, &found, &tombstone);
+    } else {
+        slot = find_slot(set, elm, &found, &tombstone);
+    }
 
     if (found) {
         // Element already exists - do nothing
@@ -248,6 +254,7 @@ b8 hashset_insert(hashset* set, const u8* elm, b8 elm_move)
 }
 
 
+// only pass u8* key
 b8 hashset_remove(hashset* set, const u8* elm)
 {
     CHECK_FATAL(!set, "set is null");

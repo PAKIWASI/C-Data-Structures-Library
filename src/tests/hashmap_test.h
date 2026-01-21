@@ -1,14 +1,13 @@
-#include "String.h"
-#include "common.h"
 #include "hashmap.h"
 #include "helpers.h"
-#include <stdio.h>
+
 
 
 /* TODO:
     YES! Your hashmap has the same issue! When you use key_move = 1, you're passing a different pointer type 
     than when key_move = 0, which would cause inconsistent hashing.
 */
+
 
 // test push (copy) - string stored as value
 int hashmap_test_1(void)

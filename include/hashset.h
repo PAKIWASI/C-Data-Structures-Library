@@ -48,7 +48,7 @@ void hashset_destroy(hashset* set);
  * @param elm_move - 0: elm copy semantics (u8*), 1: elm move semantics (u8**) 
  * @return 1 if key existed (do nothing), 0 if new key inserted
  */
-b8 hashset_insert(hashset* set, const u8* elm, b8 elm_move);
+b8 hashset_insert(hashset* set, u8* elm, b8 elm_move);
 
 /**
  * Check if elm is present in hashset

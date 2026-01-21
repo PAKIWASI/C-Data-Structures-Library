@@ -9,7 +9,7 @@
 
 int hashset_test_1(void)
 {
-    hashset* set = hashset_create(sizeof(String*), murmurhash3_str_ptr, str_cmp_ptr, str_copy_ptr,
+    hashset* set = hashset_create(sizeof(String*), murmurhash3_str, str_cmp_ptr, str_copy_ptr,
                                   str_move_ptr, str_del_ptr);
 
     String* s = string_from_cstr("hello");

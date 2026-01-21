@@ -1,4 +1,6 @@
 #include "hashmap.h"
+#include "common.h"
+#include <asm-generic/errno.h>
 
 
 typedef struct {
@@ -103,7 +105,7 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
         if (old_kv->state == FILLED) {
             b8 found = 0;
             int tombstone = -1;
-            u32 slot = find_slot(map, old_kv->key, &found, &tombstone);
+            u32 slot = find_slot(map, old_kv->key, &found, &tombstone); //  TODO: find slot uses which version???
 
             // new table can't have tombstones, and load factor will be like 35%
             // so no need for error checking
@@ -222,7 +224,15 @@ b8 hashmap_put(hashmap* map, u8* key, b8 key_move, u8* val, b8 val_move)
     
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+    //u32 slot = find_slot(map, key, &found, &tombstone); // TODO: what if key_move? then we pass wrong para to hash_fn
+    // NEW RULE:
+    //      For hash_fn, we always take the u8*, even when u8** is passed
+    u32 slot = 0;
+    if (key_move) {
+        slot = find_slot(map, *(u8**)key, &found, &tombstone);
+    } else {
+        slot = find_slot(map, key, &found, &tombstone);
+    }
     
     if (found) {
         KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
@@ -316,15 +326,28 @@ b8 hashmap_put(hashmap* map, u8* key, b8 key_move, u8* val, b8 val_move)
 }
 
 
-b8 hashmap_get(const hashmap* map, const u8* key, u8* val)
+// TODO: add key_move to this to delete key ? now only key as u8* will work
+b8 hashmap_get(const hashmap* map, const u8* key, b8 key_move, u8* val)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
     CHECK_FATAL(!val, "val is null");
+    if (key_move) { CHECK_FATAL(!*key, "*key is null"); }
     
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+    u32 slot = 0;
+    if (key_move) {
+        slot = find_slot(map, *(u8**)key, &found, &tombstone);
+        // destroy the key
+        if (map->key_del_fn) {
+            map->key_del_fn(*(u8**)key);
+        } else {
+            free(*(u8**)key);
+        }
+    } else {
+        slot = find_slot(map, key, &found, &tombstone);
+    }
 
     if (found) {
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, slot);
@@ -342,14 +365,25 @@ b8 hashmap_get(const hashmap* map, const u8* key, u8* val)
     return 0; // not found
 }
 
-u8* hashmap_get_ptr(hashmap* map, const u8* key)
+u8* hashmap_get_ptr(hashmap* map, const u8* key, b8 key_move)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
 
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+    u32 slot = 0;
+    if (key_move) {
+        slot = find_slot(map, *(u8**)key, &found, &tombstone);
+        // destroy the key
+        if (map->key_del_fn) {
+            map->key_del_fn(*(u8**)key);
+        } else {
+            free(*(u8**)key);
+        }
+    } else {
+        slot = find_slot(map, key, &found, &tombstone);
+    }
 
     if (found) {
         return ((const KV*)genVec_get_ptr(map->buckets, slot))->val;
@@ -359,7 +393,8 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
 }
 
 
-b8 hashmap_del(hashmap* map, const u8* key, u8* out)
+// key has to be u8* to work
+b8 hashmap_del(hashmap* map, const u8* key, b8 key_move, u8* out)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
@@ -368,7 +403,19 @@ b8 hashmap_del(hashmap* map, const u8* key, u8* out)
 
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+
+    u32 slot = 0;
+    if (key_move) {
+        slot = find_slot(map, *(u8**)key, &found, &tombstone);
+        // destroy the key
+        if (map->key_del_fn) {
+            map->key_del_fn(*(u8**)key);
+        } else {
+            free(*(u8**)key);
+        }
+    } else {
+        slot = find_slot(map, key, &found, &tombstone);
+    }
 
     if (found) {
         KV* kv = (KV*)genVec_get_ptr(map->buckets, slot);
@@ -400,14 +447,24 @@ b8 hashmap_del(hashmap* map, const u8* key, u8* out)
 }
 
 
-b8 hashmap_has(const hashmap* map, const u8* key)
+b8 hashmap_has(const hashmap* map, const u8* key, b8 key_move)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key, "key is null");
     
     b8 found = 0;
     int tombstone = -1;
-    find_slot(map, key, &found, &tombstone);
+    if (key_move) {
+        find_slot(map, *(u8**)key, &found, &tombstone);
+        // destroy the key
+        if (map->key_del_fn) {
+            map->key_del_fn(*(u8**)key);
+        } else {
+            free(*(u8**)key);
+        }
+    } else {
+        find_slot(map, key, &found, &tombstone);
+    }
     
     return found;
 }
