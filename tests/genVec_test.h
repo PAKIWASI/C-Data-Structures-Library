@@ -6,8 +6,6 @@
 
 
 
-
-
 // test push (copy)
 int genVec_test_1(void)
 {
@@ -133,19 +131,13 @@ int genVec_test_5(void)
 
 int genVec_test_6(void)
 {
-    genVec* vec = genVec_init(10, sizeof(String), str_copy, str_move, str_del);
+    genVec* vec = genVec_init(10, sizeof(String*), str_copy_ptr, str_move_ptr, str_del_ptr);
 
     VEC_PUSH_CSTR(vec, "hello");
     VEC_PUSH_CSTR(vec, "hello");
 
-    genVec_print(vec, str_print);
+    genVec_print(vec, str_print_ptr);
 
-    String s;
-    genVec_pop(vec, cast(s));
-
-    genVec_print(vec, str_print);
-
-    string_destroy_stk(&s);
     genVec_destroy(vec);
     return 0;
 }

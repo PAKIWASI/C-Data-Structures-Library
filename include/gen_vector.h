@@ -5,7 +5,7 @@
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b); // havent used this
+typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b); 
 typedef void (*genVec_delete_fn)(u8* elm);                 // Cleanup owned resources
 typedef void (*genVec_copy_fn)(u8* dest, const u8* src);   // Deep copy resources
 typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into dest, null src
@@ -148,13 +148,13 @@ static inline u8 genVec_empty(const genVec* vec)
 // TODO: add:
 
 // Swap two elements (useful for sorting algorithms)
-void genVec_swap(genVec* vec, u32 i, u32 j);
+//void genVec_swap(genVec* vec, u32 i, u32 j);
 
 // Find element using compare function
-b8 genVec_find(const genVec* vec, const u8* elm, genVec_compare_fn cmp);
+//b8 genVec_find(const genVec* vec, const u8* elm, genVec_compare_fn cmp);
 
 // Get a subarray copy from array
-void genVec_subarray(genVec* vec, genVec* subarr, u32 l, u32 r);
+//void genVec_subarray(genVec* vec, genVec* subarr, u32 l, u32 r);
 
 
 

@@ -133,10 +133,13 @@ void double_print(const u8* elm) {
 #define VEC_PUSH_SIMP(vec, type, val) \
     genVec_push(vec, (u8*)&(type){val})
 
-// for sizeof(String)
+
+// for String, String*
 #define VEC_PUSH_CSTR(vec, cstr) do {       \
     String* _str = string_from_cstr(cstr);  \
     genVec_push_move(vec, (u8**)&_str);      \
 } while (0)
+
+
 
 

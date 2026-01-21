@@ -25,7 +25,7 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
 file(GLOB SRC_FILES "src/*.c")
 
 add_executable(main ${SRC_FILES})
-target_include_directories(main PRIVATE include src/tests)
+target_include_directories(main PRIVATE include tests)
 
 # Debug build (default) - with ASan, no optimizations, full debug info
 #cmake -B build -G Ninja
