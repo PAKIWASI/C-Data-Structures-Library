@@ -136,7 +136,7 @@ void double_print(const u8* elm) {
 
 // for String, String*
 #define VEC_PUSH_CSTR(vec, cstr) do {       \
-    String* _str = string_from_cstr(cstr);  \
+    String* _str = string_from_cstr(cstr, NULL);  \
     genVec_push_move(vec, (u8**)&_str);      \
 } while (0)
 
