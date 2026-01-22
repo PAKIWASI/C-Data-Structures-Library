@@ -109,3 +109,24 @@ typedef uint64_t u64;
 #define nMB(n) ((n) * MB)
 
 
+// ALLOCATOR
+//====================
+
+typedef void* (*custom_alloc_fn)(u64 size);
+typedef void  (*custom_dealloc_fn)(void* ptr);
+typedef void* (*custom_realloc_fn)(void* ptr, u64 size);
+
+typedef struct {
+    custom_alloc_fn   alloc_fn;
+    custom_dealloc_fn free_fn;
+    custom_realloc_fn realloc_fn;
+} Allocator;
+
+
+// extern Allocator Defalut_Allocator;
+Allocator Defalut_Allocator = {
+    .alloc_fn = malloc,
+    .free_fn = free,
+    .realloc_fn = realloc,
+};
+

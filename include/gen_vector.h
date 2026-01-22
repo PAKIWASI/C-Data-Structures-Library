@@ -20,6 +20,7 @@ typedef struct {
     genVec_copy_fn   copy_fn;   // Deep copy function for owned resources (or NULL)
     genVec_move_fn   move_fn;   // Get a double pointer, transfer ownership and null original
     genVec_delete_fn del_fn;    // Cleanup function for owned resources (or NULL)
+    Allocator*       allocator; // Custom allocation functions (malloc, realloc, free) (or NULL)
 } genVec;
 
 
