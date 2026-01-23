@@ -3,8 +3,9 @@
 #include "gen_vector.h"
 #include "map_setup.h"
 
+
 typedef struct {
-    genVec*         buckets;
+    genVec*         buckets;        // TODO: replace with raw array? (only using replace, get_ptr and init_val. memory managed by hashmap, not vec)
     u32             capacity;
     u32             size;
     u16             key_size;
@@ -68,6 +69,15 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key);
  */
 b8 hashmap_del(hashmap* map, const u8* key, u8* out);
 
+
+// TODO: 
+void hashmap_clear(hashmap* map);  // Remove all, keep capacity
+void hashmap_reset(hashmap* map);  // Remove all, reset to initial capacity
+// Update value in-place if key exists, return false if key doesn't exist
+b8 hashmap_update(hashmap* map, const u8* key, const u8* val);
+genVec* hashmap_keys(const hashmap* map);
+genVec* hashmap_values(const hashmap* map);
+
 /**
  * Check if key exists
  */
@@ -95,3 +105,5 @@ static inline b8 hashmap_empty(const hashmap* map)
     CHECK_FATAL(!map, "map is null");
     return map->size == 0;
 }
+
+

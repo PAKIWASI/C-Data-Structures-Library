@@ -2,6 +2,7 @@
 
 #include "common.h"
 
+// TODO: iterator, for each support?
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);

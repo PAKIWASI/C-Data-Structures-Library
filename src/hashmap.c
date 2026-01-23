@@ -1,9 +1,11 @@
 #include "hashmap.h"
-#include "common.h"
+
+
 
 typedef struct {
     u8* key;
-    u8* val;
+    u8* val;        // TODO: 
+    u32 hash;       // cached hash value to compute only once
     STATE state;
 } KV;
 
@@ -34,8 +36,6 @@ static void kv_destroy(hashmap* map, const KV* kv)
 ====================PRIVATE FUNCTIONS====================
 */
 
-// CRITICAL: find_slot ALWAYS takes const u8* key (not u8**)
-// This ensures consistent hashing regardless of caller's pointer type
 static u32 find_slot(const hashmap* map, const u8* key,
                         b8* found, int* tombstone)
 {
