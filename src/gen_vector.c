@@ -221,7 +221,7 @@ void genVec_pop(genVec* vec, u8* popped)
 {
     CHECK_FATAL(!vec, "vec is null");
 
-    CHECK_WARN_VOID(vec->size == 0, "vec is empty");
+    CHECK_WARN_RET(vec->size == 0, , "vec is empty");
 
     u8* last_elm = GET_PTR(vec, vec->size - 1);
 
@@ -621,7 +621,7 @@ void genVec_shrink(genVec* vec)
 
     u8* new_data = realloc(vec->data, GET_SCALED(vec, reduced_cap));
     if (!new_data) {
-        CHECK_WARN_VOID(1, "data realloc failed");
+        CHECK_WARN_RET(1, , "data realloc failed");
         return; // Keep original allocation
     }
 

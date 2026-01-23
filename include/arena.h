@@ -18,8 +18,8 @@ void* arena_alloc(Arena* arena, u32 size);
 void arena_clear(Arena* arena);
 void arena_release(Arena* arena);
 
-b8 arena_push(Arena* arena, u8* data, u32 size);
-b8 arena_pop(Arena* arena, u32 size);
+void arena_push(Arena* arena, const u8* data, u32 size);
+void arena_pop(Arena* arena, u32 size);
 
 u32 arena_get_mark(Arena* arena);
-b8 arena_clear_mark(Arena* arena, u32 mark);
+void arena_clear_mark(Arena* arena, u32 mark);

@@ -123,10 +123,5 @@ typedef struct {
 } Allocator;
 
 
-// extern Allocator Defalut_Allocator;
-Allocator Defalut_Allocator = {
-    .alloc_fn = malloc,
-    .free_fn = free,
-    .realloc_fn = realloc,
-};
+extern Allocator Defalut_Allocator;
 
