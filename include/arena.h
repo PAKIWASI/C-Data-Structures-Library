@@ -3,7 +3,6 @@
 #include "common.h"
 
 
-
 typedef struct {
     u8* base;
     u32 idx;
@@ -31,9 +30,10 @@ Arena* arena_create(u32 capacity);
 
 /*
 Initialize an arena object with pointers to the arena and a
-pre-allocated region, as well as the size of the provided
+pre-allocated region(base ptr), as well as the size of the provided
 region. Good for using the stack instead of the heap.
-Providing size = 0 results in an empty arena with ARENA_DEFAULT_SIZE
+The arena and the data may be stack initialized, so no arena_release.
+Note that ARENA_DEFAULT_SIZE is not used.
 
 Parameters:
   Arena* arena    |   The arena object being initialized.
@@ -50,7 +50,7 @@ expensive frees.
 Parameters:
   Arena *arena    |    The arena to be cleared.
 */
-void   arena_clear(Arena* arena);
+void arena_clear(Arena* arena);
 
 /*
 Free the memory allocated for the entire arena region.
@@ -58,7 +58,7 @@ Free the memory allocated for the entire arena region.
 Parameters:
   Arena *arena    |    The arena to be destroyed.
 */
-void   arena_release(Arena* arena);
+void arena_release(Arena* arena);
 
 /*
 Return a pointer to a portion of specified size of the
@@ -81,7 +81,7 @@ Return:
   Pointer to arena region segment on success, NULL on
   failure.
 */
-u8*  arena_alloc(Arena* arena, u32 size);
+u8* arena_alloc(Arena* arena, u32 size);
 
 /*
 Same as arena_alloc, except you can specify a memory
@@ -109,17 +109,6 @@ Return:
 */
 u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment);
 
-/*
-Copy SIZE bytes from data into the arena
-
-Parameters:
-  Arena* arena          |   The arena into which data will be pushed
-
-  const u8* data        |   The pointer to the data that will be copied
-
-  u32 size              |   The size (in bytes) of the data to be copied
-*/
-void arena_push(Arena* arena, const u8* data, u32 size);
 
 /*
 Get the value of index at the current state of arena
@@ -131,7 +120,7 @@ Parameters:
 Return:
   The current value of idx variable
 */
-u32  arena_get_mark(Arena* arena);
+u32 arena_get_mark(Arena* arena);
 
 /*
 Clear the arena from current index back to mark
@@ -142,11 +131,19 @@ Parameters:
 */
 void arena_clear_mark(Arena* arena, u32 mark);
 
+// Get used capacity
+static inline u32 arena_used(Arena* arena)
+{
+    CHECK_FATAL(!arena, "arena is null");
+    return arena->size;
+}
 
 // Get remaining capacity
-u32 arena_remaining(Arena* arena);
+u32 arena_remaining(Arena* arena)
+{
+    CHECK_FATAL(!arena, "arena is null");
+    return arena->size - arena->idx;
+}
 
-// Get used capacity
-u32 arena_used(Arena* arena);
 
 

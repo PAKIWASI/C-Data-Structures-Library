@@ -1,4 +1,6 @@
 #include "arena.h"
+#include "common.h"
+#include <stdlib.h>
 
 
 /*
@@ -11,7 +13,7 @@ align to 4 bytes
 */
 // Align a value to alignment boundary
 #define ALIGN_UP(val, align) \
-    (((val) + ((align) - 1)) & ~((align) - 1))
+    (((val) + ((u32)(align) - 1)) & ~(((u32)align) - 1))
 
 // align value to ARENA_DEFAULT_ALIGNMENT
 #define ALIGN_UP_DEFAULT(val) \
@@ -27,6 +29,97 @@ align to 4 bytes
     ALIGN_PTR((ptr), ARENA_DEFAULT_ALIGNMENT)
 
 
-#define ARENA_CURR_PTR(arena) ((arena)->base + (arena)->idx)
+#define ARENA_PTR(arena) ((arena)->base + (arena)->idx)
 
+
+
+
+
+Arena* arena_create(u32 capacity)
+{
+    if (capacity == 0) {
+        capacity = ARENA_DEFAULT_SIZE;
+    }
+
+    Arena* arena = (Arena*)malloc(sizeof(Arena));
+    CHECK_FATAL(!arena, "arena malloc failed");
+
+    arena->base = (u8*)malloc(capacity);
+    CHECK_FATAL(!arena->base, "arena base malloc failed");
+
+    arena->idx = 0;
+    arena->size = capacity;
+
+    return arena;
+}
+
+void arena_create_stk(Arena* arena, u8* data, u32 size)
+{
+    CHECK_FATAL(!arena, "arena is null");
+    CHECK_FATAL(!data, "data is null");
+    CHECK_FATAL(size == 0, "size can't be zero");
+
+    arena->base = data;
+    arena->idx = 0;
+    arena->size = size;
+}
+
+void arena_clear(Arena* arena)
+{
+    CHECK_FATAL(!arena, "arena is null");
+
+    arena->idx = 0;
+}
+
+void arena_release(Arena* arena)
+{
+    CHECK_FATAL(!arena, "arena is null");
+    
+    free(arena->base);
+    free(arena);
+}
+
+u8* arena_alloc(Arena* arena, u32 size)
+{
+    CHECK_FATAL(!arena, "arena is null");
+    CHECK_FATAL(size == 0, "can't have allocation of size = 0");
+    CHECK_WARN_RET(arena->size - arena->idx < size,
+                   NULL, "not enough space in arena for SIZE");
+
+    u8* ptr = ARENA_PTR(arena);
+    arena->idx = ALIGN_UP_DEFAULT(arena->idx);
+
+    return ptr;
+}
+
+u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment)
+{
+
+    CHECK_FATAL(!arena, "arena is null");
+    CHECK_FATAL(size == 0, "can't have allocation of size = 0");
+    CHECK_FATAL(alignment == 0, "can't have alignment of size = 0");
+    CHECK_WARN_RET(arena->size - arena->idx < size,
+                   NULL, "not enough space in arena for SIZE");
+
+    u8* ptr = ARENA_PTR(arena);
+    arena->idx = ALIGN_UP(arena->idx, alignment);
+
+    return ptr;
+}
+
+u32 arena_get_mark(Arena* arena)
+{
+    CHECK_FATAL(!arena, "arena is null");
+
+    return arena->idx;
+}
+
+void arena_clear_mark(Arena* arena, u32 mark)
+{
+    CHECK_FATAL(!arena, "arena is null");
+    CHECK_FATAL(mark > arena->size, "mark is out of bounds");
+    CHECK_WARN_RET(mark == arena->size, ,"no allocations made after mark");
+
+    arena->idx = mark;
+}
 

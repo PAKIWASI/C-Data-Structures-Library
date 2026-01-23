@@ -82,8 +82,8 @@ typedef uint64_t u64;
 #define KB (1 << 10)
 #define MB (1 << 20)
 
-#define nKB(n) ((n) * KB)
-#define nMB(n) ((n) * MB)
+#define nKB(n) ((u32)((n) * KB))
+#define nMB(n) ((u32)((n) * MB))
 
 
 // RAW BYTES TO HEX
