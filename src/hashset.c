@@ -179,7 +179,7 @@ b8 hashset_insert(hashset* set, const u8* elm)
     
     // New element - insert
     ELM e = {
-        .elm = set->buckets->allocator->alloc_fn(set->elm_size),
+        .elm = malloc(set->elm_size),
         .state = FILLED
     };
     CHECK_FATAL(!e.elm, "elm malloc failed");
@@ -222,7 +222,7 @@ b8 hashset_insert_move(hashset* set, u8** elm)
 
     // New element - insert
     ELM e = {
-        .elm = set->buckets->allocator->alloc_fn(set->elm_size),
+        .elm = malloc(set->elm_size),
         .state = FILLED
     };
     CHECK_FATAL(!e.elm, "elm malloc failed");

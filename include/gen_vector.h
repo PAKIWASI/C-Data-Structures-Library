@@ -5,10 +5,17 @@
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b); 
+typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b); 
 typedef void (*genVec_delete_fn)(u8* elm);                 // Cleanup owned resources
 typedef void (*genVec_copy_fn)(u8* dest, const u8* src);   // Deep copy resources
 typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into dest, null src
+
+
+// genVec growth/shrink settings (define your own before including this file)
+//
+#define GROWTH    1.5  // vec capacity multiplier
+#define SHRINK_AT 0.25 // % filled to shrink at (25% filled)
+#define SHRINK_BY 0.5  // capacity dividor (half)
 
 
 // generic vector container

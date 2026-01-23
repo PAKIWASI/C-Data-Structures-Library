@@ -9,5 +9,4 @@
 
 Matrix* matrix_create(int n, int m)
 {
-    
 }

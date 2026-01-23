@@ -26,8 +26,7 @@ static void kv_destroy(hashmap* map, const KV* kv)
         if (map->val_del_fn) {
             map->val_del_fn(kv->val);
         }
-        // free(kv->val);
-        map->buckets->allocator->free_fn(kv->val);
+        free(kv->val);
     }
 }
 
@@ -210,8 +209,8 @@ b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     
     // New key - insert
     KV kv = {
-        .key = map->buckets->allocator->alloc_fn(map->key_size),
-        .val = map->buckets->allocator->alloc_fn(map->val_size),
+        .key = malloc(map->key_size),
+        .val = malloc(map->val_size),
         .state = FILLED
     };
     
@@ -282,8 +281,8 @@ b8 hashmap_put_move(hashmap* map, u8** key, u8** val)
     
     // New key - insert with move semantics
     KV kv = {
-        .key = map->buckets->allocator->alloc_fn(map->key_size),
-        .val = map->buckets->allocator->alloc_fn(map->val_size),
+        .key = malloc(map->key_size),
+        .val = malloc(map->val_size),
         .state = FILLED
     };
     
@@ -344,8 +343,8 @@ b8 hashmap_put_val_move(hashmap* map, const u8* key, u8** val)
     }
     
     KV kv = {
-        .key = map->buckets->allocator->alloc_fn(map->key_size),
-        .val = map->buckets->allocator->alloc_fn(map->val_size),
+        .key = malloc(map->key_size),
+        .val = malloc(map->val_size),
         .state = FILLED
     };
     
@@ -408,8 +407,8 @@ b8 hashmap_put_key_move(hashmap* map, u8** key, const u8* val)
     }
     
     KV kv = {
-        .key = map->buckets->allocator->alloc_fn(map->key_size),
-        .val = map->buckets->allocator->alloc_fn(map->val_size),
+        .key = malloc(map->key_size),
+        .val = malloc(map->val_size),
         .state = FILLED
     };
     

@@ -1,13 +1,6 @@
 #include "gen_vector.h"
-#include "common.h"
 
-#include <stdlib.h>
 #include <string.h>
-
-
-#define GROWTH    1.5  // vec capacity multiplier
-#define SHRINK_AT 0.25 // % filled to shrink at (25% filled)
-#define SHRINK_BY 0.5  // capacity dividor (half)
 
 
 // get ptr to elm at index i
