@@ -1,5 +1,4 @@
 #include "String.h"
-#include "common.h"
 #include "gen_vector.h"
 #include "helpers.h"
 #include <string.h>
@@ -137,6 +136,8 @@ int genVec_test_6(void)
     VEC_PUSH_CSTR(vec, "hello");
 
     genVec_print(vec, str_print_ptr);
+
+    print_hex((const u8*)vec, sizeof(genVec), 8);
 
     genVec_destroy(vec);
     return 0;

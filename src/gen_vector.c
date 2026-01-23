@@ -3,10 +3,15 @@
 #include <string.h>
 
 
+
+#define GENVEC_MIN_CAPACITY 4
+
+
 // get ptr to elm at index i
 #define GET_PTR(vec, i) ((vec->data) + ((size_t)(i) * (vec->data_size)))
 // get total_size in bytes for i elements
-#define GET_SCALED(vec, i) ((size_t)(i) * (vec->data_size))
+#define GET_SCALED(vec, i) ((size_t)(i) * (vec->data_size)) // TODO: potential overflow?
+
 
 
 //private functions
@@ -495,7 +500,7 @@ void genVec_replace_move(genVec* vec, u32 i, u8** data)
 }
 
 
-u8* genVec_front(const genVec* vec)
+const u8* genVec_front(const genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(vec->size == 0, "vec is empty");
@@ -504,7 +509,7 @@ u8* genVec_front(const genVec* vec)
 }
 
 
-u8* genVec_back(const genVec* vec)
+const u8* genVec_back(const genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(vec->size == 0, "vec is empty");
@@ -545,7 +550,7 @@ void genVec_copy(genVec* dest, const genVec* src)
     memcpy(dest, src, sizeof(genVec));
 
     // malloc data ptr
-    dest->data = malloc(GET_SCALED(src, src->size));
+    dest->data = malloc(GET_SCALED(src, src->capacity));
 
     // Copy elements
     if (src->copy_fn) {
@@ -588,7 +593,7 @@ void genVec_grow(genVec* vec)
     CHECK_FATAL(!vec, "vec is null");
 
     u32 new_cap;
-    if (vec->capacity < 4) {
+    if (vec->capacity < GENVEC_MIN_CAPACITY) {
         new_cap = vec->capacity + 1;
     } else {
         new_cap = (u32)((double)vec->capacity * GROWTH);

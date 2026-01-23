@@ -16,7 +16,7 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into des
 #define GROWTH    1.5  // vec capacity multiplier
 #define SHRINK_AT 0.25 // % filled to shrink at (25% filled)
 #define SHRINK_BY 0.5  // capacity dividor (half)
-
+                      
 
 // generic vector container
 typedef struct {
@@ -100,7 +100,6 @@ void genVec_insert_move(genVec* vec, u32 i, u8** data);
 void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data);
 
 // Insert (move) num_data  elements from data starting at index i. Transfers ownership
-// Note: This function should only be used if vec stores pointers (not values) 
 void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data);
 
 // Remove element at index i, optionally copy to out, shift elements left
@@ -110,10 +109,10 @@ void genVec_remove(genVec* vec, u32 i, u8* out);
 void genVec_remove_range(genVec* vec, u32 l, u32 r);
 
 // Get pointer to first element
-u8* genVec_front(const genVec* vec);
+const u8* genVec_front(const genVec* vec);
 
 // Get pointer to last element
-u8* genVec_back(const genVec* vec);
+const u8* genVec_back(const genVec* vec);
 
 
 // Utility
@@ -153,15 +152,26 @@ static inline u8 genVec_empty(const genVec* vec)
 }
 
 // TODO: add:
+/*
 
-// Swap two elements (useful for sorting algorithms)
-//void genVec_swap(genVec* vec, u32 i, u32 j);
+// Resize vector to exact size (useful after bulk operations)
+void genVec_shrink_to_fit(genVec* vec);
 
-// Find element using compare function
-//b8 genVec_find(const genVec* vec, const u8* elm, genVec_compare_fn cmp);
+// Extend with multiple copies of val
+void genVec_extend(genVec* vec, const u8* val, u32 count);
 
-// Get a subarray copy from array
-//void genVec_subarray(genVec* vec, genVec* subarr, u32 l, u32 r);
+// Swap two elements
+void genVec_swap(genVec* vec, u32 i, u32 j);
 
+// Find element index (-1 if not found)
+i32 genVec_find(const genVec* vec, const u8* elm, genVec_compare_fn cmp);
+
+// Reverse the vector in-place
+void genVec_reverse(genVec* vec);
+
+// Filter in-place (remove elements where predicate returns false)
+void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
+
+*/
 
 

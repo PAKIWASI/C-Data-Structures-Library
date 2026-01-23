@@ -3,22 +3,23 @@
 #include "common.h"
 
 
+
 typedef struct {
     u8* base;
+    u32 idx;
     u32 size;
-    u32 capacity;
 } Arena;
 
  
-#define ARENA_DEFAULT_ALIGNMENT (sizeof(u64))
+// Tweakable settings
+#define ARENA_DEFAULT_ALIGNMENT (sizeof(u64))   // 8 byte
+#define ARENA_DEFAULT_SIZE (nKB(4))             // 4 KB
 
-#define ARENA_DEFAULT_SIZE (nKB(4))
 
 /*
 Allocate and return a pointer to memory to the arena
 with a region with the specified size. Providing a
-size of zero results in a failure. Be sure to destory
-with arena_release later.
+size = 0 results in size = ARENA_DEFAULT_SIZE (user can modify)
 
 Parameters:
   u32 size    |    The size (in bytes) of the arena
@@ -31,12 +32,12 @@ Arena* arena_create(u32 capacity);
 /*
 Initialize an arena object with pointers to the arena and a
 pre-allocated region, as well as the size of the provided
-region. Good for using the stack instead of the heap, if you
-so desire.
+region. Good for using the stack instead of the heap.
+Providing size = 0 results in an empty arena with ARENA_DEFAULT_SIZE
 
 Parameters:
   Arena* arena    |   The arena object being initialized.
-  u8*   region    |   The region to be arena-fyed.
+  u8*    data     |   The region to be arena-fyed.
   u32    size     |   The size of the region in bytes.
 */
 void arena_create_stk(Arena* arena, u8* data, u32 size);
@@ -58,7 +59,6 @@ Parameters:
   Arena *arena    |    The arena to be destroyed.
 */
 void   arena_release(Arena* arena);
-
 
 /*
 Return a pointer to a portion of specified size of the
@@ -95,7 +95,7 @@ will get some hard-to-track bugs. Providing a size of
 zero results in a failure.
 
 Parameters:
-  Arena *arena              |    The arena of which the pointer
+  Arena* arena              |    The arena of which the pointer
                                  from the region will be
                                  distributed
   u32 size                  |    The size (in bytes) of
@@ -107,10 +107,46 @@ Return:
   Pointer to arena region segment on success, NULL on
   failure.
 */
-u8*  arena_alloc_alligned(Arena* arena, u32 size, u16 alignment);
+u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment);
 
+/*
+Copy SIZE bytes from data into the arena
+
+Parameters:
+  Arena* arena          |   The arena into which data will be pushed
+
+  const u8* data        |   The pointer to the data that will be copied
+
+  u32 size              |   The size (in bytes) of the data to be copied
+*/
 void arena_push(Arena* arena, const u8* data, u32 size);
-void arena_pop(Arena* arena, u32 size);
 
+/*
+Get the value of index at the current state of arena
+This can be used to later clear upto that point using arena_clear_mark
+
+Parameters:
+  Arena* arena          |   The arena whose idx will be returned
+
+Return:
+  The current value of idx variable
+*/
 u32  arena_get_mark(Arena* arena);
+
+/*
+Clear the arena from current index back to mark
+
+Parameters:
+  Arena* arena          |   The arena you want to clear using it's mark
+  u32    mark           |   The mark previosly obtained by arena_get_mark 
+*/
 void arena_clear_mark(Arena* arena, u32 mark);
+
+
+// Get remaining capacity
+u32 arena_remaining(Arena* arena);
+
+// Get used capacity
+u32 arena_used(Arena* arena);
+
+

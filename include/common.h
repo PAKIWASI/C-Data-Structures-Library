@@ -86,4 +86,6 @@ typedef uint64_t u64;
 #define nMB(n) ((n) * MB)
 
 
+// RAW BYTES TO HEX
 
+void print_hex(const u8* ptr, u32 size, u32 bytes_per_line);
