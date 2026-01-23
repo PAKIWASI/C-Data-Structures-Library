@@ -8,11 +8,11 @@
 int hashmap_test_1(void)
 {
     hashmap* map = hashmap_create(sizeof(int), sizeof(String), NULL, NULL, NULL, str_copy,
-                                  NULL, str_move, NULL, str_del, NULL);
+                                  NULL, str_move, NULL, str_del);
 
     int a = 5;
     String str;
-    string_create_stk(&str, "hello", NULL);
+    string_create_stk(&str, "hello");
 
     hashmap_put(map, cast(a), cast(str));
     a++;
@@ -58,13 +58,13 @@ int hashmap_test_1(void)
 int hashmap_test_2(void)
 {
     hashmap* map = hashmap_create(sizeof(int), sizeof(String), NULL, NULL, NULL, str_copy,
-                                  NULL, str_move, NULL, str_del, NULL);
+                                  NULL, str_move, NULL, str_del);
 
     int a = 7;
-    String* str = string_from_cstr("hello", NULL);
+    String* str = string_from_cstr("hello");
     hashmap_put_val_move(map, cast(a), (u8**)&str);
 
-    str = string_from_cstr("what is up", NULL);
+    str = string_from_cstr("what is up");
     a += 2;
     hashmap_put_val_move(map, cast(a), (u8**)&str);
     

@@ -5,7 +5,7 @@
 
 int string_test_1(void)
 {
-    String* str = string_create(NULL);
+    String* str = string_create();
     string_append_cstr(str, "hello");
     string_print(str);
     printf("\n");
@@ -22,7 +22,7 @@ int string_test_1(void)
     string_print(&s2);
     printf("\n");
 
-    String* s3 = string_from_cstr("wtf", NULL);
+    String* s3 = string_from_cstr("wtf");
     string_move(s3, &str);
     string_print(s3);
     printf("\n");
@@ -39,3 +39,5 @@ int string_test_1(void)
 
     return 0;
 }
+
+

@@ -26,19 +26,11 @@
     }                                           \
 } while (0)
 
-#define ASSERT_WARN_VOID(cond, fmt, ...) do {   \
+#define ASSERT_WARN_RET(cond, ret, fmt, ...) do {   \
     if (!(cond)) {                              \
         WARN("Assertion failed: (%s): " fmt,    \
               #cond, ##__VA_ARGS__);            \
-        return;                                 \
-    }                                           \
-} while (0)
-
-#define ASSERT_WARN_NULL(cond, fmt, ...) do {   \
-    if (!(cond)) {                              \
-        WARN("Assertion failed: (%s): " fmt,    \
-              #cond, ##__VA_ARGS__);            \
-        return NULL;                            \
+        return ret;                                 \
     }                                           \
 } while (0)
 
@@ -56,13 +48,6 @@
     }                                       \
 } while (0)
 
-#define CHECK_WARN_VOID(cond, fmt, ...) do {    \
-    if ((cond)) {                               \
-        WARN("Check: (%s): " fmt,     \
-              #cond, ##__VA_ARGS__);            \
-        return;                                 \
-    }                                           \
-} while (0)
 
 #define CHECK_WARN_RET(cond, ret, fmt, ...) do {    \
     if ((cond)) {                                   \
@@ -109,19 +94,4 @@ typedef uint64_t u64;
 #define nMB(n) ((n) * MB)
 
 
-// ALLOCATOR
-//====================
-
-typedef void* (*custom_alloc_fn)(u64 size);
-typedef void  (*custom_dealloc_fn)(void* ptr);
-typedef void* (*custom_realloc_fn)(void* ptr, u64 size);
-
-typedef struct {
-    custom_alloc_fn   alloc_fn;
-    custom_dealloc_fn free_fn;
-    custom_realloc_fn realloc_fn;
-} Allocator;
-
-
-extern Allocator Defalut_Allocator;
 

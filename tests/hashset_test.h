@@ -11,9 +11,9 @@ int hashset_test_1(void)
 {
     // TODO: debug this shi 
     hashset* set = hashset_create(sizeof(String*), murmurhash3_str, str_cmp_ptr, str_copy_ptr,
-                                  str_move_ptr, str_del_ptr, NULL);
+                                  str_move_ptr, str_del_ptr);
 
-    String* s = string_from_cstr("hello", NULL);
+    String* s = string_from_cstr("hello");
     hashset_insert(set, (const u8*)&s);
 
     hashset_print(set, str_print_ptr);
@@ -25,9 +25,9 @@ int hashset_test_1(void)
 
 int hashset_test_2(void)
 {
-    hashset* set = hashset_create(sizeof(String), murmurhash3_str, str_cmp, str_copy, str_move, str_del, NULL);
+    hashset* set = hashset_create(sizeof(String), murmurhash3_str, str_cmp, str_copy, str_move, str_del);
 
-    String* s = string_from_cstr("helo", NULL);
+    String* s = string_from_cstr("helo");
     hashset_insert(set, (const u8*)s);
 
     hashset_print(set, str_print);
