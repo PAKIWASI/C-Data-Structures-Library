@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HASHSET_H
+#define HASHSET_H
 
 #include "gen_vector.h"
 #include "map_setup.h"
@@ -94,4 +95,4 @@ static inline b8 hashset_empty(const hashset* set)
 }
 
 
-
+#endif // HASHSET_H

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HASHMAP_H
+#define HASHMAP_H
 
 #include "gen_vector.h"
 #include "map_setup.h"
@@ -107,3 +108,5 @@ static inline b8 hashmap_empty(const hashmap* map)
 }
 
 
+
+#endif // HASHMAP_H

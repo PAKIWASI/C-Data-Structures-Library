@@ -1,4 +1,5 @@
-#pragma once
+#ifndef COMMON_H
+#define COMMON_H
 
 
 // LOGGING/ERRORS
@@ -89,3 +90,8 @@ typedef uint64_t u64;
 // RAW BYTES TO HEX
 
 void print_hex(const u8* ptr, u32 size, u32 bytes_per_line);
+
+
+
+
+#endif // COMMON_H

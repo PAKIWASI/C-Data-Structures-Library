@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STRING_H
+#define STRING_H
 
 #include "gen_vector.h"
 
@@ -133,3 +134,6 @@ u32 string_count_char(const String* str, char c);
 // Repeat string
 String* string_repeat(const String* str, u32 times);
 */
+
+
+#endif // STRING_H

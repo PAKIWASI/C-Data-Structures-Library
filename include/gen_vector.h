@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GEN_VECTOR_H
+#define GEN_VECTOR_H
 
 #include "common.h"
 
@@ -176,3 +177,4 @@ void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
 */
 
 
+#endif // GEN_VECTOR_H

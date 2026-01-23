@@ -1,4 +1,5 @@
 #include "String.h"
+#include "helpers.h"
 
 
 
@@ -6,7 +7,7 @@
 int string_test_1(void)
 {
     String* str = string_create();
-    string_append_cstr(str, "hello");
+    STR_APPEND_CSTR(str, "hello");
     string_print(str);
     printf("\n");
 
@@ -18,11 +19,11 @@ int string_test_1(void)
 
     String s2;
     string_copy(&s2, s);
-    string_append_cstr(&s2, " wasi");
+    STR_APPEND_CSTR(&s2, " wasi");
     string_print(&s2);
     printf("\n");
 
-    String* s3 = string_from_cstr("wtf");
+    String* s3 = string_from_cstr("wtf", 3);
     string_move(s3, &str);
     string_print(s3);
     printf("\n");

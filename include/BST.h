@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BST_H
+#define BST_H
 
 #include "String.h"
 #include "bit_vector.h"
@@ -48,3 +49,5 @@ void bst_print(const BST* bst);
     6. Continue recursively  → fills in 1,3,5,7
 */
 
+
+#endif // BST_H

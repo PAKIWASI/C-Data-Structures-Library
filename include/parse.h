@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PARSE_H
+#define PARSE_H
 
 
 #include "hashmap.h"
@@ -161,3 +162,4 @@ int parse(void)
 }
 
 
+#endif // PARSE_H

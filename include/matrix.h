@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MATRIX_H
+#define MATRIX_H
 
 #include "common.h"
 
@@ -18,3 +19,7 @@ typedef struct {
 
 Matrix* matrix_create(int n, int m);
 Matrix* matrix_create_stk(Matrix* matrix, int n, int m);
+
+
+
+#endif // MATRIX_H

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MAP_SETUP
+#define MAP_SETUP
 
 #include "common.h"
 #include <string.h>
@@ -85,4 +86,4 @@ static u32 prev_prime(u32 current) {
 
 
 
-
+#endif // MAP_SETUP

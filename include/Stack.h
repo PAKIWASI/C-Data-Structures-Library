@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STACK_H
+#define STACK_H
 
 #include "gen_vector.h"
 
@@ -22,3 +23,6 @@ static inline u32 stack_size(Stack* stk) {
 }
 
 void stack_print(Stack* stk, genVec_print_fn print_fn);
+
+
+#endif // STACK_H

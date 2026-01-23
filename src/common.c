@@ -5,6 +5,8 @@
 
 void print_hex(const u8* ptr, u32 size, u32 bytes_per_line) 
 {
+    if (ptr == NULL | size == 0 | bytes_per_line == 0) { return; }
+
     // hex rep 0-15
     const char* hex = "0123456789ABCDEF";
     

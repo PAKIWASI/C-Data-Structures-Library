@@ -1,10 +1,10 @@
-#include "genVec_test.h"
+#include "arena_test.h"
 
 
 
 int main(void)
 {
-    genVec_test_6();
+    arena_test_2();
 
     return 0;
 }

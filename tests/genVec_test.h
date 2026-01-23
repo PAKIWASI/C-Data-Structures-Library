@@ -10,11 +10,12 @@ int genVec_test_1(void)
 {
     genVec* vec = genVec_init(10, sizeof(String), str_copy, str_move, str_del);
 
-    String* str = string_from_cstr("hello");
+    String* str = string_from_cstr("hello", 5);
     genVec_push(vec, castptr(str));
     genVec_push(vec, castptr(str));
 
-    string_append_cstr(str, " what is up");
+    STR_APPEND_CSTR(str, " what is up");
+
     genVec_push(vec, castptr(str));
     genVec_push(vec, castptr(str));
 
@@ -39,7 +40,7 @@ int genVec_test_2(void)
 {
     genVec* vec = genVec_init(10, sizeof(String), str_copy, str_move, str_del);
 
-    String* str = string_from_cstr("hello");
+    String* str = string_from_cstr("hello", 5);
     string_print(str);
     printf("\n");
 
@@ -71,7 +72,7 @@ int genVec_test_3(void)
 
     String str;
     u8* p = (u8*)&str;
-    string_create_stk((String*)p, "hello");
+    string_create_stk((String*)p, "hello", 5);
     genVec_push(vec, (const u8*)&p); //  address of pointer to str (double ptr)
 
     string_print((String*)p);
@@ -94,7 +95,7 @@ int genVec_test_4(void)
 {
     genVec* vec = genVec_init(10, sizeof(String*), str_copy_ptr, str_move_ptr, str_del_ptr);
 
-    String* str = string_from_cstr("hello");
+    String* str = string_from_cstr("hello", 5);
     genVec_push_move(vec, (u8**)&str); // take String** for move
 
     genVec* v2 = malloc(sizeof(genVec));

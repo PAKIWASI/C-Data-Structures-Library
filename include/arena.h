@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ARENA_H
+#define ARENA_H
 
 #include "common.h"
 
@@ -135,15 +136,15 @@ void arena_clear_mark(Arena* arena, u32 mark);
 static inline u32 arena_used(Arena* arena)
 {
     CHECK_FATAL(!arena, "arena is null");
-    return arena->size;
+    return arena->idx;
 }
 
 // Get remaining capacity
-u32 arena_remaining(Arena* arena)
+static inline u32 arena_remaining(Arena* arena)
 {
     CHECK_FATAL(!arena, "arena is null");
     return arena->size - arena->idx;
 }
 
 
-
+#endif // ARENA_H

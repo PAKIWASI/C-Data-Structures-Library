@@ -1,4 +1,5 @@
-#pragma once
+#ifndef QUEUE_H
+#define QUEUE_H
 
 #include "gen_vector.h"
 
@@ -30,3 +31,5 @@ static inline u8 queue_empty(Queue* q) {
 void queue_print(Queue* q, genVec_print_fn print_fn);
 
 
+
+#endif // QUEUE_H

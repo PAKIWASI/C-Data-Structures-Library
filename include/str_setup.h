@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STR_SETUP_H
+#define STR_SETUP_H
 
 #include "String.h"
 
@@ -8,7 +9,7 @@ u32 murmurhash3_str(const u8* key, u32 size)
     (void)size;
     
     String* str= (String*)key;
-    const char* data = string_to_cstr_ptr(str);
+    const char* data = string_data_ptr(str);
     u32 len = string_len(str);
     
     const u32 c1 = 0xcc9e2d51;
@@ -61,4 +62,4 @@ u32 murmurhash3_str(const u8* key, u32 size)
 }
 
 
-
+#endif // STR_SETUP_H

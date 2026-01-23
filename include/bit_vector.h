@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BIT_VECTOR_H
+#define BIT_VECTOR_H
 
 #include "gen_vector.h"
 #include <stddef.h>
@@ -38,3 +39,5 @@ static inline u32 bitVec_size_bytes(bitVec* bvec) {
     return genVec_size(bvec->arr);
 }
 
+
+#endif // BIT_VECTOR_H
