@@ -1,10 +1,11 @@
-#include "arena_test.h"
+#include "matrix_test.h"
 
 
 
 int main(void)
 {
-    arena_test_2();
+    
+    matrix_test_1();
 
     return 0;
 }

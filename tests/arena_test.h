@@ -1,6 +1,7 @@
 #ifndef	ARENA_TEST_H
 #define ARENA_TEST_H
 
+
 #include "arena.h"
 #include "common.h"
 
@@ -49,8 +50,8 @@ int arena_test_2(void)
 {
     Arena arena;
     int buff[nKB(1)];
-
     arena_create_stk(&arena, (u8*)buff, nKB(1));
+
 
     float* b = (float*)arena_alloc_aligned(&arena, sizeof(float), sizeof(float));
     b[0] = 2.1F;

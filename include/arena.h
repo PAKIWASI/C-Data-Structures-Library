@@ -4,6 +4,9 @@
 #include "common.h"
 
 
+// TODO: macros to add arrays etc into arena (like in vid)
+
+
 typedef struct {
     u8* base;
     u32 idx;
