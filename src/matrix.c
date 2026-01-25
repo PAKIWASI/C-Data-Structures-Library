@@ -1,6 +1,7 @@
 #include "matrix.h"
 #include "common.h"
 
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,18 +20,26 @@ Matrix* matrix_create(u32 n, u32 m)
 
     mat->n    = n;
     mat->m    = m;
-    mat->data = malloc(sizeof(int) * n * m);
+    mat->data = (int*)malloc(sizeof(int) * n * m);
     CHECK_FATAL(!mat->data, "matrix data malloc failed");
 
     return mat;
 }
 
-void matrix_create_stk(Matrix* mat, int* data, u32 n, u32 m)
+Matrix* matrix_create_arr(u32 n, u32 m, const int* arr)
+{
+    CHECK_FATAL(!arr, "input arr is null");
+    Matrix* mat = matrix_create(n, m);
+    memcpy(mat->data, arr, sizeof(int) * n * m);
+    return mat;
+}
+
+void matrix_create_stk(Matrix* mat, u32 n, u32 m, int* data)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(!data, "data is null");
 
-    mat->data = data;
+    mat->data = data;   // we can do this on the stack
     mat->n    = n;
     mat->m    = m;
 }
@@ -88,12 +97,42 @@ void matrix_set_elm(Matrix* mat, int elm, u32 i, u32 j)
     mat->data[IDX(mat, i, j)] = elm;
 }
 
+void matrix_add(Matrix* out, Matrix* a, Matrix* b)
+{
+    CHECK_FATAL(!out, "out matrix is null");
+    CHECK_FATAL(!a,   "a matrix is null");
+    CHECK_FATAL(!b,   "b matrix is null");
+    CHECK_FATAL(a->n != b->n || a->m != b->m, "a, b mat dimentions dont match");
+
+    u32 total = MATRIX_TOTAL(a);
+
+    for (u32 i = 0; i < total; i++) {
+        out->data[i] = a->data[i] + b->data[i];
+    }
+}
+
+void matrix_add_self(Matrix* a, Matrix* b)
+{
+    CHECK_FATAL(!a,   "a matrix is null");
+    CHECK_FATAL(!b,   "b matrix is null");
+    CHECK_FATAL(a->n != b->n || a->m != b->m, "a, b mat dimentions dont match");
+
+    u32 total = MATRIX_TOTAL(a);
+
+    for (u32 i = 0; i < total; i++) {
+        a->data[i] = a->data[i] + b->data[i];
+    }
+}
 
 
 static u32 digits(int x)
 {
-    u32 d = (x <= 0); // handles 0 and negatives
-    while (x) {
+    u32 d = 0;
+    if (x <= 0) {
+        d = 1;  // For '-' sign or '0'
+        x = (x == INT_MIN) ? INT_MAX : -x;  // Handle edge case
+    }
+    while (x > 0) {
         x /= 10;
         d++;
     }
@@ -105,26 +144,30 @@ void matrix_print(Matrix* mat)
     CHECK_FATAL(!mat, "matrix is null");
 
     u32 width = 0;
+    u32 total = mat->n * mat->m;
 
-    // find max width
-    for (u32 i = 0; i < mat->n; i++) {
-        for (u32 j = 0; j < mat->m; j++) {
-            u32 d = digits(GET_ELM(mat, i, j));
-            if (d > width) { width = d; }
-        }
+    // Find max width - linear O(n * k)
+    for (u32 i = 0; i < total; i++) {
+        u32 d = digits(mat->data[i]); // O(k)
+        if (d > width) { width = d; }
     }
 
-    for (u32 i = 0; i < mat->n; i++) {
-        putchar('|');
-        putchar(' ');
-
-        for (u32 j = 0; j < mat->m; j++) {
-            printf("%-*d ", width, GET_ELM(mat, i, j));
+    // Single linear loop O(n)
+    for (u32 i = 0; i < total; i++) {
+        // Print row separator
+        if (i % mat->m == 0) {
+            if (i > 0) { putchar('|'); }  // Close previous row
+            putchar('\n');
+            putchar('|');
+            putchar(' ');
         }
-
-        putchar('|');
-        putchar('\n');
+        
+        // Print element
+        printf("%-*d ", width, mat->data[i]);
     }
+
+    // Close last row
+    putchar('|');
     putchar('\n');
 }
 
