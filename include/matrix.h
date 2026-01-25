@@ -59,35 +59,48 @@ void matrix_set_val_arr2(Matrix* mat, const int** arr2, u32 n, u32 m);
 // set the value at position i, j
 void matrix_set_elm(Matrix* mat, int elm, u32 i, u32 j);
 
+// add a and b and save result in out
+// out may alias a and/or b
+void matrix_add(Matrix* out, const Matrix* a, const Matrix* b);
 
-void matrix_add(Matrix* out, Matrix* a, Matrix* b);
-void matrix_add_self(Matrix* a, Matrix* b);
+void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b);
 
-void matrix_sub(Matrix* out, Matrix* a, Matrix* b);
-void matrix_sub_self(Matrix* a, Matrix* b);
+// out may not alias a, b (TODO: will need _self functions when data shape changes)
+void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b);
+void matrix_xply_self(Matrix* a, const Matrix* b);
 
-void matrix_xply(Matrix* out, Matrix* a, Matrix* b);
-void matrix_xply_self(Matrix* a, Matrix* b);
+void matrix_div(Matrix* out, const Matrix* a, const Matrix* b);
+void matrix_div_self(Matrix* a, const Matrix* b);
 
-void matrix_div(Matrix* out, Matrix* a, Matrix* b);
-void matrix_div_self(Matrix* a, Matrix* b);
-
-void matrix_T(Matrix* out, Matrix* mat);
+void matrix_T(Matrix* out, const Matrix* mat);
 void matrix_T_self(Matrix* mat);
 
-int  matrix_det(Matrix* mat);
+int  matrix_det(const Matrix* mat);
 
-void matrix_adj(Matrix* out, Matrix* mat);
+void matrix_adj(Matrix* out, const Matrix* mat);
+//void matrix_adj_self(Matrix* mat);
 
-void matrix_inv(Matrix* out, Matrix* mat);
+void matrix_inv(Matrix* out, const Matrix* mat);
+//void matrix_inv_self(Matrix* mat);
 
-void matrix_scale(Matrix* mat, int* val);
+void matrix_scale(Matrix* mat, int val);
 
 
-
-void matrix_copy(Matrix* out, Matrix* mat);
+void matrix_copy(Matrix* dest, const Matrix* src);
 
 // print the formatted, alighmed matrix
-void matrix_print(Matrix* mat);
+void matrix_print(const Matrix* mat);
+
+/* TODO: 
+ 
+typedef struct {
+    int* data;
+    u32  n, m;
+    u32  stride;
+} MatrixView;
+
+slicing,transposes without copying,SIMD-friendly kernels
+
+*/
 
 #endif // MATRIX_H

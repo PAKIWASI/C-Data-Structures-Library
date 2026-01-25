@@ -376,4 +376,13 @@ typedef struct {
     };
     b8 is_heap;  // or use size MSB as flag
 } String;
+
+
+string view:
+
+typedef struct {
+    const char* data;
+    u32 len;
+} StringView;
+
 */

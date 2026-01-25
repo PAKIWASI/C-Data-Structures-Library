@@ -150,4 +150,38 @@ static inline u32 arena_remaining(Arena* arena)
 }
 
 
+// USEFULL MACROS
+
+
+// typed allocation
+#define ARENA_ALLOC(arena, T) \
+    ((T*)arena_alloc((arena), sizeof(T)))
+
+#define ARENA_ALLOC_N(arena, T, n) \
+    ((T*)arena_alloc((arena), sizeof(T) * (n)))
+
+// common for structs
+#define ARENA_ALLOC_ZERO(arena, T) \
+    ((T*)memset(ARENA_ALLOC(arena, T), 0, sizeof(T)))
+
+#define ARENA_ALLOC_ZERO_N(arena, T, n) \
+    ((T*)memset(ARENA_ALLOC_N(arena, T, n), 0, sizeof(T) * (n)))
+
+// Scratch Arena
+
+#define ARENA_SCRATCH(arena) \
+    for (u32 _mark = arena_get_mark(arena); _mark != (u32)-1; \
+         arena_clear_mark(arena, _mark), _mark = (u32)-1)
+/* USAGE:
+ARENA_SCRATCH(arena) {
+    char* tmp = ARENA_ALLOC_N(arena, char, 256);
+    // temp work
+} // auto rollback
+*/
+
+#define ARENA_PUSH_T(arena, T, value) \
+    (*(T*)memcpy(ARENA_ALLOC(arena, T), &(value), sizeof(T)))
+
+
+
 #endif // ARENA_H

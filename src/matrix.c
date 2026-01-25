@@ -1,5 +1,4 @@
 #include "matrix.h"
-#include "common.h"
 
 #include <limits.h>
 #include <stdarg.h>
@@ -8,7 +7,7 @@
 
 // Index calculation (row major)
 #define IDX(mat, i, j) (((i) * (mat)->m) + (j))
-#define GET_ELM(mat, i, j) (mat->data[IDX(mat, i, j)])
+#define MATRIX_AT(mat, i, j) ((mat)->data[(i)*(mat)->m + (j)])
 
 
 Matrix* matrix_create(u32 n, u32 m)
@@ -97,7 +96,23 @@ void matrix_set_elm(Matrix* mat, int elm, u32 i, u32 j)
     mat->data[IDX(mat, i, j)] = elm;
 }
 
-void matrix_add(Matrix* out, Matrix* a, Matrix* b)
+void matrix_add(Matrix* out, const Matrix* a, const Matrix* b)
+{
+    CHECK_FATAL(!out, "out matrix is null");
+    CHECK_FATAL(!a,   "a matrix is null");
+    CHECK_FATAL(!b,   "b matrix is null");
+    CHECK_FATAL(a->n != b->n || a->m != b->m || a->n != out->n || a->m != out->m,
+                "a, b, out mat dimentions dont match");
+
+    u32 total = MATRIX_TOTAL(a);
+
+    for (u32 i = 0; i < total; i++) {
+        out->data[i] = a->data[i] + b->data[i];
+    }
+}
+
+
+void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b)
 {
     CHECK_FATAL(!out, "out matrix is null");
     CHECK_FATAL(!a,   "a matrix is null");
@@ -107,21 +122,29 @@ void matrix_add(Matrix* out, Matrix* a, Matrix* b)
     u32 total = MATRIX_TOTAL(a);
 
     for (u32 i = 0; i < total; i++) {
-        out->data[i] = a->data[i] + b->data[i];
+        out->data[i] = a->data[i] - b->data[i];
     }
 }
 
-void matrix_add_self(Matrix* a, Matrix* b)
+
+void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b)
 {
+    CHECK_FATAL(!out, "out matrix is null");
     CHECK_FATAL(!a,   "a matrix is null");
     CHECK_FATAL(!b,   "b matrix is null");
-    CHECK_FATAL(a->n != b->n || a->m != b->m, "a, b mat dimentions dont match");
 
     u32 total = MATRIX_TOTAL(a);
 
-    for (u32 i = 0; i < total; i++) {
-        a->data[i] = a->data[i] + b->data[i];
-    }
+
+}
+
+void matrix_xply_self(Matrix* a, const Matrix* b)
+{
+    CHECK_FATAL(!a,   "a matrix is null");
+    CHECK_FATAL(!b,   "b matrix is null");
+
+    u32 total = MATRIX_TOTAL(a);
+
 }
 
 
@@ -139,7 +162,7 @@ static u32 digits(int x)
     return d;
 }
 
-void matrix_print(Matrix* mat)
+void matrix_print(const Matrix* mat)
 {
     CHECK_FATAL(!mat, "matrix is null");
 

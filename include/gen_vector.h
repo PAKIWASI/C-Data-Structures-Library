@@ -176,5 +176,12 @@ void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
 
 */
 
+/*
+ * genVec is a value-based generic vector.
+ * Elements are stored inline and managed via user-supplied
+ * copy/move/destructor callbacks.
+ *
+ * This avoids pointer ownership ambiguity and improves cache locality.
+ */
 
 #endif // GEN_VECTOR_H
