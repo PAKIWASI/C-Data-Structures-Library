@@ -3,7 +3,6 @@
 
 #include "common.h"
 
-// TODO: iterator, for each support?
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
@@ -153,6 +152,7 @@ static inline u8 genVec_empty(const genVec* vec)
     return vec->size == 0;
 }
 
+// TODO: iterator, for each support?
 // TODO: add:
 /*
 

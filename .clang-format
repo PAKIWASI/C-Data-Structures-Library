@@ -28,7 +28,7 @@ SortIncludes: true
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-ColumnLimit: 100                              # 80-120 is common
+ColumnLimit: 80                              # 80-120 is common
 
 # Pointer/reference alignment (pick one style)
 PointerAlignment: Left                        # int* ptr (more common in C)

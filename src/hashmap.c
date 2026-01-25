@@ -4,8 +4,7 @@
 
 typedef struct {
     u8* key;
-    u8* val;        // TODO: 
-    u32 hash;       // cached hash value to compute only once
+    u8* val;
     STATE state;
 } KV;
 
@@ -44,7 +43,8 @@ static u32 find_slot(const hashmap* map, const u8* key,
     *found = 0;
     *tombstone = -1;
 
-    for (u32 x = 0; x < map->capacity; x++) {
+    for (u32 x = 0; x < map->capacity; x++) 
+    {
         u32 i = (index + x) % map->capacity;
         const KV* kv = (const KV*)genVec_get_ptr(map->buckets, i);
 
@@ -139,7 +139,11 @@ hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
     hashmap* map = malloc(sizeof(hashmap));
     CHECK_FATAL(!map, "map malloc failed");
 
-    KV kv = { .key = NULL, .val = NULL, .state = EMPTY };
+    KV kv = { 
+        .key = NULL, 
+        .val = NULL, 
+        .state = EMPTY 
+    };
     map->buckets = genVec_init_val(HASHMAP_INIT_CAPACITY, cast(kv), sizeof(KV), NULL, NULL, NULL);
     
     map->capacity = HASHMAP_INIT_CAPACITY;
