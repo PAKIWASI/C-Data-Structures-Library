@@ -5,7 +5,7 @@
 int main(void)
 {
     
-    matrix_test_3();
+    matrix_test_4();
 
     return 0;
 }

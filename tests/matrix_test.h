@@ -2,7 +2,6 @@
 #define MATRIX_TEST_H
 
 #include "matrix.h"
-#include <stdio.h>
 
 
 int matrix_test_1(void)
@@ -76,7 +75,7 @@ int matrix_test_3(void)
 
     matrix_print(&mat2);
 
-    matrix_add_self(mat, &mat2);
+    matrix_add(mat, mat, &mat2);
 
     matrix_print(mat);
 
@@ -84,13 +83,37 @@ int matrix_test_3(void)
     matrix_create_stk(&out, 4, 3, (int*)ZEROS_2D(4, 3));
     matrix_print(&out);
 
-    matrix_add(&out, mat, &mat2);
+    matrix_sub(&out, mat, &mat2);
     matrix_print(&out);
+
+
+    matrix_sub(&out, &out, &out);
+    matrix_print(&out);
+
 
     matrix_destroy(mat);
     return 0;
 }
 
+int matrix_test_4(void)
+{
+    Matrix mat;
+    matrix_create_stk(&mat, 4, 3, (int*)(int[4][3]){
+        {1, 2, 3},
+        {1, 2, 3},
+        {1, 2, 3},
+        {1, 2, 3},
+    });
+    matrix_print(&mat);
+
+    Matrix m2;
+    matrix_create_stk(&m2, 3, 4, (int*)ZEROS_2D(3, 4));
+
+    matrix_T(&m2, &mat);
+    matrix_print(&m2);
+
+    return 0;
+}
 
 
 #endif // MATRIX_TEST_H
