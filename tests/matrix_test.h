@@ -32,20 +32,20 @@ int matrix_test_2(void)
 {
     Matrix* mat = matrix_create(3, 3);
 
-    matrix_set_val_arr(mat, (int[9]){
+    matrix_set_val_arr(mat, 9, (int[9]){
             1, 1, 1,
             2, 2, 2,
             3, 3, 3
-    }, 9);
+    });
 
     matrix_print(mat);
 
     // prefer this as much more explicit, hard to make mistake
-    matrix_set_val_arr(mat, (int*)(int[3][3]){
+    matrix_set_val_arr(mat, 9, (int*)(int[3][3]){
         {1,  200, 3},
         {4,  5,   6},
         {70, 8,   8}
-    }, 9);
+    });
 
     matrix_print(mat);
 
@@ -111,6 +111,12 @@ int matrix_test_4(void)
 
     matrix_T(&m2, &mat);
     matrix_print(&m2);
+
+    Matrix m3;
+    matrix_create_stk(&m3, 3, 3, (int*)ZEROS_2D(3, 3));
+    matrix_xply(&m3, &m2, &mat);
+
+    matrix_print(&m3);
 
     return 0;
 }

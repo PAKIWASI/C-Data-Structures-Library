@@ -63,6 +63,7 @@ void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b);
 
 // out may not alias a, b (TODO: will need _self functions when data shape changes)
 void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b);
+void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b);
 // void matrix_xply_self(Matrix* a, const Matrix* b);   // TODO: reallocation needed as shape changes?
 
 void matrix_div(Matrix* out, const Matrix* a, const Matrix* b);

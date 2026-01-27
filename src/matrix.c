@@ -1,5 +1,4 @@
 #include "matrix.h"
-#include "common.h"
 
 #include <limits.h>
 #include <stdarg.h>
@@ -128,18 +127,97 @@ void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b)
     }
 }
 
-
-// a x b * b x c = a x c
+// ikj multiplication. (mxk) * (kxn) = (mxn)
+// this is good for small to medium size matrices
 void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b)
 {
     CHECK_FATAL(!out, "out matrix is null");
     CHECK_FATAL(!a,   "a matrix is null");
     CHECK_FATAL(!b,   "b matrix is null");
+    CHECK_FATAL(a->n != b->m, "incompatible matrix dimensions for multiplication");
+    CHECK_FATAL(out->m != a->m || out->n != b->n, "output matrix has wrong dimensions");
+    
+    u32 m = a->m;  // rows of A
+    u32 k = a->n;  // cols of A = rows of B
+    u32 n = b->n;  // cols of B
+    
+    // Initialize output to zero
+    memset(out->data, 0, sizeof(int) * m * n);
+    
+    // Block size for cache optimization
+    const u32 BLOCK_SIZE = 16;
+    
+    // Blocked matrix multiplication (ikj order for cache efficiency)
+    for (u32 i = 0; i < m; i += BLOCK_SIZE) 
+    {
+        for (u32 k_outer = 0; k_outer < k; k_outer += BLOCK_SIZE) 
+        {
+            for (u32 j = 0; j < n; j += BLOCK_SIZE) {
+                // Block boundaries
+                u32 i_max = (i + BLOCK_SIZE < m)       ? i + BLOCK_SIZE       : m;
+                u32 k_max = (k_outer + BLOCK_SIZE < k) ? k_outer + BLOCK_SIZE : k;
+                u32 j_max = (j + BLOCK_SIZE < n)       ? j + BLOCK_SIZE       : n;
+                // Multiply this block
+                for (u32 ii = i; ii < i_max; ii++) {
+                    for (u32 kk = k_outer; kk < k_max; kk++) {
+
+                        int a_val = a->data[IDX(a, ii, kk)];
+                        for (u32 jj = j; jj < j_max; jj++) {
+                            out->data[IDX(out, ii, jj)] += a_val * b->data[IDX(b, kk, jj)];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+
+// this function transposes b for cache-friendly access
+// takes more memory, good for large size matrices
+void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
+{
+    CHECK_FATAL(!out, "out matrix is null");
+    CHECK_FATAL(!a,   "a matrix is null");
+    CHECK_FATAL(!b,   "b matrix is null");
     CHECK_FATAL(a->n != b->m, "incompatible matrix dimensions");
-
-    u32 total = MATRIX_TOTAL(a);
-
-    // we transpose b mat so we can xply row-wise
+    CHECK_FATAL(out->m != a->m || out->n != b->n, "output matrix has wrong dimensions");
+    
+    u32 m = a->m;
+    u32 k = a->n;
+    u32 n = b->n;
+    
+    // Transpose B for cache-friendly access
+    Matrix* b_T = matrix_create(n, k);  // B^T is n×k
+    matrix_T(b_T, b);
+    
+    memset(out->data, 0, sizeof(int) * m * n);
+    
+    const u32 BLOCK_SIZE = 16;
+    
+    // Now both A and B^T are accessed row-wise
+    for (u32 i = 0; i < m; i += BLOCK_SIZE) 
+    {
+        for (u32 j = 0; j < n; j += BLOCK_SIZE) 
+        {
+            u32 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m;
+            u32 j_max = (j + BLOCK_SIZE < n) ? j + BLOCK_SIZE : n;
+            
+            for (u32 ii = i; ii < i_max; ii++) {
+                for (u32 jj = j; jj < j_max; jj++) {
+                    
+                    int sum = 0;
+                    // Dot product of A[ii] and B_T[jj] (both row-wise)
+                    for (u32 kk = 0; kk < k; kk++) {
+                        sum += a->data[IDX(a, ii, kk)] * b_T->data[IDX(b_T, jj, kk)];
+                    }
+                    out->data[IDX(out, ii, jj)] = sum;
+                }
+            }
+        }
+    }
+    matrix_destroy(b_T);
 }
 
 void matrix_xply_self(Matrix* a, const Matrix* b)
@@ -152,15 +230,7 @@ void matrix_xply_self(Matrix* a, const Matrix* b)
 
 }
 
-/*
--Spatial Locality: Instead of jumping around the entire matrix, we process small blocks that fit in the CPU cache
--Temporal Locality: We access nearby memory locations repeatedly while they're still hot in the cache
--Reduces Cache Misses: For large matrices, a naive transpose causes many cache misses because:
 
-Reading is row-wise (good for cache)
-Writing is column-wise (bad for cache - jumps by out->n each time)
-Blocking keeps both read and write working sets small
-*/
 void matrix_T(Matrix* out, const Matrix* mat)
 {
     CHECK_FATAL(!mat, "mat matrix is null");
@@ -169,13 +239,13 @@ void matrix_T(Matrix* out, const Matrix* mat)
                 "incompatible matrix dimensions");
     
     // Block size for cache optimization (tune based on cache line size)
-    const u32 BLOCK_SIZE = 16;
+    const u32 BLOCK_SIZE = 16;      // TODO: user adjustable macro?
     
     // Blocked transpose: process matrix in BLOCK_SIZE x BLOCK_SIZE tiles
     for (u32 i = 0; i < mat->m; i += BLOCK_SIZE) {
         for (u32 j = 0; j < mat->n; j += BLOCK_SIZE) {
             
-            // Calculate block boundaries (handle edge cases)
+            // Calculate block boundaries
             u32 i_max = (i + BLOCK_SIZE < mat->m) ? i + BLOCK_SIZE : mat->m;
             u32 j_max = (j + BLOCK_SIZE < mat->n) ? j + BLOCK_SIZE : mat->n;
             
@@ -183,14 +253,13 @@ void matrix_T(Matrix* out, const Matrix* mat)
             for (u32 ii = i; ii < i_max; ii++) {
                 for (u32 jj = j; jj < j_max; jj++) {
                     // mat[ii][jj] -> out[jj][ii]
-                    // out->data[jj * out->n + ii] = mat->data[ii * mat->n + jj];
                     out->data[IDX(out, jj, ii)] = mat->data[IDX(mat, ii, jj)];
                 }
             }
         }
     }
-}
 
+}
 
 static u32 digits(int x)
 {
