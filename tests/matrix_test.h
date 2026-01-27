@@ -121,5 +121,26 @@ int matrix_test_4(void)
     return 0;
 }
 
+int matrix_test_5(void)
+{
+    Matrix* mat = matrix_create_arr(3, 3, (int*)(int[3][3]){
+        {3, 2, 4},
+        {2, 0, 2},      // BUG: not working for 0 in middle (saying it's singular!?)
+        {4, 2, 3},
+    });
+
+    Matrix L, U;
+    matrix_create_stk(&L, 3, 3, (int*)ZEROS_2D(3, 3));
+    matrix_create_stk(&U, 3, 3, (int*)ZEROS_2D(3, 3));
+
+    matrix_LU_Decomp(&L, &U, mat);  // WARN: L and U should be floats!
+
+    matrix_print(&L);
+    matrix_print(&U);
+
+    matrix_destroy(mat);
+    return 0;
+}
+
 
 #endif // MATRIX_TEST_H

@@ -1,14 +1,14 @@
 #include "matrix.h"
+#include "common.h"
 
 #include <limits.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <string.h>
 
 
 // Index calculation (row major)
 #define IDX(mat, i, j) (((i) * (mat)->n) + (j))
-#define MATRIX_AT(mat, i, j) ((mat)->data[(i)*(mat)->n + (j)])
+#define MATRIX_AT(mat, i, j) ((mat)->data[((i) * (mat)->n) + (j)])
 
 
 Matrix* matrix_create(u32 m, u32 n)
@@ -152,7 +152,8 @@ void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b)
     {
         for (u32 k_outer = 0; k_outer < k; k_outer += BLOCK_SIZE) 
         {
-            for (u32 j = 0; j < n; j += BLOCK_SIZE) {
+            for (u32 j = 0; j < n; j += BLOCK_SIZE) 
+            {
                 // Block boundaries
                 u32 i_max = (i + BLOCK_SIZE < m)       ? i + BLOCK_SIZE       : m;
                 u32 k_max = (k_outer + BLOCK_SIZE < k) ? k_outer + BLOCK_SIZE : k;
@@ -220,14 +221,76 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
     matrix_destroy(b_T);
 }
 
-void matrix_xply_self(Matrix* a, const Matrix* b)
+/*
+Doolittle algorithm computes U's i-th row, then L's i-th column, alternating
+For each element, you subtract the dot product of already-computed L and U values
+*/
+void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat)
 {
-    CHECK_FATAL(!a,   "a matrix is null");
-    CHECK_FATAL(!b,   "b matrix is null");
-    CHECK_FATAL(a->n != b->m, "incompatible matrix dimensions");
+    CHECK_FATAL(!L,   "L mat is null");
+    CHECK_FATAL(!U,   "U mat is null");
+    CHECK_FATAL(!mat, "mat is null");
+    CHECK_FATAL(mat->n != mat->m, "mat is not a square matrix");
+    CHECK_FATAL(L->n != mat->n || L->m != mat->m, "L dimensions don't match");
+    CHECK_FATAL(U->n != mat->n || U->m != mat->m, "U dimensions don't match");
 
-    u32 total = MATRIX_TOTAL(a);
+    const u32 n = mat->n;
 
+    // 0 init matrices
+    memset(L->data, 0, sizeof(int) * n * n);
+    memset(U->data, 0, sizeof(int) * n * n);
+    // L main diagonal is 1
+    for (u32 i = 0; i < n; i++) {
+        L->data[IDX(L, i, i)] = 1;
+    }
+
+
+    // Build U and L row by row
+    for (u32 i = 0; i < n; i++) 
+    {
+        // Upper triangular matrix U (row i, columns from i to n-1)
+        for (u32 k = i; k < n; k++) {
+            int sum = 0;
+            for (u32 j = 0; j < i; j++) {
+                sum += L->data[IDX(L, i, j)] * U->data[IDX(U, j, k)];
+            }
+            U->data[IDX(U, i, k)] = MATRIX_AT(mat, i, k) - sum;
+        }
+
+        // Lower triangular matrix L (column i, rows from i+1 to n-1)
+        for (u32 k = i + 1; k < n; k++) {
+            int sum = 0;
+            for (u32 j = 0; j < i; j++) {
+                sum += L->data[IDX(L, k, j)] * U->data[IDX(U, j, i)];
+            }
+            
+            // Check for zero diagonal in U (would cause division by zero)
+            if (U->data[IDX(U, i, i)] == 0) {
+                CHECK_FATAL(1, "Matrix is singular - LU decomposition failed");
+            }
+            
+            L->data[IDX(L, k, i)] = (MATRIX_AT(mat, k, i) - sum) / U->data[IDX(U, i, i)];
+        }
+    }
+}
+
+// LU Decomosition method
+int matrix_det(const Matrix* mat)
+{
+    CHECK_FATAL(!mat, "mat matrix is null");
+    CHECK_FATAL(mat->m != mat->n, "only square matrices have determinant");
+    
+    /*
+        det of triangular mat is product of main diagonal
+        so det of a mat that is decomposed with LU method becomes
+        product of elements on the diagonal of L and U
+        det(A) = det(L) * det(U)
+        LU Decomosition is when we make 2 triangular matrices from one,
+        which when xplied give original matrix
+    */
+
+
+    return 0;
 }
 
 

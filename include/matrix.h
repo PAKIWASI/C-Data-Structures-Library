@@ -17,7 +17,6 @@ typedef struct {
     u32  n; // cols
 } Matrix;
 
-
 // create heap matrix with n rows and m cols
 Matrix* matrix_create(u32 m, u32 n);
 
@@ -64,21 +63,18 @@ void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b);
 // out may not alias a, b (TODO: will need _self functions when data shape changes)
 void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b);
 void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b);
-// void matrix_xply_self(Matrix* a, const Matrix* b);   // TODO: reallocation needed as shape changes?
 
 void matrix_div(Matrix* out, const Matrix* a, const Matrix* b);
-// void matrix_div_self(Matrix* a, const Matrix* b);
 
 void matrix_T(Matrix* out, const Matrix* mat);
-// void matrix_T_self(Matrix* mat);
+
+void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat);
 
 int matrix_det(const Matrix* mat);
 
 void matrix_adj(Matrix* out, const Matrix* mat);
-//void matrix_adj_self(Matrix* mat);
 
 void matrix_inv(Matrix* out, const Matrix* mat);
-//void matrix_inv_self(Matrix* mat);
 
 void matrix_scale(Matrix* mat, int val);
 
