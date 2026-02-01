@@ -16,9 +16,9 @@ int matrix_test_1(void)
 
     matrix_print(&mat);
 
-    matrix_set_val(&mat, 2, 2, 2, 2,
-                         2, 2, 2, 2,
-                         2, 2, 2, 2);           
+    // matrix_set_val(&mat, 2, 2, 2, 2,
+    //                      2, 2, 2, 2,
+    //                      2, 2, 2, 2);           
 
     matrix_set_elm(&mat, 0, 1, 1);
 
@@ -142,7 +142,12 @@ int matrix_test_5(void)
     return 0;
 }
 
+#include "matrix_generic.h"
+INSTANTIATE_MATRIX(double, "%lf");
 
+int matrix_test_6(void)
+{
+}
 
 
 #endif // MATRIX_TEST_H

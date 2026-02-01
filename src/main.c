@@ -6,8 +6,5 @@
 
 int main(void)
 {
-    
-    matrix_test_6();
-
-    return 0;
+    return matrix_test_6();    
 }
