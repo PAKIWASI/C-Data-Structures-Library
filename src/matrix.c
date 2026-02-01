@@ -1,8 +1,8 @@
 #include "matrix.h"
 
+#include <stdarg.h>
 #include <string.h>
 #include <limits.h>
-
 
 
 Matrix* matrix_create(u32 m, u32 n)
@@ -110,7 +110,10 @@ void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b)
     CHECK_FATAL(!out, "out matrix is null");
     CHECK_FATAL(!a, "a matrix is null");
     CHECK_FATAL(!b, "b matrix is null");
-    CHECK_FATAL(a->m != b->m || a->n != b->n, "a, b mat dimentions dont match");
+    // FIXED: Added dimension check for 'out' matrix
+    CHECK_FATAL(a->m != b->m || a->n != b->n || a->m != out->m ||
+                    a->n != out->n,
+                "a, b, out mat dimentions dont match");
 
     u32 total = MATRIX_TOTAL(a);
 
@@ -212,8 +215,18 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
 }
 
 /*
-Doolittle algorithm computes U's i-th row, then L's i-th column, alternating
-For each element, you subtract the dot product of already-computed L and U values
+NOTE: LU Decomposition with integer matrices has limitations!
+
+Integer division truncates, which means:
+1. The decomposition will lose precision
+2. Matrices with certain structures (like zeros in specific positions) may fail
+3. Results are approximate, not exact
+
+For accurate LU decomposition, use floating-point types (float/double).
+This implementation is kept for integer matrices but should be used with caution.
+
+Doolittle algorithm computes U's i-th row, then L's i-th column, alternating.
+For each element, you subtract the dot product of already-computed L and U values.
 */
 void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat)
 {
@@ -256,13 +269,16 @@ void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat)
                 CHECK_FATAL(1, "Matrix is singular - LU decomposition failed");
             }
 
+            // WARNING: Integer division truncates! This loses precision.
+            // For accurate LU decomposition, use floating-point matrices.
             L->data[IDX(L, k, i)] =
                 (MATRIX_AT(mat, k, i) - sum) / U->data[IDX(U, i, i)];
         }
     }
 }
 
-// LU Decomosition method
+// FIXED: Implemented complete determinant calculation using LU decomposition
+// NOTE: For integer matrices, this may lose precision due to integer division in LU
 int matrix_det(const Matrix* mat)
 {
     CHECK_FATAL(!mat, "mat matrix is null");
@@ -273,12 +289,34 @@ int matrix_det(const Matrix* mat)
         so det of a mat that is decomposed with LU method becomes
         product of elements on the diagonal of L and U
         det(A) = det(L) * det(U)
-        LU Decomosition is when we make 2 triangular matrices from one,
-        which when xplied give original matrix
+        
+        Since L has 1s on diagonal: det(L) = 1
+        So: det(A) = det(U) = product of U's diagonal elements
+        
+        LU Decomposition is when we make 2 triangular matrices from one,
+        which when multiplied give original matrix: A = L * U
     */
 
-
-    return 0;
+    u32 n = mat->n;
+    
+    // Create temporary matrices for LU decomposition
+    Matrix* L = matrix_create(n, n);
+    Matrix* U = matrix_create(n, n);
+    
+    // Perform LU decomposition
+    matrix_LU_Decomp(L, U, mat);
+    
+    // Calculate determinant as product of U's diagonal
+    int det = 1;
+    for (u32 i = 0; i < n; i++) {
+        det *= U->data[IDX(U, i, i)];
+    }
+    
+    // Cleanup
+    matrix_destroy(L);
+    matrix_destroy(U);
+    
+    return det;
 }
 
 
@@ -309,6 +347,26 @@ void matrix_T(Matrix* out, const Matrix* mat)
             }
         }
     }
+}
+
+void matrix_scale(Matrix* mat, int val)
+{
+    CHECK_FATAL(!mat, "matrix is null");
+    
+    u32 total = MATRIX_TOTAL(mat);
+    for (u32 i = 0; i < total; i++) {
+        mat->data[i] *= val;
+    }
+}
+
+void matrix_copy(Matrix* dest, const Matrix* src)
+{
+    CHECK_FATAL(!dest, "dest matrix is null");
+    CHECK_FATAL(!src, "src matrix is null");
+    CHECK_FATAL(dest->m != src->m || dest->n != src->n, 
+                "matrix dimensions don't match");
+    
+    memcpy(dest->data, src->data, sizeof(int) * MATRIX_TOTAL(src));
 }
 
 static u32 digits(int x)
@@ -356,107 +414,3 @@ void matrix_print(const Matrix* mat)
     putchar('|');
     putchar('\n');
 }
-
-
-
-#include "matrix.h"
-#include <string.h>
-#include <stdio.h>
-
-// ============================================================================
-// IMPLEMENTATION MACROS
-// ============================================================================
-
-// Common helper function implementations
-#define IMPLEMENT_MATRIX_CREATE(type) \
-    Matrix_##type* matrix_create_##type(u32 m, u32 n) \
-    { \
-        CHECK_FATAL(n == 0 && m == 0, "n == m == 0"); \
-        Matrix_##type* mat = (Matrix_##type*)malloc(sizeof(Matrix_##type)); \
-        CHECK_FATAL(!mat, "matrix malloc failed"); \
-        mat->m = m; \
-        mat->n = n; \
-        mat->data = (type*)malloc(sizeof(type) * n * m); \
-        CHECK_FATAL(!mat->data, "matrix data malloc failed"); \
-        return mat; \
-    }
-
-#define IMPLEMENT_MATRIX_CREATE_ARR(type) \
-    Matrix_##type* matrix_create_arr_##type(u32 m, u32 n, const type* arr) \
-    { \
-        CHECK_FATAL(!arr, "input arr is null"); \
-        Matrix_##type* mat = matrix_create_##type(m, n); \
-        memcpy(mat->data, arr, sizeof(type) * m * n); \
-        return mat; \
-    }
-
-#define IMPLEMENT_MATRIX_CREATE_STK(type) \
-    void matrix_create_stk_##type(Matrix_##type* mat, u32 m, u32 n, type* data) \
-    { \
-        CHECK_FATAL(!mat, "matrix is null"); \
-        CHECK_FATAL(!data, "data is null"); \
-        mat->data = data; \
-        mat->m = m; \
-        mat->n = n; \
-    }
-
-#define IMPLEMENT_MATRIX_DESTROY(type) \
-    void matrix_destroy_##type(Matrix_##type* mat) \
-    { \
-        CHECK_FATAL(!mat, "matrix is null"); \
-        free(mat->data); \
-        free(mat); \
-    }
-
-#define IMPLEMENT_MATRIX_SET_VAL(type) \
-    void matrix_set_val_##type(Matrix_##type* mat, ...) \
-    { \
-        CHECK_FATAL(!mat, "matrix is null"); \
-        va_list arr; \
-        va_start(arr, mat); \
-        u32 total = MATRIX_TOTAL(mat); \
-        for (u32 i = 0; i < total; i++) { \
-            mat->data[i] = (type)va_arg(arr, double); \
-        } \
-        va_end(arr); \
-    }
-
-// Continue with other implementations...
-
-#define IMPLEMENT_MATRIX_PRINT(type, fmt) \
-    void matrix_print_##type(const Matrix_##type* mat) \
-    { \
-        CHECK_FATAL(!mat, "matrix is null"); \
-        for (u32 i = 0; i < mat->m; i++) { \
-            printf("| "); \
-            for (u32 j = 0; j < mat->n; j++) { \
-                printf(fmt, mat->data[IDX(mat, i, j)]); \
-                printf(" "); \
-            } \
-            printf("|\n"); \
-        } \
-    }
-
-// ============================================================================
-// COMPLETE IMPLEMENTATION FOR A SINGLE TYPE
-// ============================================================================
-
-#define IMPLEMENT_MATRIX_FULL(type, fmt) \
-    IMPLEMENT_MATRIX_CREATE(type) \
-    IMPLEMENT_MATRIX_CREATE_ARR(type) \
-    IMPLEMENT_MATRIX_CREATE_STK(type) \
-    IMPLEMENT_MATRIX_DESTROY(type) \
-    IMPLEMENT_MATRIX_SET_VAL(type) \
-    /* ... add other implementations ... */ \
-    IMPLEMENT_MATRIX_PRINT(type, fmt)
-
-// ============================================================================
-// X-MACRO DISPATCHER FOR IMPLEMENTATIONS
-// ============================================================================
-
-// Generate implementations for all types
-#define X(type, suffix, fmt) IMPLEMENT_MATRIX_FULL(type, fmt);
-#include "matrix_types.def"
-#undef X
-
-

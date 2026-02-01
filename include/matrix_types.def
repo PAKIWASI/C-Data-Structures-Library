@@ -1,8 +1,0 @@
-// This file defines all matrix types you want to support
-// Format: X(type, suffix, format_string)
-
-X(float, f, "%.2f")
-X(double, d, "%.4lf") 
-X(int, i, "%d")
-X(u32, u, "%u")
-X(u8, u8, "%hhu")

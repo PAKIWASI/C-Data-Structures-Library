@@ -1,0 +1,408 @@
+#ifndef MATRIX_GENERIC_H
+#define MATRIX_GENERIC_H
+
+#include "common.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <limits.h>
+
+
+
+// ============================================================================
+// GENERIC MATRIX MACRO DEFINITIONS
+// ============================================================================
+
+// Define a matrix type for a specific data type
+#define MATRIX_TYPE(T) \
+    typedef struct { \
+        T* data; \
+        u32 m; /* rows */ \
+        u32 n; /* cols */ \
+    } Matrix_##T
+
+// Generate all matrix types
+MATRIX_TYPE(int);
+MATRIX_TYPE(float);
+MATRIX_TYPE(double);
+MATRIX_TYPE(long);
+MATRIX_TYPE(short);
+
+// Helper macros (type-agnostic)
+#define MATRIX_TOTAL(mat)    ((u32)((mat)->n * (mat)->m))
+#define IDX(mat, i, j)       (((i) * (mat)->n) + (j))
+#define MATRIX_AT(mat, i, j) ((mat)->data[((i) * (mat)->n) + (j)])
+
+// Zero initialization helpers
+#define ZEROS_1D(T, n)    (((T)[n]){0})
+#define ZEROS_2D(T, m, n) (((T)[m][n]){0})
+
+// ============================================================================
+// MATRIX CREATION/DESTRUCTION
+// ============================================================================
+
+#define MATRIX_CREATE(T) \
+    Matrix_##T* matrix_create_##T(u32 m, u32 n) \
+    { \
+        CHECK_FATAL(n == 0 && m == 0, "n == m == 0"); \
+        Matrix_##T* mat = (Matrix_##T*)malloc(sizeof(Matrix_##T)); \
+        CHECK_FATAL(!mat, "matrix malloc failed"); \
+        mat->m = m; \
+        mat->n = n; \
+        mat->data = (T*)malloc(sizeof(T) * n * m); \
+        CHECK_FATAL(!mat->data, "matrix data malloc failed"); \
+        return mat; \
+    }
+
+#define MATRIX_CREATE_ARR(T) \
+    Matrix_##T* matrix_create_arr_##T(u32 m, u32 n, const T* arr) \
+    { \
+        CHECK_FATAL(!arr, "input arr is null"); \
+        Matrix_##T* mat = matrix_create_##T(m, n); \
+        memcpy(mat->data, arr, sizeof(T) * m * n); \
+        return mat; \
+    }
+
+#define MATRIX_CREATE_STK(T) \
+    void matrix_create_stk_##T(Matrix_##T* mat, u32 m, u32 n, T* data) \
+    { \
+        CHECK_FATAL(!mat, "matrix is null"); \
+        CHECK_FATAL(!data, "data is null"); \
+        mat->data = data; \
+        mat->m = m; \
+        mat->n = n; \
+    }
+
+#define MATRIX_DESTROY(T) \
+    void matrix_destroy_##T(Matrix_##T* mat) \
+    { \
+        CHECK_FATAL(!mat, "matrix is null"); \
+        free(mat->data); \
+        free(mat); \
+    }
+
+// ============================================================================
+// MATRIX SETTERS
+// ============================================================================
+
+#define MATRIX_SET_VAL_ARR(T) \
+    void matrix_set_val_arr_##T(Matrix_##T* mat, u32 count, const T* arr) \
+    { \
+        CHECK_FATAL(!mat, "matrix is null"); \
+        CHECK_FATAL(!arr, "arr is null"); \
+        CHECK_FATAL(count != MATRIX_TOTAL(mat), "count doesn't match matrix size"); \
+        memcpy(mat->data, arr, sizeof(T) * count); \
+    }
+
+#define MATRIX_SET_ELM(T) \
+    void matrix_set_elm_##T(Matrix_##T* mat, T elm, u32 i, u32 j) \
+    { \
+        CHECK_FATAL(!mat, "matrix is null"); \
+        CHECK_FATAL(i >= mat->m || j >= mat->n, "index out of bounds"); \
+        mat->data[IDX(mat, i, j)] = elm; \
+    }
+
+// ============================================================================
+// MATRIX OPERATIONS
+// ============================================================================
+
+#define MATRIX_ADD(T) \
+    void matrix_add_##T(Matrix_##T* out, const Matrix_##T* a, const Matrix_##T* b) \
+    { \
+        CHECK_FATAL(!out, "out matrix is null"); \
+        CHECK_FATAL(!a, "a matrix is null"); \
+        CHECK_FATAL(!b, "b matrix is null"); \
+        CHECK_FATAL(a->m != b->m || a->n != b->n || a->m != out->m || a->n != out->n, \
+                    "a, b, out mat dimensions don't match"); \
+        u32 total = MATRIX_TOTAL(a); \
+        for (u32 i = 0; i < total; i++) { \
+            out->data[i] = a->data[i] + b->data[i]; \
+        } \
+    }
+
+#define MATRIX_SUB(T) \
+    void matrix_sub_##T(Matrix_##T* out, const Matrix_##T* a, const Matrix_##T* b) \
+    { \
+        CHECK_FATAL(!out, "out matrix is null"); \
+        CHECK_FATAL(!a, "a matrix is null"); \
+        CHECK_FATAL(!b, "b matrix is null"); \
+        CHECK_FATAL(a->m != b->m || a->n != b->n || a->m != out->m || a->n != out->n, \
+                    "a, b, out mat dimensions don't match"); \
+        u32 total = MATRIX_TOTAL(a); \
+        for (u32 i = 0; i < total; i++) { \
+            out->data[i] = a->data[i] - b->data[i]; \
+        } \
+    }
+
+#define MATRIX_SCALE(T) \
+    void matrix_scale_##T(Matrix_##T* mat, T val) \
+    { \
+        CHECK_FATAL(!mat, "matrix is null"); \
+        u32 total = MATRIX_TOTAL(mat); \
+        for (u32 i = 0; i < total; i++) { \
+            mat->data[i] *= val; \
+        } \
+    }
+
+// ============================================================================
+// MATRIX MULTIPLICATION (Blocked ikj)
+// ============================================================================
+
+#define MATRIX_XPLY(T) \
+    void matrix_xply_##T(Matrix_##T* out, const Matrix_##T* a, const Matrix_##T* b) \
+    { \
+        CHECK_FATAL(!out, "out matrix is null"); \
+        CHECK_FATAL(!a, "a matrix is null"); \
+        CHECK_FATAL(!b, "b matrix is null"); \
+        CHECK_FATAL(a->n != b->m, "incompatible matrix dimensions for multiplication"); \
+        CHECK_FATAL(out->m != a->m || out->n != b->n, "output matrix has wrong dimensions"); \
+        \
+        u32 m = a->m; \
+        u32 k = a->n; \
+        u32 n = b->n; \
+        \
+        memset(out->data, 0, sizeof(T) * m * n); \
+        \
+        const u32 BLOCK_SIZE = 16; \
+        \
+        for (u32 i = 0; i < m; i += BLOCK_SIZE) { \
+            for (u32 k_outer = 0; k_outer < k; k_outer += BLOCK_SIZE) { \
+                for (u32 j = 0; j < n; j += BLOCK_SIZE) { \
+                    u32 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m; \
+                    u32 k_max = (k_outer + BLOCK_SIZE < k) ? k_outer + BLOCK_SIZE : k; \
+                    u32 j_max = (j + BLOCK_SIZE < n) ? j + BLOCK_SIZE : n; \
+                    \
+                    for (u32 ii = i; ii < i_max; ii++) { \
+                        for (u32 kk = k_outer; kk < k_max; kk++) { \
+                            T a_val = a->data[IDX(a, ii, kk)]; \
+                            for (u32 jj = j; jj < j_max; jj++) { \
+                                out->data[IDX(out, ii, jj)] += a_val * b->data[IDX(b, kk, jj)]; \
+                            } \
+                        } \
+                    } \
+                } \
+            } \
+        } \
+    }
+
+// ============================================================================
+// MATRIX TRANSPOSE
+// ============================================================================
+
+#define MATRIX_T(T) \
+    void matrix_T_##T(Matrix_##T* out, const Matrix_##T* mat) \
+    { \
+        CHECK_FATAL(!mat, "mat matrix is null"); \
+        CHECK_FATAL(!out, "out matrix is null"); \
+        CHECK_FATAL(mat->m != out->n || mat->n != out->m, "incompatible matrix dimensions"); \
+        \
+        const u32 BLOCK_SIZE = 16; \
+        \
+        for (u32 i = 0; i < mat->m; i += BLOCK_SIZE) { \
+            for (u32 j = 0; j < mat->n; j += BLOCK_SIZE) { \
+                u32 i_max = (i + BLOCK_SIZE < mat->m) ? i + BLOCK_SIZE : mat->m; \
+                u32 j_max = (j + BLOCK_SIZE < mat->n) ? j + BLOCK_SIZE : mat->n; \
+                \
+                for (u32 ii = i; ii < i_max; ii++) { \
+                    for (u32 jj = j; jj < j_max; jj++) { \
+                        out->data[IDX(out, jj, ii)] = mat->data[IDX(mat, ii, jj)]; \
+                    } \
+                } \
+            } \
+        } \
+    }
+
+// ============================================================================
+// MATRIX COPY
+// ============================================================================
+
+#define MATRIX_COPY(T) \
+    void matrix_copy_##T(Matrix_##T* dest, const Matrix_##T* src) \
+    { \
+        CHECK_FATAL(!dest, "dest matrix is null"); \
+        CHECK_FATAL(!src, "src matrix is null"); \
+        CHECK_FATAL(dest->m != src->m || dest->n != src->n, "matrix dimensions don't match"); \
+        memcpy(dest->data, src->data, sizeof(T) * MATRIX_TOTAL(src)); \
+    }
+
+// ============================================================================
+// LU DECOMPOSITION (for floating point types)
+// ============================================================================
+
+#define MATRIX_LU_DECOMP(T) \
+    void matrix_LU_Decomp_##T(Matrix_##T* L, Matrix_##T* U, const Matrix_##T* mat) \
+    { \
+        CHECK_FATAL(!L, "L mat is null"); \
+        CHECK_FATAL(!U, "U mat is null"); \
+        CHECK_FATAL(!mat, "mat is null"); \
+        CHECK_FATAL(mat->n != mat->m, "mat is not a square matrix"); \
+        CHECK_FATAL(L->n != mat->n || L->m != mat->m, "L dimensions don't match"); \
+        CHECK_FATAL(U->n != mat->n || U->m != mat->m, "U dimensions don't match"); \
+        \
+        const u32 n = mat->n; \
+        \
+        memset(L->data, 0, sizeof(T) * n * n); \
+        memset(U->data, 0, sizeof(T) * n * n); \
+        \
+        for (u32 i = 0; i < n; i++) { L->data[IDX(L, i, i)] = 1; } \
+        \
+        for (u32 i = 0; i < n; i++) { \
+            for (u32 k = i; k < n; k++) { \
+                T sum = 0; \
+                for (u32 j = 0; j < i; j++) { \
+                    sum += L->data[IDX(L, i, j)] * U->data[IDX(U, j, k)]; \
+                } \
+                U->data[IDX(U, i, k)] = MATRIX_AT(mat, i, k) - sum; \
+            } \
+            \
+            for (u32 k = i + 1; k < n; k++) { \
+                T sum = 0; \
+                for (u32 j = 0; j < i; j++) { \
+                    sum += L->data[IDX(L, k, j)] * U->data[IDX(U, j, i)]; \
+                } \
+                \
+                T u_diag = U->data[IDX(U, i, i)]; \
+                CHECK_FATAL(u_diag == 0, "Matrix is singular - LU decomposition failed"); \
+                \
+                L->data[IDX(L, k, i)] = (MATRIX_AT(mat, k, i) - sum) / u_diag; \
+            } \
+        } \
+    }
+
+// ============================================================================
+// DETERMINANT (via LU decomposition)
+// ============================================================================
+
+#define MATRIX_DET(T) \
+    T matrix_det_##T(const Matrix_##T* mat) \
+    { \
+        CHECK_FATAL(!mat, "mat matrix is null"); \
+        CHECK_FATAL(mat->m != mat->n, "only square matrices have determinant"); \
+        \
+        u32 n = mat->n; \
+        Matrix_##T* L = matrix_create_##T(n, n); \
+        Matrix_##T* U = matrix_create_##T(n, n); \
+        \
+        matrix_LU_Decomp_##T(L, U, mat); \
+        \
+        T det = 1; \
+        for (u32 i = 0; i < n; i++) { \
+            det *= U->data[IDX(U, i, i)]; \
+        } \
+        \
+        matrix_destroy_##T(L); \
+        matrix_destroy_##T(U); \
+        \
+        return det; \
+    }
+
+// ============================================================================
+// MATRIX PRINT (with formatting based on type)
+// ============================================================================
+
+// Helper for integer types
+#define MATRIX_PRINT_INT(T, fmt) \
+    static u32 digits_##T(T x) \
+    { \
+        u32 d = 0; \
+        if (x <= 0) { \
+            d = 1; \
+            x = -x; \
+        } \
+        while (x > 0) { \
+            x /= 10; \
+            d++; \
+        } \
+        return d; \
+    } \
+    \
+    void matrix_print_##T(const Matrix_##T* mat) \
+    { \
+        CHECK_FATAL(!mat, "matrix is null"); \
+        u32 width = 0; \
+        u32 total = mat->m * mat->n; \
+        \
+        for (u32 i = 0; i < total; i++) { \
+            u32 d = digits_##T(mat->data[i]); \
+            if (d > width) { width = d; } \
+        } \
+        \
+        for (u32 i = 0; i < total; i++) { \
+            if (i % mat->n == 0) { \
+                if (i > 0) { putchar('|'); } \
+                putchar('\n'); \
+                putchar('|'); \
+                putchar(' '); \
+            } \
+            printf("%-*" fmt " ", width, mat->data[i]); \
+        } \
+        putchar('|'); \
+        putchar('\n'); \
+    }
+
+// Helper for floating point types
+#define MATRIX_PRINT_FLOAT(T, fmt) \
+    void matrix_print_##T(const Matrix_##T* mat) \
+    { \
+        CHECK_FATAL(!mat, "matrix is null"); \
+        u32 total = mat->m * mat->n; \
+        \
+        for (u32 i = 0; i < total; i++) { \
+            if (i % mat->n == 0) { \
+                if (i > 0) { putchar('|'); } \
+                putchar('\n'); \
+                putchar('|'); \
+                putchar(' '); \
+            } \
+            printf("%10.4" fmt " ", mat->data[i]); \
+        } \
+        putchar('|'); \
+        putchar('\n'); \
+    }
+
+// ============================================================================
+// MACRO TO INSTANTIATE ALL FUNCTIONS FOR A TYPE
+// ============================================================================
+
+#define INSTANTIATE_MATRIX_INT(T, fmt) \
+    MATRIX_CREATE(T) \
+    MATRIX_CREATE_ARR(T) \
+    MATRIX_CREATE_STK(T) \
+    MATRIX_DESTROY(T) \
+    MATRIX_SET_VAL_ARR(T) \
+    MATRIX_SET_ELM(T) \
+    MATRIX_ADD(T) \
+    MATRIX_SUB(T) \
+    MATRIX_SCALE(T) \
+    MATRIX_XPLY(T) \
+    MATRIX_T(T) \
+    MATRIX_COPY(T) \
+    MATRIX_PRINT_INT(T, fmt)
+
+#define INSTANTIATE_MATRIX_FLOAT(T, fmt) \
+    MATRIX_CREATE(T) \
+    MATRIX_CREATE_ARR(T) \
+    MATRIX_CREATE_STK(T) \
+    MATRIX_DESTROY(T) \
+    MATRIX_SET_VAL_ARR(T) \
+    MATRIX_SET_ELM(T) \
+    MATRIX_ADD(T) \
+    MATRIX_SUB(T) \
+    MATRIX_SCALE(T) \
+    MATRIX_XPLY(T) \
+    MATRIX_T(T) \
+    MATRIX_COPY(T) \
+    MATRIX_LU_DECOMP(T) \
+    MATRIX_DET(T) \
+    MATRIX_PRINT_FLOAT(T, fmt)
+
+// Instantiate for common types
+INSTANTIATE_MATRIX_INT(int, "d")
+INSTANTIATE_MATRIX_INT(long, "ld")
+INSTANTIATE_MATRIX_INT(short, "hd")
+INSTANTIATE_MATRIX_FLOAT(float, "f")
+INSTANTIATE_MATRIX_FLOAT(double, "lf")
+
+#endif // MATRIX_GENERIC_H
