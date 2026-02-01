@@ -3,6 +3,9 @@
 #include "common.h"
 
 
+// WARN: this shit is not right, needs a compelete re-write (but will i ever need this ?)
+// not a priority rn
+
 #define PARENT(i)  (((i) - 1) / 2)
 #define L_CHILD(i) ((2 * (i)) + 1)
 #define R_CHILD(i) ((2 * (i)) + 2)

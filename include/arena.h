@@ -179,9 +179,6 @@ ARENA_SCRATCH(arena) {
 } // auto rollback
 */
 
-#define ARENA_PUSH_T(arena, T, value) \
-    (*(T*)memcpy(ARENA_ALLOC(arena, T), &(value), sizeof(T)))
-
 
 
 #endif // ARENA_H

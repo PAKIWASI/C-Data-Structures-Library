@@ -35,8 +35,8 @@ const char* string_to_cstr(const String* str);
 char* string_data_ptr(const String* str);
 
 // TODO: 
-void string_to_cstr_buf(const String* str, char* buf, u32 buf_size);
-void string_to_cstr_buf_move(const String* str, char* buf, u32 buf_size);
+// void string_to_cstr_buf(const String* str, char* buf, u32 buf_size);
+// void string_to_cstr_buf_move(const String* str, char* buf, u32 buf_size);
 
 // Modification
 void string_append_cstr(String* str, const char* cstr, u32 len);
@@ -135,5 +135,33 @@ u32 string_count_char(const String* str, char c);
 String* string_repeat(const String* str, u32 times);
 */
 
+// TODO: SS0 ?
+/*
+#define STRING_SSO_SIZE 15
+
+typedef struct {
+    union {
+        struct {
+            char* data;
+            u32 size;
+            u32 capacity;
+        } heap;
+        struct {
+            char data[STRING_SSO_SIZE];
+            u8 size;
+        } stack;
+    };
+    b8 is_heap;  // or use size MSB as flag
+} String;
+
+
+string view:
+
+typedef struct {
+    const char* data;
+    u32 len;
+} StringView;
+
+*/
 
 #endif // STRING_H

@@ -112,11 +112,11 @@ void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat);
 float matrix_det(const Matrix* mat);
 
 // Calculate adjugate (adjoint) matrix
-// NOT IMPLEMENTED - placeholder for future implementation
+// TODO: NOT IMPLEMENTED - placeholder for future implementation
 void matrix_adj(Matrix* out, const Matrix* mat);
 
 // Calculate matrix inverse: out = mat^(-1)
-// NOT IMPLEMENTED - placeholder for future implementation
+// TODO: NOT IMPLEMENTED - placeholder for future implementation
 void matrix_inv(Matrix* out, const Matrix* mat);
 
 
@@ -165,5 +165,6 @@ void matrix_print(const Matrix* mat);
     - Condition number checks
     - Iterative refinement
 */
+
 
 #endif // MATRIX_H

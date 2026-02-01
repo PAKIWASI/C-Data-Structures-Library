@@ -1,8 +1,5 @@
 #include "bit_vector.h"
-#include "common.h"
-#include "gen_vector.h"
 
-#include <stdio.h>
 
 
 bitVec* bitVec_create(void)

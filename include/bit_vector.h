@@ -2,7 +2,6 @@
 #define BIT_VECTOR_H
 
 #include "gen_vector.h"
-#include <stddef.h>
 
 
 typedef struct {

@@ -358,31 +358,3 @@ void string_print(const String* str)
 }
 
 
-// TODO: SS0 ?
-/*
-#define STRING_SSO_SIZE 15
-
-typedef struct {
-    union {
-        struct {
-            char* data;
-            u32 size;
-            u32 capacity;
-        } heap;
-        struct {
-            char data[STRING_SSO_SIZE];
-            u8 size;
-        } stack;
-    };
-    b8 is_heap;  // or use size MSB as flag
-} String;
-
-
-string view:
-
-typedef struct {
-    const char* data;
-    u32 len;
-} StringView;
-
-*/

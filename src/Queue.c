@@ -1,8 +1,4 @@
 #include "Queue.h"
-#include "common.h"
-#include "gen_vector.h"
-
-#include <stdio.h>
 
 
 #define QUEUE_GROWTH 1.5

@@ -6,18 +6,19 @@
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b); 
-typedef void (*genVec_delete_fn)(u8* elm);                 // Cleanup owned resources
-typedef void (*genVec_copy_fn)(u8* dest, const u8* src);   // Deep copy resources
-typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into dest, null src
+typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b);
+typedef void (*genVec_delete_fn)(u8* elm); // Cleanup owned resources
+typedef void (*genVec_copy_fn)(u8* dest, const u8* src); // Deep copy resources
+typedef void (*genVec_move_fn)(u8*  dest,
+                               u8** src); // Move src into dest, null src
 
 
-// genVec growth/shrink settings (define your own before including this file)
-//
+// genVec growth/shrink settings (user can change)
+
 #define GROWTH    1.5  // vec capacity multiplier
 #define SHRINK_AT 0.25 // % filled to shrink at (25% filled)
 #define SHRINK_BY 0.5  // capacity dividor (half)
-                      
+
 
 // generic vector container
 typedef struct {
@@ -36,15 +37,18 @@ typedef struct {
 
 // Initialize vector with capacity n. If elements own heap resources,
 // provide copy_fn (deep copy) and del_fn (cleanup). Otherwise pass NULL.
-genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
+genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn,
+                    genVec_move_fn move_fn, genVec_delete_fn del_fn);
 
 // Initialize vector on stack with data on heap
-void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, 
-                     genVec_delete_fn del_fn, genVec* vec);
+void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn,
+                     genVec_move_fn move_fn, genVec_delete_fn del_fn,
+                     genVec* vec);
 
 // Initialize vector of size n, all elements set to val
-genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn,
-                        genVec_move_fn move_fn, genVec_delete_fn del_fn);
+genVec* genVec_init_val(u32 n, const u8* val, u16 data_size,
+                        genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+                        genVec_delete_fn del_fn);
 
 // Destroy heap-allocated vector and clean up all elements
 void genVec_destroy(genVec* vec);
@@ -122,7 +126,7 @@ const u8* genVec_back(const genVec* vec);
 // Print all elements using provided print function
 void genVec_print(const genVec* vec, genVec_print_fn fn);
 
-// Deep copy src vector into dest 
+// Deep copy src vector into dest
 // Note: cleans up dest (if already inited)
 void genVec_copy(genVec* dest, const genVec* src);
 
@@ -153,6 +157,7 @@ static inline u8 genVec_empty(const genVec* vec)
 }
 
 // TODO: iterator, for each support?
+// TODO: ADD SMALL VECTOR STACK ??
 // TODO: add:
 /*
 
@@ -176,7 +181,7 @@ void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
 
 */
 
-/*
+/*          TLDR
  * genVec is a value-based generic vector.
  * Elements are stored inline and managed via user-supplied
  * copy/move/destructor callbacks.

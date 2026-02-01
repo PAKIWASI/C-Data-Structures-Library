@@ -1,6 +1,4 @@
 #include "Stack.h"
-#include "common.h"
-#include "gen_vector.h"
 
 
 
