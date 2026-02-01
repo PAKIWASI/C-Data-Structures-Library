@@ -1,8 +1,6 @@
 #include "matrix.h"
 
-#include <stdarg.h>
 #include <string.h>
-#include <limits.h>
 
 
 Matrix* matrix_create(u32 m, u32 n)
@@ -14,21 +12,21 @@ Matrix* matrix_create(u32 m, u32 n)
 
     mat->m    = m;
     mat->n    = n;
-    mat->data = (int*)malloc(sizeof(int) * n * m);
+    mat->data = (float*)malloc(sizeof(float) * n * m);
     CHECK_FATAL(!mat->data, "matrix data malloc failed");
 
     return mat;
 }
 
-Matrix* matrix_create_arr(u32 m, u32 n, const int* arr)
+Matrix* matrix_create_arr(u32 m, u32 n, const float* arr)
 {
     CHECK_FATAL(!arr, "input arr is null");
     Matrix* mat = matrix_create(m, n);
-    memcpy(mat->data, arr, sizeof(int) * m * n);
+    memcpy(mat->data, arr, sizeof(float) * m * n);
     return mat;
 }
 
-void matrix_create_stk(Matrix* mat, u32 m, u32 n, int* data)
+void matrix_create_stk(Matrix* mat, u32 m, u32 n, float* data)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(!data, "data is null");
@@ -47,27 +45,16 @@ void matrix_destroy(Matrix* mat)
 }
 
 
-void matrix_set_val(Matrix* mat, ...)
-{
-    CHECK_FATAL(!mat, "matrix is null");
-
-    va_list arr;
-    va_start(arr, mat);
-    u32 total = MATRIX_TOTAL(mat);
-    for (u32 i = 0; i < total; i++) { mat->data[i] = va_arg(arr, int); }
-    va_end(arr);
-}
-
-void matrix_set_val_arr(Matrix* mat, u32 count, const int* arr)
+void matrix_set_val_arr(Matrix* mat, u32 count, const float* arr)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(!arr, "arr is null");
     CHECK_FATAL(count != MATRIX_TOTAL(mat), "count doesn't match matrix size");
 
-    memcpy(mat->data, arr, sizeof(int) * count);
+    memcpy(mat->data, arr, sizeof(float) * count);
 }
 
-void matrix_set_val_arr2(Matrix* mat, u32 m, u32 n, const int** arr2)
+void matrix_set_val_arr2(Matrix* mat, u32 m, u32 n, const float** arr2)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(!arr2, "arr is null");
@@ -77,12 +64,12 @@ void matrix_set_val_arr2(Matrix* mat, u32 m, u32 n, const int** arr2)
 
     u32 idx = 0;
     for (u32 i = 0; i < m; i++) {
-        memcpy(mat->data + idx, arr2[i], sizeof(int) * n);
+        memcpy(mat->data + idx, arr2[i], sizeof(float) * n);
         idx += n;
     }
 }
 
-void matrix_set_elm(Matrix* mat, int elm, u32 i, u32 j)
+void matrix_set_elm(Matrix* mat, float elm, u32 i, u32 j)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(i >= mat->m || j >= mat->n, "index out of bounds");
@@ -137,7 +124,7 @@ void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b)
     u32 n = b->n; // cols of B
 
     // Initialize output to zero
-    memset(out->data, 0, sizeof(int) * m * n);
+    memset(out->data, 0, sizeof(float) * m * n);
 
     // Block size for cache optimization
     const u32 BLOCK_SIZE = 16;
@@ -155,7 +142,7 @@ void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b)
                 for (u32 ii = i; ii < i_max; ii++) {
                     for (u32 kk = k_outer; kk < k_max; kk++) {
 
-                        int a_val = a->data[IDX(a, ii, kk)];
+                        float a_val = a->data[IDX(a, ii, kk)];
                         for (u32 jj = j; jj < j_max; jj++) {
                             out->data[IDX(out, ii, jj)] +=
                                 a_val * b->data[IDX(b, kk, jj)];
@@ -187,7 +174,7 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
     Matrix* b_T = matrix_create(n, k); // B^T is n×k
     matrix_T(b_T, b);
 
-    memset(out->data, 0, sizeof(int) * m * n);
+    memset(out->data, 0, sizeof(float) * m * n);
 
     const u32 BLOCK_SIZE = 16;
 
@@ -200,7 +187,7 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
             for (u32 ii = i; ii < i_max; ii++) {
                 for (u32 jj = j; jj < j_max; jj++) {
 
-                    int sum = 0;
+                    float sum = 0;
                     // Dot product of A[ii] and B_T[jj] (both row-wise)
                     for (u32 kk = 0; kk < k; kk++) {
                         sum += a->data[IDX(a, ii, kk)] *
@@ -215,16 +202,6 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
 }
 
 /*
-NOTE: LU Decomposition with integer matrices has limitations!
-
-Integer division truncates, which means:
-1. The decomposition will lose precision
-2. Matrices with certain structures (like zeros in specific positions) may fail
-3. Results are approximate, not exact
-
-For accurate LU decomposition, use floating-point types (float/double).
-This implementation is kept for integer matrices but should be used with caution.
-
 Doolittle algorithm computes U's i-th row, then L's i-th column, alternating.
 For each element, you subtract the dot product of already-computed L and U values.
 */
@@ -240,8 +217,8 @@ void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat)
     const u32 n = mat->n;
 
     // 0 init matrices
-    memset(L->data, 0, sizeof(int) * n * n);
-    memset(U->data, 0, sizeof(int) * n * n);
+    memset(L->data, 0, sizeof(float) * n * n);
+    memset(U->data, 0, sizeof(float) * n * n);
     // L main diagonal is 1
     for (u32 i = 0; i < n; i++) { L->data[IDX(L, i, i)] = 1; }
 
@@ -250,7 +227,7 @@ void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat)
     for (u32 i = 0; i < n; i++) {
         // Upper triangular matrix U (row i, columns from i to n-1)
         for (u32 k = i; k < n; k++) {
-            int sum = 0;
+            float sum = 0;
             for (u32 j = 0; j < i; j++) {
                 sum += L->data[IDX(L, i, j)] * U->data[IDX(U, j, k)];
             }
@@ -259,7 +236,7 @@ void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat)
 
         // Lower triangular matrix L (column i, rows from i+1 to n-1)
         for (u32 k = i + 1; k < n; k++) {
-            int sum = 0;
+            float sum = 0;
             for (u32 j = 0; j < i; j++) {
                 sum += L->data[IDX(L, k, j)] * U->data[IDX(U, j, i)];
             }
@@ -269,53 +246,47 @@ void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat)
                 CHECK_FATAL(1, "Matrix is singular - LU decomposition failed");
             }
 
-            // WARNING: Integer division truncates! This loses precision.
-            // For accurate LU decomposition, use floating-point matrices.
             L->data[IDX(L, k, i)] =
                 (MATRIX_AT(mat, k, i) - sum) / U->data[IDX(U, i, i)];
         }
     }
 }
 
-// FIXED: Implemented complete determinant calculation using LU decomposition
-// NOTE: For integer matrices, this may lose precision due to integer division in LU
-int matrix_det(const Matrix* mat)
+/*
+    det of triangular mat is product of main diagonal
+    so det of a mat that is decomposed with LU method becomes
+    product of elements on the diagonal of L and U
+    det(A) = det(L) * det(U)
+    
+    Since L has 1s on diagonal: det(L) = 1
+    So: det(A) = det(U) = product of U's diagonal elements
+    
+    LU Decomposition is when we make 2 triangular matrices from one,
+    which when multiplied give original matrix: A = L * U
+*/
+float matrix_det(const Matrix* mat)
 {
     CHECK_FATAL(!mat, "mat matrix is null");
     CHECK_FATAL(mat->m != mat->n, "only square matrices have determinant");
 
-    /*
-        det of triangular mat is product of main diagonal
-        so det of a mat that is decomposed with LU method becomes
-        product of elements on the diagonal of L and U
-        det(A) = det(L) * det(U)
-        
-        Since L has 1s on diagonal: det(L) = 1
-        So: det(A) = det(U) = product of U's diagonal elements
-        
-        LU Decomposition is when we make 2 triangular matrices from one,
-        which when multiplied give original matrix: A = L * U
-    */
 
     u32 n = mat->n;
-    
+
     // Create temporary matrices for LU decomposition
     Matrix* L = matrix_create(n, n);
     Matrix* U = matrix_create(n, n);
-    
+
     // Perform LU decomposition
     matrix_LU_Decomp(L, U, mat);
-    
+
     // Calculate determinant as product of U's diagonal
-    int det = 1;
-    for (u32 i = 0; i < n; i++) {
-        det *= U->data[IDX(U, i, i)];
-    }
-    
+    float det = 1;
+    for (u32 i = 0; i < n; i++) { det *= U->data[IDX(U, i, i)]; }
+
     // Cleanup
     matrix_destroy(L);
     matrix_destroy(U);
-    
+
     return det;
 }
 
@@ -349,52 +320,29 @@ void matrix_T(Matrix* out, const Matrix* mat)
     }
 }
 
-void matrix_scale(Matrix* mat, int val)
+void matrix_scale(Matrix* mat, float val)
 {
     CHECK_FATAL(!mat, "matrix is null");
-    
+
     u32 total = MATRIX_TOTAL(mat);
-    for (u32 i = 0; i < total; i++) {
-        mat->data[i] *= val;
-    }
+    for (u32 i = 0; i < total; i++) { mat->data[i] *= val; }
 }
 
 void matrix_copy(Matrix* dest, const Matrix* src)
 {
     CHECK_FATAL(!dest, "dest matrix is null");
     CHECK_FATAL(!src, "src matrix is null");
-    CHECK_FATAL(dest->m != src->m || dest->n != src->n, 
+    CHECK_FATAL(dest->m != src->m || dest->n != src->n,
                 "matrix dimensions don't match");
-    
-    memcpy(dest->data, src->data, sizeof(int) * MATRIX_TOTAL(src));
-}
 
-static u32 digits(int x)
-{
-    u32 d = 0;
-    if (x <= 0) {
-        d = 1;                             // For '-' sign or '0'
-        x = (x == INT_MIN) ? INT_MAX : -x; // Handle edge case
-    }
-    while (x > 0) {
-        x /= 10;
-        d++;
-    }
-    return d;
+    memcpy(dest->data, src->data, sizeof(float) * MATRIX_TOTAL(src));
 }
 
 void matrix_print(const Matrix* mat)
 {
     CHECK_FATAL(!mat, "matrix is null");
 
-    u32 width = 0;
     u32 total = mat->m * mat->n;
-
-    // Find max width - linear O(n * k)
-    for (u32 i = 0; i < total; i++) {
-        u32 d = digits(mat->data[i]); // O(k)
-        if (d > width) { width = d; }
-    }
 
     // Single linear loop O(n)
     for (u32 i = 0; i < total; i++) {
@@ -407,10 +355,12 @@ void matrix_print(const Matrix* mat)
         }
 
         // Print element
-        printf("%-*d ", width, mat->data[i]);
+        printf("%f ", mat->data[i]);
     }
 
     // Close last row
     putchar('|');
     putchar('\n');
 }
+
+

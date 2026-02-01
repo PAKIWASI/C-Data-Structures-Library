@@ -3,12 +3,8 @@
 
 #include "common.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdarg.h>
 #include <limits.h>
-
 
 
 // ============================================================================
@@ -23,12 +19,6 @@
         u32 n; /* cols */ \
     } Matrix_##T
 
-// Generate all matrix types
-MATRIX_TYPE(int);
-MATRIX_TYPE(float);
-MATRIX_TYPE(double);
-MATRIX_TYPE(long);
-MATRIX_TYPE(short);
 
 // Helper macros (type-agnostic)
 #define MATRIX_TOTAL(mat)    ((u32)((mat)->n * (mat)->m))
@@ -299,51 +289,10 @@ MATRIX_TYPE(short);
     }
 
 // ============================================================================
-// MATRIX PRINT (with formatting based on type)
+// UNIFIED MATRIX PRINT
 // ============================================================================
 
-// Helper for integer types
-#define MATRIX_PRINT_INT(T, fmt) \
-    static u32 digits_##T(T x) \
-    { \
-        u32 d = 0; \
-        if (x <= 0) { \
-            d = 1; \
-            x = -x; \
-        } \
-        while (x > 0) { \
-            x /= 10; \
-            d++; \
-        } \
-        return d; \
-    } \
-    \
-    void matrix_print_##T(const Matrix_##T* mat) \
-    { \
-        CHECK_FATAL(!mat, "matrix is null"); \
-        u32 width = 0; \
-        u32 total = mat->m * mat->n; \
-        \
-        for (u32 i = 0; i < total; i++) { \
-            u32 d = digits_##T(mat->data[i]); \
-            if (d > width) { width = d; } \
-        } \
-        \
-        for (u32 i = 0; i < total; i++) { \
-            if (i % mat->n == 0) { \
-                if (i > 0) { putchar('|'); } \
-                putchar('\n'); \
-                putchar('|'); \
-                putchar(' '); \
-            } \
-            printf("%-*" fmt " ", width, mat->data[i]); \
-        } \
-        putchar('|'); \
-        putchar('\n'); \
-    }
-
-// Helper for floating point types
-#define MATRIX_PRINT_FLOAT(T, fmt) \
+#define MATRIX_PRINT(T, fmt) \
     void matrix_print_##T(const Matrix_##T* mat) \
     { \
         CHECK_FATAL(!mat, "matrix is null"); \
@@ -356,7 +305,7 @@ MATRIX_TYPE(short);
                 putchar('|'); \
                 putchar(' '); \
             } \
-            printf("%10.4" fmt " ", mat->data[i]); \
+            printf(fmt " ", mat->data[i]); \
         } \
         putchar('|'); \
         putchar('\n'); \
@@ -366,7 +315,9 @@ MATRIX_TYPE(short);
 // MACRO TO INSTANTIATE ALL FUNCTIONS FOR A TYPE
 // ============================================================================
 
+// For integer types (no LU/determinant)
 #define INSTANTIATE_MATRIX_INT(T, fmt) \
+    MATRIX_TYPE(T); \
     MATRIX_CREATE(T) \
     MATRIX_CREATE_ARR(T) \
     MATRIX_CREATE_STK(T) \
@@ -379,9 +330,11 @@ MATRIX_TYPE(short);
     MATRIX_XPLY(T) \
     MATRIX_T(T) \
     MATRIX_COPY(T) \
-    MATRIX_PRINT_INT(T, fmt)
+    MATRIX_PRINT(T, fmt)
 
+// For floating point types (includes LU/determinant)
 #define INSTANTIATE_MATRIX_FLOAT(T, fmt) \
+    MATRIX_TYPE(T); \
     MATRIX_CREATE(T) \
     MATRIX_CREATE_ARR(T) \
     MATRIX_CREATE_STK(T) \
@@ -396,13 +349,7 @@ MATRIX_TYPE(short);
     MATRIX_COPY(T) \
     MATRIX_LU_DECOMP(T) \
     MATRIX_DET(T) \
-    MATRIX_PRINT_FLOAT(T, fmt)
+    MATRIX_PRINT(T, fmt)
 
-// Instantiate for common types
-INSTANTIATE_MATRIX_INT(int, "d")
-INSTANTIATE_MATRIX_INT(long, "ld")
-INSTANTIATE_MATRIX_INT(short, "hd")
-INSTANTIATE_MATRIX_FLOAT(float, "f")
-INSTANTIATE_MATRIX_FLOAT(double, "lf")
 
 #endif // MATRIX_GENERIC_H

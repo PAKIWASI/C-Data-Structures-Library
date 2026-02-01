@@ -10,12 +10,12 @@
 #define IDX(mat, i, j)       (((i) * (mat)->n) + (j))
 #define MATRIX_AT(mat, i, j) ((mat)->data[((i) * (mat)->n) + (j)])
 
-#define ZEROS_1D(n)    ((int[n]){0})
-#define ZEROS_2D(m, n) ((int[m][n]){0})
+#define ZEROS_1D(n)    ((float[n]){0})
+#define ZEROS_2D(m, n) ((float[m][n]){0})
 
 
 typedef struct {
-    int* data;
+    float* data;
     u32  m; // rows
     u32  n; // cols
 } Matrix;
@@ -28,10 +28,10 @@ typedef struct {
 Matrix* matrix_create(u32 m, u32 n);
 
 // create heap matrix with m rows and n cols and an array of size m x n
-Matrix* matrix_create_arr(u32 m, u32 n, const int* arr);
+Matrix* matrix_create_arr(u32 m, u32 n, const float* arr);
 
 // create matrix with everything on the stack
-void matrix_create_stk(Matrix* mat, u32 m, u32 n, int* data);
+void matrix_create_stk(Matrix* mat, u32 m, u32 n, float* data);
 
 // destroy the matrix created with matrix_create or matrix_create_arr
 // DO NOT use on stack-allocated matrices (created with matrix_create_stk)
@@ -41,27 +41,23 @@ void matrix_destroy(Matrix* mat);
 // SETTERS
 // ============================================================================
 
-// variadic function (no bounds checking or count check)
-// Usage: matrix_set_val(mat, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-void matrix_set_val(Matrix* mat, ...);
-
 /* Preferred method for setting values from arrays
-   For direct arrays (int[len]){...} ROW MAJOR or (int[row][col]){{...},{...}} MORE EXPLICIT
+   For direct arrays (float[len]){...} ROW MAJOR or (float[row][col]){{...},{...}} MORE EXPLICIT
    
    Usage:
-       matrix_set_val_arr(mat, 9, (int*)(int[3][3]){
+       matrix_set_val_arr(mat, 9, (float*)(float[3][3]){
            {1, 2, 3},
            {4, 5, 6},
            {7, 8, 9}
        });
 */
-void matrix_set_val_arr(Matrix* mat, u32 count, const int* arr);
+void matrix_set_val_arr(Matrix* mat, u32 count, const float* arr);
 
 // for 2D arrays (array of pointers)
-void matrix_set_val_arr2(Matrix* mat, u32 m, u32 n, const int** arr2);
+void matrix_set_val_arr2(Matrix* mat, u32 m, u32 n, const float** arr2);
 
 // set the value at position (i, j) where i is row and j is column
-void matrix_set_elm(Matrix* mat, int elm, u32 i, u32 j);
+void matrix_set_elm(Matrix* mat, float elm, u32 i, u32 j);
 
 
 // BASIC OPERATIONS
@@ -76,7 +72,7 @@ void matrix_add(Matrix* out, const Matrix* a, const Matrix* b);
 void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b);
 
 // Scalar multiplication: mat = mat * val
-void matrix_scale(Matrix* mat, int val);
+void matrix_scale(Matrix* mat, float val);
 
 // Matrix copy: dest = src
 void matrix_copy(Matrix* dest, const Matrix* src);
@@ -107,17 +103,10 @@ void matrix_T(Matrix* out, const Matrix* mat);
 
 // LU Decomposition: mat = L × U
 // Decomposes square matrix into Lower and Upper triangular matrices
-// 
-// WARNING: Uses integer division which truncates!
-// For accurate LU decomposition, consider using floating-point matrices.
-// Some matrices may fail or produce inaccurate results with integer arithmetic.
 void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat);
 
 // Calculate determinant using LU decomposition
-// 
-// NOTE: For integer matrices, may lose precision due to integer division in LU.
-// Returns: determinant of the matrix
-int matrix_det(const Matrix* mat);
+float matrix_det(const Matrix* mat);
 
 // Calculate adjugate (adjoint) matrix
 // NOT IMPLEMENTED - placeholder for future implementation
@@ -128,7 +117,6 @@ void matrix_adj(Matrix* out, const Matrix* mat);
 void matrix_inv(Matrix* out, const Matrix* mat);
 
 
-// ============================================================================
 // UTILITIES
 // ============================================================================
 
