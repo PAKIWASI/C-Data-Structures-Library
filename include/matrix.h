@@ -74,6 +74,9 @@ void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b);
 // Scalar multiplication: mat = mat * val
 void matrix_scale(Matrix* mat, float val);
 
+// Element wise divistion
+void matrix_div(Matrix* mat, float val);
+
 // Matrix copy: dest = src
 void matrix_copy(Matrix* dest, const Matrix* src);
 

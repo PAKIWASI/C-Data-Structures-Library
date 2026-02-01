@@ -31,7 +31,8 @@ void matrix_create_stk(Matrix* mat, u32 m, u32 n, float* data)
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(!data, "data is null");
 
-    mat->data = data; // we can do this on the stack
+    // we can do this on the stack
+    mat->data = data; // copying stk ptr 
     mat->m    = m;
     mat->n    = n;
 }
@@ -171,8 +172,11 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
     u32 n = b->n;
 
     // Transpose B for cache-friendly access
-    Matrix* b_T = matrix_create(n, k); // B^T is n×k
-    matrix_T(b_T, b);
+    // Matrix* b_T = matrix_create(n, k); // B^T is n×k
+    Matrix b_T;
+    float  data[n * k]; // random vals
+    matrix_create_stk(&b_T, n, k, data);
+    matrix_T(&b_T, b); // transpose sets all vals
 
     memset(out->data, 0, sizeof(float) * m * n);
 
@@ -191,14 +195,15 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
                     // Dot product of A[ii] and B_T[jj] (both row-wise)
                     for (u32 kk = 0; kk < k; kk++) {
                         sum += a->data[IDX(a, ii, kk)] *
-                               b_T->data[IDX(b_T, jj, kk)];
+                               // b_T->data[IDX(b_T, jj, kk)];
+                               b_T.data[IDX(&b_T, jj, kk)];
                     }
                     out->data[IDX(out, ii, jj)] = sum;
                 }
             }
         }
     }
-    matrix_destroy(b_T);
+    // matrix_destroy(b_T);
 }
 
 /*
@@ -272,20 +277,28 @@ float matrix_det(const Matrix* mat)
 
     u32 n = mat->n;
 
+    // TODO: use stack for init?
     // Create temporary matrices for LU decomposition
-    Matrix* L = matrix_create(n, n);
-    Matrix* U = matrix_create(n, n);
+    //
+    // Matrix* L = matrix_create(n, n);
+    // Matrix* U = matrix_create(n, n);
+    Matrix L, U;
+    float  Ldata[n * n]; // random vals
+    float  Udata[n * n];
+    matrix_create_stk(&L, n, n, Ldata);
+    matrix_create_stk(&U, n, n, Udata);
 
     // Perform LU decomposition
-    matrix_LU_Decomp(L, U, mat);
+    matrix_LU_Decomp(&L, &U, mat); // L and U set to zero
 
     // Calculate determinant as product of U's diagonal
     float det = 1;
-    for (u32 i = 0; i < n; i++) { det *= U->data[IDX(U, i, i)]; }
+    // for (u32 i = 0; i < n; i++) { det *= U->data[IDX(U, i, i)]; }
+    for (u32 i = 0; i < n; i++) { det *= U.data[IDX(&U, i, i)]; }
 
     // Cleanup
-    matrix_destroy(L);
-    matrix_destroy(U);
+    // matrix_destroy(L);
+    // matrix_destroy(U);
 
     return det;
 }
@@ -326,6 +339,16 @@ void matrix_scale(Matrix* mat, float val)
 
     u32 total = MATRIX_TOTAL(mat);
     for (u32 i = 0; i < total; i++) { mat->data[i] *= val; }
+}
+
+
+void matrix_div(Matrix* mat, float val)
+{
+    CHECK_FATAL(!mat, "mat is null");
+    CHECK_FATAL(val == 0, "division by zero!");
+
+    u32 total = MATRIX_TOTAL(mat);
+    for (u32 i = 0; i < total; i++) { mat->data[i] /= val; }
 }
 
 void matrix_copy(Matrix* dest, const Matrix* src)

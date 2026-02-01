@@ -3,13 +3,11 @@
 
 #include "common.h"
 
+#include <limits.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-// #include <stdarg.h>
-// #include <limits.h>
 
 
 // ============================================================================
@@ -82,6 +80,16 @@
 // MATRIX SETTERS
 // ============================================================================
 
+/* Preferred method for setting values from arrays
+   For direct arrays (T[len]){...} ROW MAJOR or (T[row][col]){{...},{...}} MORE EXPLICIT
+   
+   Usage:
+       matrix_set_val_arr_T(mat, 9, (T*)(T[3][3]){
+           {1, 2, 3},
+           {4, 5, 6},
+           {7, 8, 9}
+       });
+*/
 #define MATRIX_SET_VAL_ARR(T)                                             \
     void matrix_set_val_arr_##T(Matrix_##T* mat, u32 count, const T* arr) \
     {                                                                     \
@@ -92,6 +100,7 @@
         memcpy(mat->data, arr, sizeof(T) * count);                        \
     }
 
+// For 2D arrays (array of pointers)
 #define MATRIX_SET_VAL_ARR2(T)                                  \
     void matrix_set_val_arr2_##T(Matrix_##T* mat, u32 m, u32 n, \
                                  const T** arr2)                \
@@ -208,38 +217,11 @@
     }
 
 // ============================================================================
-// MATRIX TRANSPOSE
+// MATRIX MULTIPLICATION VARIANT 2 (Transpose-based)
 // ============================================================================
 
-#define MATRIX_T(T)                                                      \
-    void matrix_T_##T(Matrix_##T* out, const Matrix_##T* mat)            \
-    {                                                                    \
-        CHECK_FATAL(!mat, "mat matrix is null");                         \
-        CHECK_FATAL(!out, "out matrix is null");                         \
-        CHECK_FATAL(mat->m != out->n || mat->n != out->m,                \
-                    "incompatible matrix dimensions");                   \
-                                                                         \
-        const u32 BLOCK_SIZE = 16;                                       \
-                                                                         \
-        for (u32 i = 0; i < mat->m; i += BLOCK_SIZE) {                   \
-            for (u32 j = 0; j < mat->n; j += BLOCK_SIZE) {               \
-                u32 i_max =                                              \
-                    (i + BLOCK_SIZE < mat->m) ? i + BLOCK_SIZE : mat->m; \
-                u32 j_max =                                              \
-                    (j + BLOCK_SIZE < mat->n) ? j + BLOCK_SIZE : mat->n; \
-                                                                         \
-                for (u32 ii = i; ii < i_max; ii++) {                     \
-                    for (u32 jj = j; jj < j_max; jj++) {                 \
-                        out->data[IDX(out, jj, ii)] =                    \
-                            mat->data[IDX(mat, ii, jj)];                 \
-                    }                                                    \
-                }                                                        \
-            }                                                            \
-        }                                                                \
-    }
-
-
-
+// This function transposes b for cache-friendly access
+// Takes more memory, good for large size matrices
 #define MATRIX_XPLY_2(T)                                               \
     void matrix_xply_2_##T(Matrix_##T* out, const Matrix_##T* a,       \
                            const Matrix_##T* b)                        \
@@ -282,6 +264,36 @@
         matrix_destroy_##T(b_T);                                       \
     }
 
+// ============================================================================
+// MATRIX TRANSPOSE
+// ============================================================================
+
+#define MATRIX_T(T)                                                      \
+    void matrix_T_##T(Matrix_##T* out, const Matrix_##T* mat)            \
+    {                                                                    \
+        CHECK_FATAL(!mat, "mat matrix is null");                         \
+        CHECK_FATAL(!out, "out matrix is null");                         \
+        CHECK_FATAL(mat->m != out->n || mat->n != out->m,                \
+                    "incompatible matrix dimensions");                   \
+                                                                         \
+        const u32 BLOCK_SIZE = 16;                                       \
+                                                                         \
+        for (u32 i = 0; i < mat->m; i += BLOCK_SIZE) {                   \
+            for (u32 j = 0; j < mat->n; j += BLOCK_SIZE) {               \
+                u32 i_max =                                              \
+                    (i + BLOCK_SIZE < mat->m) ? i + BLOCK_SIZE : mat->m; \
+                u32 j_max =                                              \
+                    (j + BLOCK_SIZE < mat->n) ? j + BLOCK_SIZE : mat->n; \
+                                                                         \
+                for (u32 ii = i; ii < i_max; ii++) {                     \
+                    for (u32 jj = j; jj < j_max; jj++) {                 \
+                        out->data[IDX(out, jj, ii)] =                    \
+                            mat->data[IDX(mat, ii, jj)];                 \
+                    }                                                    \
+                }                                                        \
+            }                                                            \
+        }                                                                \
+    }
 
 // ============================================================================
 // MATRIX COPY
@@ -404,6 +416,7 @@
 // ============================================================================
 
 // Unified instantiation for all types
+// Order matters: functions must be defined before they're called
 #define INSTANTIATE_MATRIX(T, fmt) \
     MATRIX_TYPE(T);                \
     MATRIX_CREATE(T)               \
@@ -416,10 +429,10 @@
     MATRIX_ADD(T)                  \
     MATRIX_SUB(T)                  \
     MATRIX_SCALE(T)                \
-    MATRIX_XPLY(T)                 \
-    MATRIX_T(T)                    \
-    MATRIX_XPLY_2(T)               \
     MATRIX_COPY(T)                 \
+    MATRIX_T(T)                    \
+    MATRIX_XPLY(T)                 \
+    MATRIX_XPLY_2(T)               \
     MATRIX_LU_DECOMP(T)            \
     MATRIX_DET(T)                  \
     MATRIX_PRINT(T, fmt)

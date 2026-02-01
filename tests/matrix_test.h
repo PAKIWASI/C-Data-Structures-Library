@@ -2,6 +2,7 @@
 #define MATRIX_TEST_H
 
 #include "matrix.h"
+#include <stdio.h>
 
 
 int matrix_test_1(void)
@@ -121,11 +122,12 @@ int matrix_test_4(void)
     return 0;
 }
 
+// lu decomp and det
 int matrix_test_5(void)
 {
     Matrix* mat = matrix_create_arr(3, 3, (float*)(float[3][3]){
         {3, 2, 4},
-        {2, 0, 2},      // BUG: not working for 0 in middle (saying it's singular!?)
+        {2, 0, 2},
         {4, 2, 3},
     });
 
@@ -133,21 +135,56 @@ int matrix_test_5(void)
     matrix_create_stk(&L, 3, 3, (float*)ZEROS_2D(3, 3));
     matrix_create_stk(&U, 3, 3, (float*)ZEROS_2D(3, 3));
 
-    matrix_LU_Decomp(&L, &U, mat);  // WARN: L and U should be floats!
+    matrix_LU_Decomp(&L, &U, mat);
 
     matrix_print(&L);
     matrix_print(&U);
+
+    float det = matrix_det(mat);
+    printf("Det: %f\n", det);
+
+    Matrix copy;
+    matrix_create_stk(&copy, 3, 3, (float*)ZEROS_2D(3, 3));
+    matrix_copy(&copy, mat);
+
+    matrix_print(&copy);
 
     matrix_destroy(mat);
     return 0;
 }
 
-#include "matrix_generic.h"
-INSTANTIATE_MATRIX(double, "%lf");
-
+// matrix xpy, transpose
 int matrix_test_6(void)
 {
-}
 
+    Matrix* m1 = matrix_create_arr(4, 3, (float*)(float[4][3]){
+        {1, 2, 3},
+        {2, 2, 7},
+        {1, 0, 1},
+        {8, 9, 3},
+    });
+
+    Matrix m2;
+    matrix_create_stk(&m2, 3, 4, (float*)(float[3][4]){
+        {1, 2, 3, 4},
+        {1, 0, 9, 6},
+        {8, 4, 0, 4},
+    });
+
+    Matrix out;
+    matrix_create_stk(&out, 4, 4, (float*)ZEROS_2D(4, 4));
+    matrix_xply(&out, m1, &m2);
+    matrix_print(&out);
+
+    Matrix out_T;
+    matrix_create_stk(&out_T, 3, 4, (float*)ZEROS_2D(3, 4));
+    matrix_T(&out_T, m1);
+    matrix_print(m1);
+    matrix_print(&out_T);
+
+    matrix_destroy(m1);
+
+    return 0;
+}
 
 #endif // MATRIX_TEST_H
