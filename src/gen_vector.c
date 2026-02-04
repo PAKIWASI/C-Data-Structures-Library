@@ -192,7 +192,8 @@ void genVec_reset(genVec* vec)
     if (!vec->svo) {
         free(vec->data.heap);
         vec->data.heap = NULL;
-        vec->capacity = 0;
+        vec->capacity  = 0;
+        vec->svo       = true; // only time it's reset
     }
 
     vec->size = 0;
@@ -425,8 +426,7 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
         // Shift elements right by num_data units to right
         u8* dest = GET_PTR(vec, i + num_data);
 
-        memmove(dest, src, GET_SCALED(vec,
-                                      elements_to_shift)); // using memmove for overlapping regions
+        memmove(dest, src, GET_SCALED(vec, elements_to_shift)); // using memmove for overlapping regions
     }
 
     //src pos is now free to insert (it's data copied to next location)
@@ -659,7 +659,7 @@ void genVec_move(genVec* dest, genVec** src)
     memcpy(dest, *src, sizeof(genVec));
 
     if ((*src)->svo) {
-        (*src)->size = 0;
+        (*src)->size = 0; // can't acces data anymore
         return;
     }
 
@@ -727,8 +727,8 @@ void genVec_migrate_to_heap(genVec* vec, u32 new_capacity)
     memcpy(heap_data, vec->data.stack, GET_SCALED(vec, vec->size));
 
     vec->data.heap = heap_data;
-    vec->capacity = new_capacity;
-    vec->svo = false; // once set to false, can't be set to true again
+    vec->capacity  = new_capacity;
+    vec->svo       = false; // once set to false, can't be set to true again
 }
 
 

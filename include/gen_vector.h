@@ -15,27 +15,29 @@
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b);
-typedef void (*genVec_delete_fn)(u8* elm);                  // Cleanup owned resources
-typedef void (*genVec_copy_fn)(u8* dest, const u8* src);    // Deep copy resources
-typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into dest, null src
+typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b);
+typedef void (*genVec_delete_fn)(u8* elm);               // Cleanup owned resources
+typedef void (*genVec_copy_fn)(u8* dest, const u8* src); // Deep copy resources
+typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, null src
 
 
 // genVec growth/shrink settings (user can change)
 #ifndef GENVEC_GROWTH
-    #define GENVEC_GROWTH    1.5F  // vec capacity multiplier
+    #define GENVEC_GROWTH 1.5F // vec capacity multiplier
 #endif
 #ifndef GENVEC_SHRINK_AT
     #define GENVEC_SHRINK_AT 0.25F // % filled to shrink at (25% filled)
 #endif
 #ifndef GENVEC_SHRINK_BY
-    #define GENVEC_SHRINK_BY 0.5F  // capacity dividor (half)
+    #define GENVEC_SHRINK_BY 0.5F // capacity dividor (half)
 #endif
 
 
 //      SMALL VECTOR OPTIMIZATION
 // if vector takes <= 64 bytes, store it on the stack in the struct itself using union
 // entire union takes 64 bytes in the struct
+// when we heap alloc vector, then this is also on heap (not much improvement there)
+// but with stack vector, whole vector is then on the stack
 #ifndef GENVEC_SVO_SIZE
     #define GENVEC_SVO_SIZE 64
 #endif
@@ -47,20 +49,17 @@ typedef struct {
     union {
         u8  stack[GENVEC_SVO_SIZE]; // for small vectors (on stack) -> capacity <= SVO_CAPACITY
         u8* heap;                   // for large vectors (on heap)  -> capacity > SVO_CAPACITY
-    } data;                     
+    } data;
 
-    u32              size;      // Number of elements currently in vector
-    u32              capacity;  // Total allocated capacity
-    u16              data_size; // Size of each element in bytes
-    b8               svo;       // Flag to determine if data is on stack or heap
+    u32 size;      // Number of elements currently in vector
+    u32 capacity;  // Total allocated capacity
+    u16 data_size; // Size of each element in bytes
+    b8  svo;       // Flag to determine if data is on stack or heap
 
-    genVec_copy_fn   copy_fn;   // Deep copy function for owned resources (or NULL)
-    genVec_move_fn   move_fn;   // Get a double pointer, transfer ownership and null original
-    genVec_delete_fn del_fn;    // Cleanup function for owned resources (or NULL)
+    genVec_copy_fn   copy_fn; // Deep copy function for owned resources (or NULL)
+    genVec_move_fn   move_fn; // Get a double pointer, transfer ownership and null original
+    genVec_delete_fn del_fn;  // Cleanup function for owned resources (or NULL)
 } genVec;
-
-
-
 
 
 // Memory Management
@@ -68,17 +67,15 @@ typedef struct {
 
 // Initialize vector with capacity n. If elements own heap resources,
 // provide copy_fn (deep copy) and del_fn (cleanup). Otherwise pass NULL.
-genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn,
-                    genVec_move_fn move_fn, genVec_delete_fn del_fn);
+genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
 
 // Initialize vector on stack with data on heap
-void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn,
-                     genVec_move_fn move_fn, genVec_delete_fn del_fn,
+// SVO works best here as it is on the stack***
+void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn,
                      genVec* vec);
 
 // Initialize vector of size n, all elements set to val
-genVec* genVec_init_val(u32 n, const u8* val, u16 data_size,
-                        genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                         genVec_delete_fn del_fn);
 
 // Destroy heap-allocated vector and clean up all elements
@@ -202,9 +199,7 @@ static inline b8 genVec_isSVO(const genVec* vec)
 }
 
 
-
 // TODO: iterator support ?
-// TODO: ADD SMALL VECTOR OPTIMIZATION SVO??
 // TODO: add:
 /*
 
@@ -227,7 +222,6 @@ void genVec_reverse(genVec* vec);
 void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
 
 */
-
 
 
 #endif // GEN_VECTOR_H

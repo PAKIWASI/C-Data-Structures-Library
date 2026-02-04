@@ -11,19 +11,22 @@
 // container stores String by value (40 bytes), not ptr
 void str_copy(u8* dest, const u8* src)
 {
-    String* d =
-        (String*)dest; // malloced, not initalized container (garbage value)
+    String* d = (String*)dest; // malloced, not initalized container (garbage value)
     String* s = (String*)src;
 
     // copy all field values
     memcpy(d, s, sizeof(String)); // both point to same data
 
+    if (s->buffer.svo) {
+        return;
+    }
+
     // allocate space for data
     u32 n          = s->buffer.size * s->buffer.data_size;
-    d->buffer.data = malloc(n);
+    d->buffer.data.heap = malloc(n);
 
     // copy data
-    memcpy(d->buffer.data, s->buffer.data, n);
+    memcpy(d->buffer.data.heap, s->buffer.data.heap, n);
 }
 
 // in case of String by val, buffer is malloced (but random)
@@ -69,12 +72,16 @@ void str_copy_ptr(u8* dest, const u8* src)
     // copy all the fields
     memcpy(d, s, sizeof(String));
 
+    if (s->buffer.svo) {
+        return;
+    }
+
     // allocate memroy for new data
     u32 n          = s->buffer.size * s->buffer.data_size;
-    d->buffer.data = malloc(n);
+    d->buffer.data.heap = malloc(n);
 
     // copy all elements
-    memcpy(d->buffer.data, s->buffer.data, n);
+    memcpy(d->buffer.data.heap, s->buffer.data.heap, n);
 
     *(String**)dest = d; // dest is double ptr to str
 }
@@ -144,8 +151,7 @@ void double_print(const u8* elm)
     } while (0)
 
 
-#define STR_APPEND_CSTR(str, cstr) \
-    string_append_cstr((str), (cstr));
+#define STR_APPEND_CSTR(str, cstr) string_append_cstr((str), (cstr));
 
 
 #endif // HELPERS_H

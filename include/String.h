@@ -24,13 +24,13 @@ String* string_from_cstr(const char* cstr);
 String* string_from_string(const String* other);
 
 // reserve a capacity for a string (must be greater than current cap)
-void    string_reserve(String* str, u32 capacity);
+void string_reserve(String* str, u32 capacity);
 
 // destroy the heap allocated string
-void    string_destroy(String* str);
+void string_destroy(String* str);
 
 // destroy only the data ptr of string struct (for stk created str)
-void    string_destroy_stk(String* str);
+void string_destroy_stk(String* str);
 
 // move string contents (nulls source)
 // Note: src must be heap allocated
@@ -45,7 +45,7 @@ const char* string_to_cstr(const String* str);
 // Note: NO NULL TERMINATOR
 char* string_data_ptr(const String* str);
 
-// TODO: 
+// TODO:
 // void string_to_cstr_buf(const String* str, char* buf, u32 buf_size);
 // void string_to_cstr_buf_move(const String* str, char* buf, u32 buf_size);
 
@@ -103,7 +103,7 @@ void string_set_char(String* str, u32 i, char c);
 int string_compare(const String* str1, const String* str2);
 
 // return true if string's data matches
-b8  string_equals(const String* str1, const String* str2);
+b8 string_equals(const String* str1, const String* str2);
 
 // return true if a string's data matches a cstr
 b8 string_equals_cstr(const String* str, const char* cstr);
@@ -138,9 +138,9 @@ static inline u32 string_len(const String* str)
 }
 
 // get the capacity of the genVec container of string
-static inline u32 string_capacity(const String* str) 
-{ 
-    return str->buffer.capacity; 
+static inline u32 string_capacity(const String* str)
+{
+    return str->buffer.capacity;
 }
 
 // return true if str is empty
@@ -150,7 +150,7 @@ static inline b8 string_empty(const String* str)
 }
 
 
-// TODO: 
+// TODO:
 
 /*
 // Split string by delimiter
