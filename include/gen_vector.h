@@ -22,21 +22,49 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into des
 
 
 // genVec growth/shrink settings (user can change)
-#define GROWTH    1.5  // vec capacity multiplier
-#define SHRINK_AT 0.25 // % filled to shrink at (25% filled)
-#define SHRINK_BY 0.5  // capacity dividor (half)
+#ifndef GENVEC_GROWTH
+    #define GENVEC_GROWTH    1.5  // vec capacity multiplier
+#endif
+#ifndef GENVEC_SHRINK_AT
+    #define GENVEC_SHRINK_AT 0.25 // % filled to shrink at (25% filled)
+#endif
+#ifndef GENVEC_SHRINK_BY
+    #define GENVEC_SHRINK_BY 0.5  // capacity dividor (half)
+#endif
+
+
+//      SMALL VECTOR OPTIMIZATION
+// if vector takes <= 64 bytes, store it on the stack in the struct itself using union
+// entire union takes 64 bytes in the struct
+
+#ifndef GENVEC_SVO_SIZE
+    #define GENVEC_SVO_SIZE 64
+#endif
+
+// Get maximum number of elements that can fit in SVO storage
+#define GENVEC_SVO_CAPACITY(data_size) (GENVEC_SVO_SIZE / (data_size))
+
 
 
 // generic vector container
 typedef struct {
-    u8*              data;      // Contiguous array of elements
+    // Contiguous array of elements
+    union {
+        u8  stack[GENVEC_SVO_SIZE]; // for small vectors (on stack) -> capacity <= SVO_CAPACITY
+        u8* heap;                   // for large vectors (on heap)  -> capacity > SVO_CAPACITY
+    } data;                     
+
     u32              size;      // Number of elements currently in vector
     u32              capacity;  // Total allocated capacity
     u16              data_size; // Size of each element in bytes
+
     genVec_copy_fn   copy_fn;   // Deep copy function for owned resources (or NULL)
     genVec_move_fn   move_fn;   // Get a double pointer, transfer ownership and null original
     genVec_delete_fn del_fn;    // Cleanup function for owned resources (or NULL)
 } genVec;
+
+
+
 
 
 // Memory Management
@@ -171,6 +199,15 @@ static inline u8 genVec_empty(const genVec* vec)
     CHECK_FATAL(!vec, "vec is null");
     return vec->size == 0;
 }
+
+// Check if vector is using stack storage (SVO)
+static inline b8 genVec_isSVO(const genVec* vec)
+{
+    CHECK_FATAL(!vec, "vec is null");
+    return vec->capacity <= GENVEC_SVO_CAPACITY(vec->data_size);
+}
+
+
 
 // TODO: iterator support ?
 // TODO: ADD SMALL VECTOR OPTIMIZATION SVO??

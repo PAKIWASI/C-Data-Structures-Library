@@ -4,10 +4,13 @@
 #include <string.h>
 
 
-
 #define GENVEC_MIN_CAPACITY 4
 
 
+// Helper macros
+
+// Get pointer to data array (handles both stack and heap storage)
+#define GET_DATA(vec) ((vec)->on_stack ? (vec)->storage.stack_data : (vec)->storage.heap_data)
 // get ptr to elm at index i
 #define GET_PTR(vec, i) ((vec->data) + ((size_t)(i) * (vec->data_size)))
 // get total_size in bytes for i elements
@@ -18,6 +21,7 @@
 //private functions
 void genVec_grow(genVec* vec);
 void genVec_shrink(genVec* vec);
+void genVec_migrate_to_heap(genVec* vec, u32 new_capacity);
 
 
 genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
@@ -27,6 +31,12 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn
 
     genVec* vec = malloc(sizeof(genVec));
     CHECK_FATAL(!vec, "vec init failed");
+
+    u32 svo_cap = GENVEC_SVO_CAPACITY(data_size);
+
+    if (n * data_size <= svo_cap) {
+
+    }
 
     // Only allocate memory if n > 0, otherwise data can be NULL
     vec->data = (n > 0) ? malloc((size_t)data_size * n) : NULL;
@@ -281,7 +291,7 @@ void genVec_pop(genVec* vec, u8* popped)
 
     vec->size--; // set for re-write
 
-    if (vec->size <= (u32)((double)vec->capacity * SHRINK_AT)) { genVec_shrink(vec); }
+    if (vec->size <= (u32)((double)vec->capacity * GENVEC_SHRINK_AT)) { genVec_shrink(vec); }
 }
 
 
@@ -485,7 +495,7 @@ void genVec_remove(genVec* vec, u32 i, u8* out)
 
     vec->size--;
 
-    if (vec->size <= (u32)((double)vec->capacity * SHRINK_AT)) { genVec_shrink(vec); }
+    if (vec->size <= (u32)((double)vec->capacity * GENVEC_SHRINK_AT)) { genVec_shrink(vec); }
 }
 
 
@@ -513,7 +523,7 @@ void genVec_remove_range(genVec* vec, u32 l, u32 r)
 
     vec->size -= (r - l + 1);
 
-    if (vec->size <= (u32)((double)vec->capacity * SHRINK_AT)) { genVec_shrink(vec); }
+    if (vec->size <= (u32)((double)vec->capacity * GENVEC_SHRINK_AT)) { genVec_shrink(vec); }
 }
 
 
@@ -651,7 +661,7 @@ void genVec_grow(genVec* vec)
     if (vec->capacity < GENVEC_MIN_CAPACITY) {
         new_cap = vec->capacity + 1;
     } else {
-        new_cap = (u32)((double)vec->capacity * GROWTH);
+        new_cap = (u32)((double)vec->capacity * GENVEC_GROWTH);
         if (new_cap <= vec->capacity) { // Ensure at least +1 growth
             new_cap = vec->capacity + 1;
         }
@@ -669,7 +679,7 @@ void genVec_shrink(genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
 
-    u32 reduced_cap = (u32)((double)vec->capacity * SHRINK_BY);
+    u32 reduced_cap = (u32)((double)vec->capacity * GENVEC_SHRINK_BY);
     if (reduced_cap < vec->size || reduced_cap == 0) { return; }
 
     u8* new_data = realloc(vec->data, GET_SCALED(vec, reduced_cap));
