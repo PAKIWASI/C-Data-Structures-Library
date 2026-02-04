@@ -28,7 +28,7 @@ SortIncludes: true
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-ColumnLimit: 80                              # 80-120 is common
+ColumnLimit: 120                              # 80-120 is common
 
 # Pointer/reference alignment (pick one style)
 PointerAlignment: Left                        # int* ptr (more common in C)
@@ -52,11 +52,11 @@ IndentWrappedFunctionNames: false
 
 # Line breaking
 AllowShortFunctionsOnASingleLine: Inline            # Only inline/lambda on one line
-AllowShortIfStatementsOnASingleLine: AllIfsAndElse
-AllowShortBlocksOnASingleLine: Always              # Also allows while/for single line
-AllowShortLoopsOnASingleLine: true                 # while (x--) {}
+#AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+#AllowShortBlocksOnASingleLine: Always              # Also allows while/for single line
+#AllowShortLoopsOnASingleLine: true                 # while (x--) {}
 BreakBeforeBinaryOperators: None              # Operators at end of line
-BreakBeforeTernaryOperators: true             # ? on new line
+#BreakBeforeTernaryOperators: true             # ? on new line
 
 # Other common settings
 ReflowComments: false                         # Don't rewrap comment paragraphs

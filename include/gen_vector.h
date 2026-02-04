@@ -23,27 +23,22 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into des
 
 // genVec growth/shrink settings (user can change)
 #ifndef GENVEC_GROWTH
-    #define GENVEC_GROWTH    1.5  // vec capacity multiplier
+    #define GENVEC_GROWTH    1.5F  // vec capacity multiplier
 #endif
 #ifndef GENVEC_SHRINK_AT
-    #define GENVEC_SHRINK_AT 0.25 // % filled to shrink at (25% filled)
+    #define GENVEC_SHRINK_AT 0.25F // % filled to shrink at (25% filled)
 #endif
 #ifndef GENVEC_SHRINK_BY
-    #define GENVEC_SHRINK_BY 0.5  // capacity dividor (half)
+    #define GENVEC_SHRINK_BY 0.5F  // capacity dividor (half)
 #endif
 
 
 //      SMALL VECTOR OPTIMIZATION
 // if vector takes <= 64 bytes, store it on the stack in the struct itself using union
 // entire union takes 64 bytes in the struct
-
 #ifndef GENVEC_SVO_SIZE
     #define GENVEC_SVO_SIZE 64
 #endif
-
-// Get maximum number of elements that can fit in SVO storage
-#define GENVEC_SVO_CAPACITY(data_size) (GENVEC_SVO_SIZE / (data_size))
-
 
 
 // generic vector container
@@ -57,6 +52,7 @@ typedef struct {
     u32              size;      // Number of elements currently in vector
     u32              capacity;  // Total allocated capacity
     u16              data_size; // Size of each element in bytes
+    b8               svo;       // Flag to determine if data is on stack or heap
 
     genVec_copy_fn   copy_fn;   // Deep copy function for owned resources (or NULL)
     genVec_move_fn   move_fn;   // Get a double pointer, transfer ownership and null original
@@ -80,12 +76,6 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn,
                      genVec_move_fn move_fn, genVec_delete_fn del_fn,
                      genVec* vec);
 
-// vector initilization for simple types like int, float, char etc
-genVec* genVec_init_simple(u32 n, u16 data_size);
-
-// stack version of vector for simple types like int, float, char etc
-void genVec_init_stk_simple(u32 n, u16 data_size, genVec* vec);
-
 // Initialize vector of size n, all elements set to val
 genVec* genVec_init_val(u32 n, const u8* val, u16 data_size,
                         genVec_copy_fn copy_fn, genVec_move_fn move_fn,
@@ -107,7 +97,7 @@ void genVec_reset(genVec* vec);
 void genVec_reserve(genVec* vec, u32 new_capacity);
 
 // Grow to new_capacity and fill new slots with val
-void genVec_reserve_val(genVec* vec, u32 new_capacrity, const u8* val);
+void genVec_reserve_val(genVec* vec, u32 new_capacity, const u8* val);
 
 
 // Operations
@@ -200,11 +190,15 @@ static inline u8 genVec_empty(const genVec* vec)
     return vec->size == 0;
 }
 
+
+// Get maximum number of elements that can fit in SVO storage
+#define GENVEC_SVO_CAPACITY(data_size) (GENVEC_SVO_SIZE / (data_size))
+
 // Check if vector is using stack storage (SVO)
 static inline b8 genVec_isSVO(const genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
-    return vec->capacity <= GENVEC_SVO_CAPACITY(vec->data_size);
+    return vec->svo;
 }
 
 
