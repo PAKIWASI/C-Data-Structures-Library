@@ -89,7 +89,9 @@ void matrix_add(Matrix* out, const Matrix* a, const Matrix* b)
 
     u32 total = MATRIX_TOTAL(a);
 
-    for (u32 i = 0; i < total; i++) { out->data[i] = a->data[i] + b->data[i]; }
+    for (u32 i = 0; i < total; i++) { 
+        out->data[i] = a->data[i] + b->data[i]; 
+    }
 }
 
 
@@ -105,7 +107,9 @@ void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b)
 
     u32 total = MATRIX_TOTAL(a);
 
-    for (u32 i = 0; i < total; i++) { out->data[i] = a->data[i] - b->data[i]; }
+    for (u32 i = 0; i < total; i++) { 
+        out->data[i] = a->data[i] - b->data[i]; 
+    }
 }
 
 // ikj multiplication. (mxk) * (kxn) = (mxn)
@@ -153,6 +157,7 @@ void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b)
             }
         }
     }
+
 }
 
 
@@ -172,7 +177,6 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
     u32 n = b->n;
 
     // Transpose B for cache-friendly access
-    // Matrix* b_T = matrix_create(n, k); // B^T is n×k
     Matrix b_T;
     float  data[n * k]; // random vals
     matrix_create_stk(&b_T, n, k, data);
@@ -203,7 +207,7 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
             }
         }
     }
-    // matrix_destroy(b_T);
+
 }
 
 /*

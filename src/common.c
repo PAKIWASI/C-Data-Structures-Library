@@ -2,7 +2,6 @@
 
 
 
-
 void print_hex(const u8* ptr, u32 size, u32 bytes_per_line) 
 {
     if (ptr == NULL | size == 0 | bytes_per_line == 0) { return; }
@@ -24,7 +23,7 @@ void print_hex(const u8* ptr, u32 size, u32 bytes_per_line)
             printf(" ");
         }
     }
-    
+
     // Add final newline if we didn't just print one
     if (size % bytes_per_line != 0) {
         printf("\n");

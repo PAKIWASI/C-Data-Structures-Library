@@ -4,6 +4,8 @@
 #include <string.h>
 
 
+u32 cstr_len(const char* cstr);
+
 String* string_create(void)
 {
     String* str = malloc(sizeof(String));
@@ -14,25 +16,23 @@ String* string_create(void)
     return str;
 }
 
-void string_create_stk(String* str, const char* cstr, u32 len)
+void string_create_stk(String* str, const char* cstr)
 {
     // the difference is that we dont use string_create(), so str is not heap initilised
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
-    CHECK_FATAL(!len, "len can't be 0");
 
     genVec_init_stk(0, sizeof(char), NULL, NULL, NULL, &str->buffer);
 
-    string_append_cstr(str, cstr, len);
+    string_append_cstr(str, cstr);
 }
 
-String* string_from_cstr(const char* cstr, u32 len)
+String* string_from_cstr(const char* cstr)
 {
     CHECK_FATAL(!cstr, "cstr is null");
-    CHECK_FATAL(!len, "len can't be 0");
 
     String* str = string_create();
-    string_append_cstr(str, cstr, len);
+    string_append_cstr(str, cstr);
 
     return str;
 }
@@ -146,10 +146,12 @@ char* string_data_ptr(const String* str)
 }
 
 
-void string_append_cstr(String* str, const char* cstr, u32 len)
+void string_append_cstr(String* str, const char* cstr)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
+
+    u32 len = cstr_len(cstr);
     CHECK_FATAL(!len, "len can't be 0");
 
     genVec_insert_multi(&str->buffer, str->buffer.size, (const u8*)cstr, len);
@@ -207,12 +209,14 @@ void string_insert_char(String* str, u32 i, char c)
     genVec_insert(&str->buffer, i, cast(c));
 }
 
-void string_insert_cstr(String* str, u32 i, const char* cstr, u32 len)
+void string_insert_cstr(String* str, u32 i, const char* cstr)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
-    CHECK_FATAL(!len, "len can't be 0");
     CHECK_FATAL(i > str->buffer.size, "index out of bounds");
+
+    u32 len = cstr_len(cstr);
+    CHECK_FATAL(!len, "len can't be 0");
 
     genVec_insert_multi(&str->buffer, i, castptr(cstr), len);
 }
@@ -292,10 +296,12 @@ b8 string_equals(const String* str1, const String* str2)
     return string_compare(str1, str2) == 0;
 }
 
-b8 string_equals_cstr(const String* str, const char* cstr, u32 len)
+b8 string_equals_cstr(const String* str, const char* cstr)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
+
+    u32 len = cstr_len(cstr);
     CHECK_FATAL(!len, "len can't be 0");
 
     return memcmp(str->buffer.data, cstr, len) == 0;
@@ -312,10 +318,12 @@ u32 string_find_char(const String* str, char c)
     return (u32)-1; // Not found
 }
 
-u32 string_find_cstr(const String* str, const char* substr, u32 len)
+u32 string_find_cstr(const String* str, const char* substr)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!substr, "substr is null");
+
+    u32 len = cstr_len(substr);
     CHECK_FATAL(!len, "len can't be 0");
 
     if (len > str->buffer.size) { return (u32)-1; }
@@ -355,6 +363,22 @@ void string_print(const String* str)
     printf("\"");
     for (u32 i = 0; i < str->buffer.size; i++) { putchar(((char*)str->buffer.data)[i]); }
     printf("\"");
+}
+
+
+// TODO: test
+u32 cstr_len(const char* cstr)
+{
+    CHECK_FATAL(!cstr, "cstr is null");
+
+    u32 len = 0;
+    u32 i = 0;
+
+    while (cstr[i++] != '\0') {
+        len++;
+    }
+
+    return len;
 }
 
 

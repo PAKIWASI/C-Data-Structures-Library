@@ -1,6 +1,7 @@
 #ifndef MATRIX_TEST_H
 #define MATRIX_TEST_H
 
+/*
 #include "matrix.h"
 #include <stdio.h>
 
@@ -183,6 +184,21 @@ int matrix_test_6(void)
     matrix_print(&out_T);
 
     matrix_destroy(m1);
+
+    return 0;
+}
+*/
+#include "matrix_generic.h"
+INSTANTIATE_MATRIX(double, "%lf")
+
+int matrix_test_7(void)
+{
+    Matrix_double mat;
+    matrix_create_stk_double(&mat, 3, 3, (double*)(double[3][3]){
+        {1, 1, 1},
+        {1, 1, 1},
+        {1, 1, 1},
+    });
 
     return 0;
 }

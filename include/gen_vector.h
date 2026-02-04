@@ -6,11 +6,10 @@
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b);
-typedef void (*genVec_delete_fn)(u8* elm); // Cleanup owned resources
-typedef void (*genVec_copy_fn)(u8* dest, const u8* src); // Deep copy resources
-typedef void (*genVec_move_fn)(u8*  dest,
-                               u8** src); // Move src into dest, null src
+typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b);
+typedef void (*genVec_delete_fn)(u8* elm);                  // Cleanup owned resources
+typedef void (*genVec_copy_fn)(u8* dest, const u8* src);    // Deep copy resources
+typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into dest, null src
 
 
 // genVec growth/shrink settings (user can change)
@@ -44,6 +43,12 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn,
 void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn,
                      genVec_move_fn move_fn, genVec_delete_fn del_fn,
                      genVec* vec);
+
+// vector initilization for simple types like int, float, char etc
+genVec* genVec_init_simple(u32 n, u16 data_size);
+
+// stack version of vector for simple types like int, float, char etc
+void genVec_init_stk_simple(u32 n, u16 data_size, genVec* vec);
 
 // Initialize vector of size n, all elements set to val
 genVec* genVec_init_val(u32 n, const u8* val, u16 data_size,
@@ -88,6 +93,9 @@ void genVec_get(const genVec* vec, u32 i, u8* out);
 // Get pointer to element at index i
 // Note: Pointer invalidated by push/insert/remove operations
 const u8* genVec_get_ptr(const genVec* vec, u32 i);
+
+// apply a function on each value of the array
+void genVec_for_each(genVec* vec, void (*for_each)(u8* elm));
 
 // Replace element at index i with data (cleans up old element)
 void genVec_replace(genVec* vec, u32 i, const u8* data);
@@ -156,7 +164,7 @@ static inline u8 genVec_empty(const genVec* vec)
     return vec->size == 0;
 }
 
-// TODO: iterator, for each support?
+// TODO: iterator support?
 // TODO: ADD SMALL VECTOR STACK ??
 // TODO: add:
 /*
@@ -180,6 +188,7 @@ void genVec_reverse(genVec* vec);
 void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
 
 */
+
 
 /*          TLDR
  * genVec is a value-based generic vector.

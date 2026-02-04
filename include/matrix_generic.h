@@ -170,6 +170,15 @@
         for (u32 i = 0; i < total; i++) { mat->data[i] *= val; } \
     }
 
+#define MATRIX_DIV(T)                                            \
+    void matrix_div(Matrix_##T* mat, T val)                          \
+    {                                                            \
+        CHECK_FATAL(!mat, "mat is null");                        \
+        CHECK_FATAL(val == 0, "division by zero!");              \
+        u32 total = MATRIX_TOTAL(mat);                           \
+        for (u32 i = 0; i < total; i++) { mat->data[i] /= val; } \
+    }
+
 // ============================================================================
 // MATRIX MULTIPLICATION (Blocked ikj)
 // ============================================================================
@@ -429,6 +438,7 @@
     MATRIX_ADD(T)                  \
     MATRIX_SUB(T)                  \
     MATRIX_SCALE(T)                \
+    MATRIX_DIV(T)                  \
     MATRIX_COPY(T)                 \
     MATRIX_T(T)                    \
     MATRIX_XPLY(T)                 \

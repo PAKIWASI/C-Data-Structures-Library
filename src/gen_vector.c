@@ -1,4 +1,5 @@
 #include "gen_vector.h"
+#include "common.h"
 
 #include <string.h>
 
@@ -47,6 +48,33 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn
     return vec;
 }
 
+genVec* genVec_init_simple(u32 n, u16 data_size)
+{
+    CHECK_FATAL(data_size == 0, "data_size can't be 0");
+
+    genVec* vec = malloc(sizeof(genVec));
+    CHECK_FATAL(!vec, "vec init failed");
+
+    // Only allocate memory if n > 0, otherwise data can be NULL
+    vec->data = (n > 0) ? malloc((size_t)data_size * n) : NULL;
+
+    // Only check for allocation failure if we actually tried to allocate
+    if (n > 0 && !vec->data) {
+        free(vec);
+        FATAL("data init failed");
+    }
+
+    vec->size      = 0;
+    vec->capacity  = n;
+    vec->data_size = data_size;
+
+    vec->copy_fn = NULL;
+    vec->move_fn = NULL;
+    vec->del_fn  = NULL;
+
+    return vec;
+}
+
 
 void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                      genVec_delete_fn del_fn, genVec* vec)
@@ -66,6 +94,22 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_f
     vec->del_fn    = del_fn;
 }
 
+void genVec_init_stk_simple(u32 n, u16 data_size, genVec* vec)
+{
+    CHECK_FATAL(!vec, "vec is null");
+    CHECK_FATAL(data_size == 0, "data_size can't be 0");
+
+    // Only allocate memory if n > 0, otherwise data can be NULL
+    vec->data = (n > 0) ? malloc((size_t)data_size * n) : NULL;
+    CHECK_FATAL(n > 0 && !vec->data, "data init failed");
+
+    vec->size      = 0;
+    vec->capacity  = n;
+    vec->data_size = data_size;
+    vec->copy_fn   = NULL;
+    vec->move_fn   = NULL;
+    vec->del_fn    = NULL;
+}
 
 genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn,
                         genVec_move_fn move_fn, genVec_delete_fn del_fn)
@@ -99,7 +143,7 @@ void genVec_destroy_stk(genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
 
-    if (!vec->data) { return; } // TODO: check this
+    if (!vec->data) { return; }
 
     if (vec->del_fn) {
         // Custom cleanup for each element
@@ -264,6 +308,18 @@ const u8* genVec_get_ptr(const genVec* vec, u32 i)
     CHECK_FATAL(i >= vec->size, "index out of bounds");
 
     return GET_PTR(vec, i);
+}
+
+
+// TODO: test
+void genVec_for_each(genVec* vec, void (*for_each)(u8* elm))
+{
+    CHECK_FATAL(!vec, "vec is null");
+    CHECK_FATAL(!for_each, "for_each function is null");
+
+    for (u32 i = 0; i < vec->size; i++) {
+        for_each(GET_PTR(vec, i));
+    }
 }
 
 
