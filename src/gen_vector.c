@@ -51,7 +51,7 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn
 {
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
 
-    genVec* vec = malloc(sizeof(genVec));
+    genVec* vec = (genVec*)malloc(sizeof(genVec));
     CHECK_FATAL(!vec, "vec init failed");
 
     // Calculate how many elements can fit in SVO storage
@@ -60,10 +60,10 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn
     // Use SVO if requested capacity fits
     if (/*n > 0 &&*/ n <= svo_cap) {
         vec->svo      = true;
-        vec->capacity = svo_cap; // always in stack mode if size <= svo_cap
+        vec->capacity = svo_cap; // in stack mode if size <= svo_cap
     } else {
         // Only allocate memory if n > 0, otherwise data can be NULL
-        vec->data.heap = (n > 0) ? malloc((size_t)data_size * n) : NULL;
+        vec->data.heap = (n > 0) ? (u8*)malloc((size_t)data_size * n) : NULL;
 
         // Only check for allocation failure if we actually tried to allocate
         if (n > 0 && !vec->data.heap) {
@@ -100,7 +100,7 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_f
         vec->capacity = svo_cap;
     } else {
         // Only allocate memory if n > 0, otherwise data can be NULL
-        vec->data.heap = (n > 0) ? malloc((size_t)data_size * n) : NULL;
+        vec->data.heap = (n > 0) ? (u8*)malloc((size_t)data_size * n) : NULL;
         CHECK_FATAL(n > 0 && !vec->data.heap, "data init failed");
 
         vec->svo      = false;
@@ -147,11 +147,7 @@ void genVec_destroy_stk(genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
 
-    // in stack mode, can't free data as stored in struct
-    if (vec->svo) {
-        return;
-    }
-    if (!vec->data.heap) {
+    if (!vec->svo && !vec->data.heap) {
         return;
     }
 
@@ -162,8 +158,11 @@ void genVec_destroy_stk(genVec* vec)
         }
     }
 
-    free(vec->data.heap);
-    vec->data.heap = NULL;
+    // Free heap data if in heap mode
+    if (!vec->svo && vec->data.heap) {
+        free(vec->data.heap);
+        vec->data.heap = NULL;
+    }
     // dont free vec as on stk (don't own memory)
 }
 
@@ -193,10 +192,10 @@ void genVec_reset(genVec* vec)
     if (!vec->svo) {
         free(vec->data.heap);
         vec->data.heap = NULL;
+        vec->capacity = 0;
     }
 
-    vec->size     = 0;
-    vec->capacity = 0;
+    vec->size = 0;
 }
 
 
@@ -631,7 +630,7 @@ void genVec_copy(genVec* dest, const genVec* src)
     }
 
     // malloc data ptr
-    dest->data.heap = malloc(GET_SCALED(src, src->capacity));
+    dest->data.heap = (u8*)malloc(GET_SCALED(src, src->capacity));
 
     // Copy elements
     if (src->copy_fn) {
@@ -719,13 +718,17 @@ void genVec_shrink(genVec* vec)
 void genVec_migrate_to_heap(genVec* vec, u32 new_capacity)
 {
     CHECK_FATAL(!vec, "vec is null");
+    CHECK_FATAL(!vec->svo, "vec already on heap");
     CHECK_FATAL(new_capacity <= vec->capacity, "new_capacity must be greater than old cap");
 
-    u8* heap_data = malloc(new_capacity);
+    u8* heap_data = (u8*)malloc(GET_SCALED(vec, new_capacity));
     CHECK_FATAL(!heap_data, "heap data malloc failed");
 
-    memcpy(heap_data, vec->data.stack, vec->capacity);
+    memcpy(heap_data, vec->data.stack, GET_SCALED(vec, vec->size));
 
-
+    vec->data.heap = heap_data;
+    vec->capacity = new_capacity;
     vec->svo = false; // once set to false, can't be set to true again
 }
+
+

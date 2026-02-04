@@ -6,5 +6,5 @@
 
 int main(void)
 {
-    return genVec_test_6();
+    return genVec_test_1();
 }

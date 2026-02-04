@@ -6,6 +6,7 @@
 
 u32 cstr_len(const char* cstr);
 
+
 String* string_create(void)
 {
     String* str = malloc(sizeof(String));
