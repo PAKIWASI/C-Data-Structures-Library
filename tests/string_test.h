@@ -23,7 +23,7 @@ int string_test_1(void)
     string_print(&s2);
     printf("\n");
 
-    String* s3 = string_from_cstr("wtf", 3);
+    String* s3 = string_from_cstr("wtf");
     string_move(s3, &str);
     string_print(s3);
     printf("\n");

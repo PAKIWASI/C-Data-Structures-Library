@@ -311,7 +311,6 @@ const u8* genVec_get_ptr(const genVec* vec, u32 i)
 }
 
 
-// TODO: test
 void genVec_for_each(genVec* vec, void (*for_each)(u8* elm))
 {
     CHECK_FATAL(!vec, "vec is null");

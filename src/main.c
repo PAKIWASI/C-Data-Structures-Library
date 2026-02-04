@@ -1,10 +1,10 @@
 
 
 
-#include "matrix_test.h"
+#include "genVec_test.h"
 
 
 int main(void)
 {
-    return matrix_test_6();    
+    return genVec_test_6();
 }

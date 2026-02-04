@@ -366,7 +366,6 @@ void string_print(const String* str)
 }
 
 
-// TODO: test
 u32 cstr_len(const char* cstr)
 {
     CHECK_FATAL(!cstr, "cstr is null");

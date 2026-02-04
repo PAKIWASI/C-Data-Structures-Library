@@ -4,6 +4,15 @@
 #include "common.h"
 
 
+/*          TLDR
+ * genVec is a value-based generic vector.
+ * Elements are stored inline and managed via user-supplied
+ * copy/move/destructor callbacks.
+ *
+ * This avoids pointer ownership ambiguity and improves cache locality.
+ */
+
+
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
 typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b);
@@ -13,7 +22,6 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);         // Move src into des
 
 
 // genVec growth/shrink settings (user can change)
-
 #define GROWTH    1.5  // vec capacity multiplier
 #define SHRINK_AT 0.25 // % filled to shrink at (25% filled)
 #define SHRINK_BY 0.5  // capacity dividor (half)
@@ -164,8 +172,8 @@ static inline u8 genVec_empty(const genVec* vec)
     return vec->size == 0;
 }
 
-// TODO: iterator support?
-// TODO: ADD SMALL VECTOR STACK ??
+// TODO: iterator support ?
+// TODO: ADD SMALL VECTOR OPTIMIZATION SVO??
 // TODO: add:
 /*
 
@@ -190,12 +198,5 @@ void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
 */
 
 
-/*          TLDR
- * genVec is a value-based generic vector.
- * Elements are stored inline and managed via user-supplied
- * copy/move/destructor callbacks.
- *
- * This avoids pointer ownership ambiguity and improves cache locality.
- */
 
 #endif // GEN_VECTOR_H

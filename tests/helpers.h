@@ -11,7 +11,8 @@
 // container stores String by value (40 bytes), not ptr
 void str_copy(u8* dest, const u8* src)
 {
-    String* d = (String*)dest; // malloced, not initalized container (garbage value)
+    String* d =
+        (String*)dest; // malloced, not initalized container (garbage value)
     String* s = (String*)src;
 
     // copy all field values
@@ -136,15 +137,15 @@ void double_print(const u8* elm)
 
 
 // for String, String*
-#define VEC_PUSH_CSTR(vec, cstr)                             \
-    do {                                                     \
-        String* _str = string_from_cstr(cstr, strlen(cstr)); \
-        genVec_push_move(vec, (u8**)&_str);                  \
+#define VEC_PUSH_CSTR(vec, cstr)               \
+    do {                                       \
+        String* _str = string_from_cstr(cstr); \
+        genVec_push_move(vec, (u8**)&_str);    \
     } while (0)
 
 
 #define STR_APPEND_CSTR(str, cstr) \
-    string_append_cstr((str), (cstr), strlen((cstr)));
+    string_append_cstr((str), (cstr));
 
 
 #endif // HELPERS_H
