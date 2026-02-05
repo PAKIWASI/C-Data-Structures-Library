@@ -34,7 +34,7 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, 
 
 
 //      SMALL VECTOR OPTIMIZATION
-// if vector takes <= 64 bytes, store it on the stack in the struct itself using union
+// if vector data takes <= 64 bytes, store it on the stack in the struct itself using union
 // entire union takes 64 bytes in the struct
 // when we heap alloc vector, then this is also on heap (not much improvement there)
 // but with stack vector, whole vector is then on the stack

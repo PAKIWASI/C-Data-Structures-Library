@@ -1,3 +1,4 @@
+#include "String.h"
 #include "common.h"
 #include "hashmap.h"
 #include "helpers.h"
@@ -12,7 +13,7 @@ int hashmap_test_1(void)
 
     int a = 5;
     String str;
-    string_create_stk(&str, "hello", 5);
+    string_create_stk(&str, "hello");
 
     hashmap_put(map, cast(a), cast(str));
     a++;
@@ -31,7 +32,7 @@ int hashmap_test_1(void)
     hashmap_print(map, int_print, str_print);
 
     String* s = (String*)hashmap_get_ptr(map, cast(a));
-    STR_APPEND_CSTR(s, " what is up");
+    string_append_cstr(s, " what is up");
     string_print(s);
     printf("\n");
     s = NULL;
@@ -61,10 +62,10 @@ int hashmap_test_2(void)
                                   NULL, str_move, NULL, str_del);
 
     int a = 7;
-    String* str = string_from_cstr("hello", 5);
+    String* str = string_from_cstr("hello");
     hashmap_put_val_move(map, cast(a), (u8**)&str);
 
-    str = string_from_cstr("what is up", 10);
+    str = string_from_cstr("what is up");
     a += 2;
     hashmap_put_val_move(map, cast(a), (u8**)&str);
     
