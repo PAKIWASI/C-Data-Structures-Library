@@ -1,14 +1,13 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
-#include "gen_vector.h"
 #include "map_setup.h"
 
 
 typedef struct {
-    genVec*         buckets;        // TODO: replace with raw array? (only using replace, get_ptr and init_val. memory managed by hashmap, not vec)
-    u32             capacity;
+    u8*             buckets;
     u32             size;
+    u32             capacity;
     u16             key_size;
     u16             val_size;
     custom_hash_fn  hash_fn;
@@ -71,13 +70,6 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key);
 b8 hashmap_del(hashmap* map, const u8* key, u8* out);
 
 
-// TODO: 
-void hashmap_clear(hashmap* map);  // Remove all, keep capacity
-void hashmap_reset(hashmap* map);  // Remove all, reset to initial capacity
-// Update value in-place if key exists, return false if key doesn't exist
-b8 hashmap_update(hashmap* map, const u8* key, const u8* val);
-genVec* hashmap_keys(const hashmap* map);
-genVec* hashmap_values(const hashmap* map);
 
 /**
  * Check if key exists
@@ -87,7 +79,9 @@ b8 hashmap_has(const hashmap* map, const u8* key);
 /**
  * Print all key-value pairs
  */
-void hashmap_print(const hashmap* map, genVec_print_fn key_print, genVec_print_fn val_print);
+void hashmap_print(const hashmap* map, map_print_fn key_print, map_print_fn val_print);
+
+
 
 static inline u32 hashmap_size(const hashmap* map)
 {
@@ -108,5 +102,14 @@ static inline b8 hashmap_empty(const hashmap* map)
 }
 
 
+// TODO: 
+/*
+void hashmap_clear(hashmap* map);  // Remove all, keep capacity
+void hashmap_reset(hashmap* map);  // Remove all, reset to initial capacity
+// Update value in-place if key exists, return false if key doesn't exist
+b8 hashmap_update(hashmap* map, const u8* key, const u8* val);
+genVec* hashmap_keys(const hashmap* map);
+genVec* hashmap_values(const hashmap* map);
+*/
 
 #endif // HASHMAP_H

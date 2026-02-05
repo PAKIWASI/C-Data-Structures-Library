@@ -57,7 +57,7 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn
     u32 svo_cap = GENVEC_SVO_CAPACITY(data_size);
 
     // Use SVO if requested capacity fits
-    if (/*n > 0 &&*/ n <= svo_cap) {
+    if (n <= svo_cap) {
         vec->svo      = true;
         vec->capacity = svo_cap; // in stack mode if size <= svo_cap
     } else {
