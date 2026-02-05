@@ -1,10 +1,6 @@
-
-
-
 #include "genVec_test.h"
-
 
 int main(void)
 {
-    return genVec_test_1();
+    return genVec_test_7();
 }

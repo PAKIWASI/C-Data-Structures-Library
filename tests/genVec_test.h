@@ -1,7 +1,4 @@
-#include "String.h"
-#include "gen_vector.h"
 #include "helpers.h"
-#include <string.h>
 
 
 
@@ -14,7 +11,7 @@ int genVec_test_1(void)
     genVec_push(vec, castptr(str));
     genVec_push(vec, castptr(str));
 
-    STR_APPEND_CSTR(str, " what is up");
+    string_append_cstr(str, " what is up");
 
     genVec_push(vec, castptr(str));
     genVec_push(vec, castptr(str));
@@ -154,6 +151,24 @@ int genVec_test_6(void)
     print_hex((const u8*)vec, sizeof(genVec), 8);
 
     genVec_destroy(vec);
+    return 0;
+}
+
+int genVec_test_7(void)
+{
+    String str;
+    string_create_stk(&str, "hel");
+
+    genVec vec;
+    genVec_init_val_stk(1, cast(str), sizeof(String), NULL, NULL, NULL, &vec);
+
+    printf("str.svo:%d\nvec.svo:%d\n", str.svo, vec.svo);
+    genVec_print(&vec, str_print);
+
+    print_hex(cast(vec), sizeof(genVec), 8);
+
+    string_destroy_stk(&str);
+    genVec_destroy_stk(&vec);
     return 0;
 }
 

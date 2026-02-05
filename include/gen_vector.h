@@ -43,6 +43,7 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, 
 #endif
 
 
+
 // generic vector container
 typedef struct {
     // Contiguous array of elements
@@ -77,6 +78,9 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_f
 // Initialize vector of size n, all elements set to val
 genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                         genVec_delete_fn del_fn);
+
+void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, 
+        genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn, genVec* vec);
 
 // Destroy heap-allocated vector and clean up all elements
 void genVec_destroy(genVec* vec);
@@ -222,6 +226,5 @@ void genVec_reverse(genVec* vec);
 void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
 
 */
-
 
 #endif // GEN_VECTOR_H

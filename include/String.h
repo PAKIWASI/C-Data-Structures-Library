@@ -1,12 +1,16 @@
 #ifndef STRING_H
 #define STRING_H
 
+
 #include "gen_vector.h"
 
 
-typedef struct {
-    genVec buffer; // Vector of chars - the actual string data
-} String;
+
+// ===== STRING =====
+// the string is just a genVec of char type (length based string - not cstr)
+typedef genVec String;
+// ==================
+
 
 
 // Construction/Destruction
@@ -25,6 +29,9 @@ String* string_from_string(const String* other);
 
 // reserve a capacity for a string (must be greater than current cap)
 void string_reserve(String* str, u32 capacity);
+
+// reserve a capacity with a char
+void string_reserve_char(String* str, u32 capacity, char c);
 
 // destroy the heap allocated string
 void string_destroy(String* str);
@@ -134,13 +141,13 @@ static inline u32 string_len(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
 
-    return str->buffer.size;
+    return str->size;
 }
 
 // get the capacity of the genVec container of string
 static inline u32 string_capacity(const String* str)
 {
-    return str->buffer.capacity;
+    return str->capacity;
 }
 
 // return true if str is empty
@@ -192,26 +199,7 @@ u32 string_count_char(const String* str, char c);
 String* string_repeat(const String* str, u32 times);
 */
 
-// TODO: SS0 ?
 /*
-#define STRING_SSO_SIZE 15
-
-typedef struct {
-    union {
-        struct {
-            char* data;
-            u32 size;
-            u32 capacity;
-        } heap;
-        struct {
-            char data[STRING_SSO_SIZE];
-            u8 size;
-        } stack;
-    };
-    b8 is_heap;  // or use size MSB as flag
-} String;
-
-
 string view:
 
 typedef struct {

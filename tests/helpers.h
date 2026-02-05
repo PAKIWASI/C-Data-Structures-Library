@@ -17,16 +17,16 @@ void str_copy(u8* dest, const u8* src)
     // copy all field values
     memcpy(d, s, sizeof(String)); // both point to same data
 
-    if (s->buffer.svo) {
+    if (s->svo) {
         return;
     }
 
     // allocate space for data
-    u32 n          = s->buffer.size * s->buffer.data_size;
-    d->buffer.data.heap = malloc(n);
+    u32 n          = s->size * s->data_size;
+    d->data.heap = malloc(n);
 
     // copy data
-    memcpy(d->buffer.data.heap, s->buffer.data.heap, n);
+    memcpy(d->data.heap, s->data.heap, n);
 }
 
 // in case of String by val, buffer is malloced (but random)
@@ -72,16 +72,17 @@ void str_copy_ptr(u8* dest, const u8* src)
     // copy all the fields
     memcpy(d, s, sizeof(String));
 
-    if (s->buffer.svo) {
+    if (s->svo) {
+        *(String**)dest = d;
         return;
     }
 
     // allocate memroy for new data
-    u32 n          = s->buffer.size * s->buffer.data_size;
-    d->buffer.data.heap = malloc(n);
+    u32 n = s->size * s->data_size;
+    d->data.heap = malloc(n);
 
     // copy all elements
-    memcpy(d->buffer.data.heap, s->buffer.data.heap, n);
+    memcpy(d->data.heap, s->data.heap, n);
 
     *(String**)dest = d; // dest is double ptr to str
 }
@@ -150,8 +151,6 @@ void double_print(const u8* elm)
         genVec_push_move(vec, (u8**)&_str);    \
     } while (0)
 
-
-#define STR_APPEND_CSTR(str, cstr) string_append_cstr((str), (cstr));
 
 
 #endif // HELPERS_H

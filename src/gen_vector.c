@@ -1,5 +1,4 @@
 #include "gen_vector.h"
-#include "common.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -135,6 +134,25 @@ genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy
     return vec;
 }
 
+void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, 
+        genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn, genVec* vec)
+{
+    CHECK_FATAL(!val, "val can't be null");
+    CHECK_FATAL(n == 0, "cant init with val if n = 0");
+
+    genVec_init_stk(n, data_size, copy_fn, move_fn, del_fn, vec);
+
+    vec->size = n;
+
+    for (u32 i = 0; i < n; i++) {
+        if (copy_fn) {
+            copy_fn(GET_PTR(vec, i), val);
+        } else {
+            memcpy(GET_PTR(vec, i), val, data_size);
+        }
+    }
+}
+
 void genVec_destroy(genVec* vec)
 {
     genVec_destroy_stk(vec);
@@ -192,7 +210,7 @@ void genVec_reset(genVec* vec)
     if (!vec->svo) {
         free(vec->data.heap);
         vec->data.heap = NULL;
-        vec->capacity  = 0;
+        vec->capacity  = GENVEC_SVO_CAPACITY(vec->data_size);
         vec->svo       = true; // only time it's reset
     }
 
@@ -443,6 +461,7 @@ void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!data, "data is null");
+    CHECK_FATAL(!*data, "*data is null");
     CHECK_FATAL(num_data == 0, "num_data can't be 0");
     CHECK_FATAL(i > vec->size, "index out of bounds");
 
@@ -459,8 +478,7 @@ void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data)
         // Shift elements right by num_data units to right
         u8* dest = GET_PTR(vec, i + num_data);
 
-        memmove(dest, src, GET_SCALED(vec,
-                                      elements_to_shift)); // using memmove for overlapping regions
+        memmove(dest, src, GET_SCALED(vec, elements_to_shift)); // using memmove for overlapping regions
     }
 
     //src pos is now free to insert (it's data copied to next location)
