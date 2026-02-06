@@ -238,8 +238,13 @@ int hashmap_test_5(void)
     hashmap_put_val_move(map, cast(a), (u8**)&vec);
     hashmap_print(map, int_print, vec_print);
 
-    print_hex(hashmap_get_ptr(map, cast(a)), sizeof(genVec), 8);
+    genVec* v = malloc(sizeof(genVec));
+    hashmap_del(map, cast(a), (u8*)v);
+    hashmap_print(map, int_print, vec_print);
 
+    genVec_print(v, int_print);
+
+    genVec_destroy(v);
     hashmap_destroy(map);
     return 0;
 }
