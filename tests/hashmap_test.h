@@ -1,5 +1,7 @@
+#include "common.h"
 #include "hashmap.h"
 #include "helpers.h"
+#include "str_setup.h"
 
 
 
@@ -79,6 +81,25 @@ int hashmap_test_2(void)
     printf("%d\n", hashmap_size(map));
     
     string_destroy_stk(&s);
+    hashmap_destroy(map);
+    return 0;
+}
+
+void map_put(hashmap* map, const char* k, const char* v)
+{
+    hashmap_put(map, (u8*)k, (u8*)v);
+}
+
+int hashmap_test_3(void)
+{
+
+    hashmap* map = hashmap_create(sizeof(String), sizeof(String), 
+            murmurhash3_str, str_cmp, str_copy, str_copy, str_move, str_move, str_del, str_del);
+
+    map_put(map, "what", "up");
+
+    hashmap_print(map, str_print, str_print);
+
     hashmap_destroy(map);
     return 0;
 }
