@@ -54,17 +54,17 @@ static void reset_buckets(u8* buckets, u32 size)
 }
 
 
-static void destroy_data(delete_fn key_del, delete_fn val_del, u8* buckets, u32 cap)
-{
-    // if KV own memory, free it
-    for (u32 i = 0; i < cap; i++) {
-        const KV* kv = GET_KV(buckets, i);
-        if (kv->state == FILLED) {
-            kv_destroy(key_del, val_del, kv); // we dont modify map
-        }
-    }
-    free(buckets);
-}
+// static void destroy_data(delete_fn key_del, delete_fn val_del, u8* buckets, u32 cap)
+// {
+//     // if KV own memory, free it
+//     for (u32 i = 0; i < cap; i++) {
+//         const KV* kv = GET_KV(buckets, i);
+//         if (kv->state == FILLED) {
+//             kv_destroy(key_del, val_del, kv); // we dont modify map
+//         }
+//     }
+//     free(buckets);
+// }
 
 
 static u32 find_slot(const hashmap* map, const u8* key,
