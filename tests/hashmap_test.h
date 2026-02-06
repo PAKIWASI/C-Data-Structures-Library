@@ -1,7 +1,12 @@
 #include "String.h"
+#include "common.h"
+#include "gen_vector.h"
 #include "hashmap.h"
 #include "helpers.h"
 #include "str_setup.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 
@@ -151,4 +156,91 @@ int hashmap_test_4(void)
     return 0;
 }
 
+void vec_copy(u8* dest, const u8* src)
+{
+    genVec* s = (genVec*)src; 
+    genVec* d = (genVec*)dest; 
+
+    // cant use this as dest is garbage value
+    // genVec_copy
+
+    memcpy(d, s, sizeof(genVec));
+
+    if (s->svo) { // we already have all elements
+        return;
+    }
+
+    // malloc data ptr
+    d->data.heap = (u8*)malloc(s->capacity*(u64)s->data_size);
+
+    // Copy elements
+    if (s->copy_fn) {
+        for (u32 i = 0; i < s->size; i++) {
+            s->copy_fn((d->data.heap + ((u64)i * d->data_size)), genVec_get_ptr(s, i));
+        }
+    } else {
+        memcpy(d->data.heap, s->data.heap, s->capacity*(u64)s->data_size);
+    }
+}
+
+void vec_move(u8* dest, u8** src)
+{
+    genVec* d = (genVec*)dest;
+    genVec* s = *(genVec**)src;
+
+    // memcpy all fields
+    memcpy(d, s, sizeof(genVec));
+
+    //if svo, we already have everything
+    if (s->svo) { 
+        *src = NULL;
+        return; 
+    }
+
+    // delete the struct (not data ptr)
+    free(*src);    // TODO: is right?
+
+    // null out source
+    *src = NULL;
+}
+
+void vec_del(u8* elm)
+{
+    // destroy resources, not container
+    genVec_destroy_stk((genVec*)elm); 
+}
+
+void vec_print(const u8* elm)
+{
+    genVec* v = (genVec*)elm;
+    printf("[");
+    for (u32 i = 0; i < v->size; i++) {
+        printf("%d ", *(int*)genVec_get_ptr(v, i));
+    }
+    printf("]");
+}
+
+
+int hashmap_test_5(void)
+{
+    hashmap* map = hashmap_create(sizeof(u32), sizeof(genVec), 
+                    NULL, NULL, NULL, vec_copy, NULL, vec_move, NULL, vec_del);
+
+    u32 a = 10;
+    genVec* vec = genVec_init_val(10, cast(a), sizeof(u32), NULL, NULL, NULL);
+
+    hashmap_put(map, cast(a), (u8*)vec);
+    hashmap_print(map, int_print, vec_print);
+
+    a = 2;
+    genVec_reserve_val(vec, 100, cast(a));
+
+    hashmap_put_val_move(map, cast(a), (u8**)&vec);
+    hashmap_print(map, int_print, vec_print);
+
+    print_hex(hashmap_get_ptr(map, cast(a)), sizeof(genVec), 8);
+
+    hashmap_destroy(map);
+    return 0;
+}
 

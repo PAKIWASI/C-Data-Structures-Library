@@ -256,7 +256,10 @@ b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     CHECK_FATAL(!k, "key malloc failed");
     u8* v = malloc(map->val_size);
     CHECK_FATAL(!v, "val malloc failed");
-    
+
+    // this done so we can don't have garbage value when passed to copy/move fns
+    // memset(k, 0, map->key_size);     // user my want to read the casted struct
+    // memset(v, 0, map->val_size);
     
     // Copy key
     if (map->key_copy_fn) {
