@@ -1,4 +1,4 @@
-#include "common.h"
+#include "String.h"
 #include "hashmap.h"
 #include "helpers.h"
 #include "str_setup.h"
@@ -87,7 +87,9 @@ int hashmap_test_2(void)
 
 void map_put(hashmap* map, const char* k, const char* v)
 {
-    hashmap_put(map, (u8*)k, (u8*)v);
+    String* s1 = string_from_cstr(k);
+    String* s2 = string_from_cstr(v);
+    hashmap_put_move(map, (u8**)&s1, (u8**)&s2);
 }
 
 int hashmap_test_3(void)
@@ -98,11 +100,55 @@ int hashmap_test_3(void)
 
     map_put(map, "what", "up");
 
+    String s1;
+    string_create_stk(&s1, "what");
+
+    for (u32 i = 0; i < 10000; i++) {       // damn
+        String* val = (String*)hashmap_get_ptr(map, cast(s1));
+        string_append_cstr(val, "__hi");
+        hashmap_put(map, castptr(val), castptr(val)); 
+    }
+
     hashmap_print(map, str_print, str_print);
 
+    string_destroy_stk(&s1);
     hashmap_destroy(map);
     return 0;
 }
 
+int hashmap_test_4(void)
+{
+    hashmap* map = hashmap_create(sizeof(String), sizeof(String), 
+            murmurhash3_str, str_cmp, str_copy, str_copy, str_move, str_move, str_del, str_del);
+
+    String* s1 = string_from_cstr("hel");
+
+    String* s2 = string_from_cstr("-lo");
+
+    hashmap_put(map, castptr(s1), castptr(s2));
+    hashmap_print(map, str_print, str_print);
+
+    String* s3 = string_from_string(s1);
+
+    string_append_cstr(s2, "-lo");
+    hashmap_put(map, castptr(s3), castptr(s2));
+    hashmap_print(map, str_print, str_print);
+
+    String s4;
+    string_create_stk(&s4, "");
+    string_reserve_char(&s4, 100, 'x');
+    string_print(&s4);
+    printf("\n%d\n", s4.svo);
+
+    hashmap_put(map, castptr(s2), cast(s4));
+    hashmap_print(map, str_print, str_print);
+
+    string_destroy(s1);
+    string_destroy(s2);
+    string_destroy(s3);
+    string_destroy_stk(&s4);
+    hashmap_destroy(map);
+    return 0;
+}
 
 

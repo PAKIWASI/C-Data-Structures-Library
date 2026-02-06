@@ -42,6 +42,8 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, 
     #define GENVEC_SVO_SIZE 64
 #endif
 
+// TODO: make svo size dynamic by making it depend on data_size ? ...maybe size / data_size ?
+
 
 
 // generic vector container
@@ -61,6 +63,11 @@ typedef struct {
     genVec_move_fn   move_fn; // Get a double pointer, transfer ownership and null original
     genVec_delete_fn del_fn;  // Cleanup function for owned resources (or NULL)
 } genVec;
+
+
+// TODO: can i do a genVec with union only containing heap (less size) ?
+// I could use that one for things that are completely on the heap
+// and the api whould be same, it's svo flag would be always false
 
 
 // Memory Management

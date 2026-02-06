@@ -5,5 +5,5 @@
 int main(void)
 {
     // return genVec_test_7();
-    hashmap_test_3();
+    hashmap_test_4();
 }

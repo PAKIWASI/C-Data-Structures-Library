@@ -1,5 +1,4 @@
 #include "hashmap.h"
-#include "map_setup.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -136,7 +135,8 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
         }
     }
 
-    destroy_data(map->key_del_fn, map->val_del_fn, old_vec, old_cap);
+     // free the container, 
+     free(old_vec);  // the key, vals of each KV are transferred    
 }
 
 static void hashmap_maybe_resize(hashmap* map) 
@@ -231,6 +231,7 @@ b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     int tombstone = -1;
     u32 slot = find_slot(map, key, &found, &tombstone);
     
+    // found the key - update val
     if (found) {
         KV* kv = GET_KV(map->buckets, slot);
         
@@ -371,7 +372,7 @@ b8 hashmap_put_val_move(hashmap* map, const u8* key, u8** val)
     u32 slot = find_slot(map, key, &found, &tombstone);
     
     if (found) {
-        KV* kv = (KV*)GET_KV(map->buckets, slot);
+        KV* kv = GET_KV(map->buckets, slot);
         
         if (map->val_del_fn) {
             map->val_del_fn(kv->val);

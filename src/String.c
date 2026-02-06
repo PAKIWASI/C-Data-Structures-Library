@@ -26,6 +26,7 @@ void string_create_stk(String* str, const char* cstr)
     if (len == 0) {
         return;
     }
+
     genVec_insert_multi(str, str->size, (const u8*)cstr, len);
 }
 
