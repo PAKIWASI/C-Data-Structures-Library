@@ -3,16 +3,20 @@
 #include <string.h>
 
 
+
 #define GET_DATA(str) ((str)->svo ? (str)->data.stack : (str)->data.heap)
 
 
+// private func
 u32 cstr_len(const char* cstr);
+
 
 
 String* string_create(void)
 {
     return genVec_init(0, sizeof(char), NULL, NULL, NULL);
 }
+
 
 void string_create_stk(String* str, const char* cstr)
 {
@@ -30,12 +34,14 @@ void string_create_stk(String* str, const char* cstr)
     genVec_insert_multi(str, str->size, (const u8*)cstr, len);
 }
 
+
 String* string_from_cstr(const char* cstr)
 {
     String* str = malloc(sizeof(String));
     string_create_stk(str, cstr);
     return str;
 }
+
 
 String* string_from_string(const String* other)
 {
@@ -50,15 +56,18 @@ String* string_from_string(const String* other)
     return str;
 }
 
+
 void string_reserve(String* str, u32 capacity)
 {
     genVec_reserve(str, capacity);
 }
 
+
 void string_reserve_char(String* str, u32 capacity, char c)
 {
     genVec_reserve_val(str, capacity, cast(c));
 }
+
 
 void string_destroy(String* str)
 {
@@ -71,6 +80,7 @@ void string_destroy_stk(String* str)
 {
     genVec_destroy_stk(str);
 }
+
 
 void string_move(String* dest, String** src)
 {
@@ -126,6 +136,7 @@ void string_copy(String* dest, const String* src)
     memcpy(dest->data.heap, src->data.heap, src->size);
 }
 
+
 const char* string_to_cstr(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
@@ -146,6 +157,7 @@ const char* string_to_cstr(const String* str)
 
     return (const char*)out;
 }
+
 
 char* string_data_ptr(const String* str)
 {
@@ -201,11 +213,13 @@ void string_append_string_move(String* str, String** other)
     *other = NULL;
 }
 
+
 void string_append_char(String* str, char c)
 {
     CHECK_FATAL(!str, "str is null");
     genVec_push(str, cast(c));
 }
+
 
 char string_pop_char(String* str)
 {
@@ -217,6 +231,7 @@ char string_pop_char(String* str)
     return c;
 }
 
+
 void string_insert_char(String* str, u32 i, char c)
 {
     CHECK_FATAL(!str, "str is null");
@@ -224,6 +239,7 @@ void string_insert_char(String* str, u32 i, char c)
 
     genVec_insert(str, i, cast(c));
 }
+
 
 void string_insert_cstr(String* str, u32 i, const char* cstr)
 {
@@ -239,6 +255,7 @@ void string_insert_cstr(String* str, u32 i, const char* cstr)
     genVec_insert_multi(str, i, castptr(cstr), len);
 }
 
+
 void string_insert_string(String* str, u32 i, const String* other)
 {
     CHECK_FATAL(!str, "str is null");
@@ -253,6 +270,7 @@ void string_insert_string(String* str, u32 i, const String* other)
     genVec_insert_multi(str, i, GET_DATA(other), other->size);
 }
 
+
 void string_remove_char(String* str, u32 i)
 {
     CHECK_FATAL(!str, "str is null");
@@ -260,6 +278,7 @@ void string_remove_char(String* str, u32 i)
 
     genVec_remove(str, i, NULL);
 }
+
 
 void string_remove_range(String* str, u32 l, u32 r)
 {
@@ -270,11 +289,13 @@ void string_remove_range(String* str, u32 l, u32 r)
     genVec_remove_range(str, l, r);
 }
 
+
 void string_clear(String* str)
 {
     CHECK_FATAL(!str, "str is null");
     genVec_clear(str);
 }
+
 
 char string_char_at(const String* str, u32 i)
 {
@@ -284,6 +305,7 @@ char string_char_at(const String* str, u32 i)
     return ((char*)GET_DATA(str))[i];
 }
 
+
 void string_set_char(String* str, u32 i, char c)
 {
     CHECK_FATAL(!str, "str is null");
@@ -291,6 +313,7 @@ void string_set_char(String* str, u32 i, char c)
 
     ((char*)GET_DATA(str))[i] = c;
 }
+
 
 int string_compare(const String* str1, const String* str2)
 {
@@ -317,10 +340,12 @@ int string_compare(const String* str1, const String* str2)
     return 0;
 }
 
+
 b8 string_equals(const String* str1, const String* str2)
 {
     return string_compare(str1, str2) == 0;
 }
+
 
 b8 string_equals_cstr(const String* str, const char* cstr)
 {
@@ -341,6 +366,7 @@ b8 string_equals_cstr(const String* str, const char* cstr)
     return memcmp(GET_DATA(str), cstr, len) == 0;
 }
 
+
 u32 string_find_char(const String* str, char c)
 {
     CHECK_FATAL(!str, "str is null");
@@ -353,6 +379,7 @@ u32 string_find_char(const String* str, char c)
 
     return (u32)-1; // Not found
 }
+
 
 u32 string_find_cstr(const String* str, const char* substr)
 {
@@ -379,6 +406,7 @@ u32 string_find_cstr(const String* str, const char* substr)
     return (u32)-1;
 }
 
+
 String* string_substr(const String* str, u32 start, u32 length)
 {
     CHECK_FATAL(!str, "str is null");
@@ -401,6 +429,7 @@ String* string_substr(const String* str, u32 start, u32 length)
 
     return result;
 }
+
 
 void string_print(const String* str)
 {

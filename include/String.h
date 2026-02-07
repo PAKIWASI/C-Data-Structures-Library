@@ -6,6 +6,12 @@
 
 
 
+// TODO: how to do this?
+#ifndef STRING_SVO_OFF
+    #define STRING_SVO_OFF 0
+#endif
+
+
 // ===== STRING =====
 // the string is just a genVec of char type (length based string - not cstr)
 typedef genVec String;

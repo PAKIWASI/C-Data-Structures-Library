@@ -6,8 +6,8 @@
 #include <string.h>
 
 
-#define GENVEC_MIN_CAPACITY 4
 
+#define GENVEC_MIN_CAPACITY 4
 
 // Helper macros
 
@@ -39,11 +39,13 @@
     } while (0)
 
 
+
 //private functions
 
 void genVec_grow(genVec* vec);
 void genVec_shrink(genVec* vec);
 void genVec_migrate_to_heap(genVec* vec, u32 new_capacity);
+
 
 
 // API Implementation
@@ -352,7 +354,6 @@ void genVec_pop(genVec* vec, u8* popped)
     MAYBE_SHRINK(vec);
 }
 
-
 void genVec_get(const genVec* vec, u32 i, u8* out)
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -366,7 +367,6 @@ void genVec_get(const genVec* vec, u32 i, u8* out)
     }
 }
 
-
 const u8* genVec_get_ptr(const genVec* vec, u32 i)
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -374,7 +374,6 @@ const u8* genVec_get_ptr(const genVec* vec, u32 i)
 
     return GET_PTR(vec, i);
 }
-
 
 void genVec_for_each(genVec* vec, void (*for_each)(u8* elm))
 {
@@ -385,7 +384,6 @@ void genVec_for_each(genVec* vec, void (*for_each)(u8* elm))
         for_each(GET_PTR(vec, i));
     }
 }
-
 
 void genVec_insert(genVec* vec, u32 i, const u8* data)
 {
@@ -516,7 +514,6 @@ void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data)
     memcpy(src, *data, GET_SCALED(vec, num_data));
     *data = NULL; // Transfer ownership
 }
-
 
 void genVec_remove(genVec* vec, u32 i, u8* out)
 {
@@ -759,6 +756,7 @@ void genVec_shrink(genVec* vec)
     vec->data.heap = new_data;
     vec->capacity  = reduced_cap;
 }
+
 
 void genVec_migrate_to_heap(genVec* vec, u32 new_capacity)
 {
