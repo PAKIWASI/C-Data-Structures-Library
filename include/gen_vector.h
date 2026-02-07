@@ -70,6 +70,23 @@ typedef struct {
 // TODO: can i do a genVec with union only containing heap (less size) ?
 // I could use that one for things that are completely on the heap
 // and the api whould be same, it's svo flag would be always false
+// the sizes are different but our del funcs handle that already
+typedef struct {
+    // Contiguous array of elements
+    union {
+        u8* heap;  // for large vectors (on heap)  -> capacity > SVO_CAPACITY
+    } data;
+
+    u32 size;      // Number of elements currently in vector
+    u32 capacity;  // Total allocated capacity
+    u16 data_size; // Size of each element in bytes
+    b8  svo;       // Flag to determine if data is on stack or heap         // ALWAYS OFF
+
+    genVec_copy_fn   copy_fn; // Deep copy function for owned resources (or NULL)
+    genVec_move_fn   move_fn; // Get a double pointer, transfer ownership and null original
+    genVec_delete_fn del_fn;  // Cleanup function for owned resources (or NULL)
+} heap_genVec;
+
 
 
 // Memory Management

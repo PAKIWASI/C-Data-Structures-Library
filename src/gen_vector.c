@@ -328,7 +328,6 @@ void genVec_push_move(genVec* vec, u8** data)
     vec->size++;
 }
 
-
 // pop can't be a move operation (array is contiguos)
 void genVec_pop(genVec* vec, u8* popped)
 {
@@ -773,3 +772,5 @@ void genVec_migrate_to_heap(genVec* vec, u32 new_capacity)
     vec->capacity  = new_capacity;
     vec->svo       = false; // once set to false, can't be set to true again
 }
+
+
