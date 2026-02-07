@@ -70,6 +70,12 @@ genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy
 void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                          genVec_delete_fn del_fn, genVec* vec);
 
+// vector COMPLETELY on stack (can't grow in size)
+// you provide a stack inited array which becomes internal array of vector
+// WARNING - This crashes when size = capacity and you try to push
+void genVec_init_arr(u32 n, u8* arr, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+                         genVec_delete_fn del_fn, genVec* vec);
+
 // Destroy heap-allocated vector and clean up all elements
 void genVec_destroy(genVec* vec);
 

@@ -125,6 +125,26 @@ void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, genVec_copy_fn cop
     }
 }
 
+void genVec_init_arr(u32 n, u8* arr, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+                     genVec_delete_fn del_fn, genVec* vec)
+{
+    CHECK_FATAL(!arr, "arr is null");
+    CHECK_FATAL(!vec, "vec is null");
+
+    CHECK_FATAL(n == 0, "size of arr can't be 0");
+    CHECK_FATAL(data_size == 0, "data_size of arr can't be 0");
+
+    vec->data = arr;
+
+    vec->size      = 0;
+    vec->capacity  = n;
+    vec->data_size = data_size;
+
+    vec->copy_fn = copy_fn;
+    vec->move_fn = move_fn;
+    vec->del_fn  = del_fn;
+}
+
 void genVec_destroy(genVec* vec)
 {
     genVec_destroy_stk(vec);
@@ -230,12 +250,6 @@ void genVec_shrink_to_fit(genVec* vec)
         return;
     }
 
-    // // create new array with new cap
-    // u8* data = malloc(GET_SCALED(vec, min_cap));
-    // // we copy all valid elements (til vec size)
-    // memcpy(data, vec->data, GET_SCALED(vec, vec->size));
-    // // free the container only (dont delete owned memory)
-    // free(vec->data); // TODO: test this
     u8* new_data = realloc(vec->data, GET_SCALED(vec, min_cap));
     // update data ptr
     vec->data     = new_data;
@@ -700,4 +714,3 @@ void genVec_shrink(genVec* vec)
     vec->data     = new_data;
     vec->capacity = reduced_cap;
 }
-

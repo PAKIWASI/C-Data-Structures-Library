@@ -3,6 +3,7 @@
 #include "gen_vector.h"
 #include "helpers.h"
 #include <stdio.h>
+#include <string.h>
 
 
 
@@ -165,7 +166,7 @@ int genVec_test_7(void)
     string_create_stk(&str, "what");
 
     genVec vec;
-    genVec_init_val_stk(4, cast(str), sizeof(String), str_copy, str_move, str_del, &vec);
+    genVec_init_val_stk(7, cast(str), sizeof(String), str_copy, str_move, str_del, &vec);
 
     genVec_print(&vec, str_print);
     putchar('\n');
@@ -174,11 +175,36 @@ int genVec_test_7(void)
     String* s2 = string_from_string(&str);
     genVec_push_move(&vec, (u8**)&s2);  // MUST BE HEAP INITED
     genVec_print(&vec, str_print);
-    putchar('\n');
+    printf("\n%u\n%u\n", vec.size, vec.capacity);
+
+    genVec_shrink_to_fit(&vec);
+
+    genVec_print(&vec, str_print);
+    printf("\n%u\n%u\n", vec.size, vec.capacity);
 
     string_destroy_stk(&str);
     genVec_destroy_stk(&vec);
     return 0;
 }
 
+int genVec_test_8(void)
+{
+    genVec vec;
+    int data[5] = {0};
+
+    genVec_init_arr(5, (u8*)data, sizeof(int), NULL, NULL, NULL, &vec);
+
+    VEC_PUSH_SIMP(&vec, int, 5);
+    VEC_PUSH_SIMP(&vec, int, 6);
+    VEC_PUSH_SIMP(&vec, int, 7);
+    VEC_PUSH_SIMP(&vec, int, 7);
+    VEC_PUSH_SIMP(&vec, int, 7);
+
+    genVec_print(&vec, int_print);
+    printf("\n%u\n%u\n", vec.size, vec.capacity);
+
+    print_hex(cast(vec.data), sizeof(data), 8);
+
+    return 0;
+}
 
