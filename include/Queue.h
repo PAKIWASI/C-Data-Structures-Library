@@ -3,11 +3,12 @@
 
 #include "gen_vector.h"
 
+
 typedef struct { // Circular Queue
     genVec* arr;
-    u32 head;     // dequeue (head + 1) % capacity
-    u32 tail;     // enqueue (head + size) % capacity
-    u32 size;
+    u32 head;   // dequeue (head + 1) % capacity
+    u32 tail;   // enqueue (head + size) % capacity
+    u32 size;     
 } Queue;
 
 

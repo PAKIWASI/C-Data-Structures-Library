@@ -1,5 +1,6 @@
 #include "gen_vector.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -134,8 +135,8 @@ genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy
     return vec;
 }
 
-void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, 
-        genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn, genVec* vec)
+void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+                         genVec_delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!val, "val can't be null");
     CHECK_FATAL(n == 0, "cant init with val if n = 0");
@@ -555,7 +556,7 @@ void genVec_replace(genVec* vec, u32 i, const u8* data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(i >= vec->size, "index out of bounds");
-    CHECK_FATAL(!data, "need a valid data variable");
+    CHECK_FATAL(!data, "data is null");
 
     u8* to_replace = GET_PTR(vec, i);
 
@@ -611,20 +612,17 @@ const u8* genVec_back(const genVec* vec)
 }
 
 
-void genVec_print(const genVec* vec, genVec_print_fn fn)
+void genVec_print(const genVec* vec, genVec_print_fn print_fn)
 {
     CHECK_FATAL(!vec, "vec is null");
-    CHECK_FATAL(!fn, "print func is null");
+    CHECK_FATAL(!print_fn, "print func is null");
 
     printf("[ ");
     for (u32 i = 0; i < vec->size; i++) {
-        fn(GET_PTR(vec, i));
-        printf(" ");
+        print_fn(GET_PTR(vec, i));
+        putchar(' ');
     }
-    printf("]\n");
-
-    printf("Size: %u\n", vec->size);
-    printf("Capacity: %u\n", vec->capacity);
+    putchar(']');
 }
 
 
@@ -748,5 +746,3 @@ void genVec_migrate_to_heap(genVec* vec, u32 new_capacity)
     vec->capacity  = new_capacity;
     vec->svo       = false; // once set to false, can't be set to true again
 }
-
-

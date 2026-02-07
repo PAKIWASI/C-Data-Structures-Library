@@ -1,5 +1,6 @@
 #include "hashmap.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -591,11 +592,11 @@ void hashmap_print(const hashmap* map, map_print_fn key_print, map_print_fn val_
     for (u32 i = 0; i < map->capacity; i++) {
         const KV* kv = GET_KV(map->buckets, i);
         if (kv->state == FILLED) {
-            printf("\t");
+            putchar('\t');
             key_print(kv->key);
             printf(" => ");
             val_print(kv->val);
-            printf("\n");
+            putchar('\t');
         }
     }
 
