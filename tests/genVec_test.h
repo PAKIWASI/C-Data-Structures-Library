@@ -1,4 +1,8 @@
+#include "String.h"
+#include "common.h"
+#include "gen_vector.h"
 #include "helpers.h"
+#include <stdio.h>
 
 
 
@@ -154,21 +158,29 @@ int genVec_test_6(void)
     return 0;
 }
 
+
 int genVec_test_7(void)
 {
-    String str;
-    string_create_stk(&str, "hel");
-
     genVec vec;
-    genVec_init_val_stk(1, cast(str), sizeof(String), NULL, NULL, NULL, &vec);
+    genVec_init_stk(10, sizeof(String*), str_copy_ptr, str_move_ptr, str_del_ptr, &vec);
 
-    printf("str.svo:%d\nvec.svo:%d\n", str.svo, vec.svo);
-    genVec_print(&vec, str_print);
+    VEC_PUSH_CSTR(&vec, "hello");
+    VEC_PUSH_CSTR(&vec, "hello");
+    VEC_PUSH_CSTR(&vec, "world");
+    VEC_PUSH_CSTR(&vec, "hello");
+    VEC_PUSH_CSTR(&vec, "hello");
+    genVec_print(&vec, str_print_ptr); putchar('\n');
+    printf("%d\n%u\n%u\n",vec.svo, vec.size, vec.capacity);
 
     print_hex(cast(vec), sizeof(genVec), 8);
 
-    string_destroy_stk(&str);
-    genVec_destroy_stk(&vec);
+    genVec_shrink_to_fit(&vec);
+    genVec_print(&vec, str_print_ptr); putchar('\n');
+    printf("%d\n%u\n%u\n",vec.svo, vec.size, vec.capacity);
+
+    print_hex(cast(vec), sizeof(genVec), 8);
+
+    genVec_destroy_stk(&vec); 
     return 0;
 }
 

@@ -1,4 +1,5 @@
 #include "gen_vector.h"
+#include "common.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -207,7 +208,7 @@ void genVec_reset(genVec* vec)
             vec->del_fn(GET_PTR(vec, i));
         }
     }
-
+    // TODO: this breaks "once vec goes heap mode, it can't go back to svo"
     if (!vec->svo) {
         free(vec->data.heap);
         vec->data.heap = NULL;
@@ -256,6 +257,34 @@ void genVec_reserve_val(genVec* vec, u32 new_capacity, const u8* val)
         }
     }
     vec->size = new_capacity;
+}
+
+void genVec_shrink_to_fit(genVec* vec)
+{
+    CHECK_FATAL(!vec, "vec is null");
+
+    if (vec->svo) { // svo has fixed cap
+        return;
+    }
+    // min allowd cap or size
+    u32 min_cap  = vec->size > GENVEC_MIN_CAPACITY ? vec->size : GENVEC_MIN_CAPACITY;
+    u32 curr_cap = vec->capacity;
+
+    // if curr cap is already equal (or less??) than min allowed cap
+    if (curr_cap <= min_cap) {
+        return;
+    }
+
+    // create new array with new cap
+    u8* data = malloc(GET_SCALED(vec, min_cap));
+    // we copy all valid elements (til vec size)
+    memcpy(data, vec->data.heap, GET_SCALED(vec, vec->size));
+    // free the container only (dont delete owned memory)
+    free(vec->data.heap);
+    // update data ptr
+    vec->data.heap = data;
+    vec->size      = min_cap;
+    vec->capacity  = min_cap;
 }
 
 

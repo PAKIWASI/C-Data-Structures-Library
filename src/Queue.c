@@ -3,6 +3,7 @@
 #include <string.h>
 
 
+#define QUEUE_MIN_CAP   4
 #define QUEUE_GROWTH    1.5
 #define QUEUE_SHRINK_AT 0.25 // Shrink when less than 25% full
 #define QUEUE_SHRINK_BY 0.5  // Reduce capacity by half when shrinking
@@ -36,6 +37,7 @@
             queue_shrink((q));                                  \
         }                                                       \
     } while (0)
+
 
 
 static void queue_grow(Queue* q);
@@ -107,6 +109,25 @@ void queue_reset(Queue* q)
     q->tail = 0;
 }
 
+// Manual shrink function
+void queue_shrink_to_fit(Queue* q)
+{
+    CHECK_FATAL(!q, "queue is null");
+
+    if (q->size == 0) {
+        queue_reset(q);
+        return;
+    }
+
+    // Don't shrink below minimum useful capacity
+    u32 min_capacity     = q->size > QUEUE_MIN_CAP ? q->size : QUEUE_MIN_CAP;
+    u32 current_capacity = genVec_capacity(q->arr);
+
+    if (current_capacity > min_capacity) {
+        queue_compact(q, min_capacity);
+    }
+}
+
 void enqueue(Queue* q, const u8* x)
 {
     CHECK_FATAL(!q, "queue is null");
@@ -164,51 +185,6 @@ void dequeue(Queue* q, u8* out)
     MAYBE_SHRINK(q);
 }
 
-void dequeue_move(Queue* q, u8** out)
-{
-    CHECK_FATAL(!q, "queue is null");
-    CHECK_FATAL(!out, "out is null");
-    CHECK_WARN_RET(q->size == 0, , "can't dequeue empty queue");
-
-    // Move the element to output
-    if (*out) {
-        FATAL("out pointer must be NULL for move semantics");
-    }
-
-    // Allocate memory for output
-    *out = malloc(q->arr->data_size);
-    CHECK_FATAL(!*out, "out malloc failed");
-
-    // Get the element at head
-    const u8* src = genVec_get_ptr(q->arr, q->head);
-
-    // Move the element based on move_fn
-    if (q->arr->move_fn) {
-        // We need to create a temporary pointer that we can modify
-        u8* temp_src = (u8*)src;
-        q->arr->move_fn(*out, &temp_src);
-        // Clear the source after move
-        if (temp_src) {
-            memset(temp_src, 0, q->arr->data_size);
-        }
-    } else {
-        memcpy(*out, src, q->arr->data_size);
-        // Clear the original position
-        memset((u8*)src, 0, q->arr->data_size);
-    }
-
-    // Create dummy element to clear the position
-    u8* dummy = malloc(q->arr->data_size);
-    CHECK_FATAL(!dummy, "dummy malloc failed");
-
-    genVec_replace(q->arr, q->head, dummy);
-    free(dummy);
-
-    q->head = (q->head + 1) % genVec_capacity(q->arr);
-    q->size--;
-    MAYBE_SHRINK(q);
-}
-
 void queue_peek(Queue* q, u8* peek)
 {
     CHECK_FATAL(!q, "queue is null");
@@ -248,25 +224,6 @@ void queue_print(Queue* q, genVec_print_fn print_fn)
     putchar(']');
 }
 
-// Manual shrink function
-void queue_shrink_to_fit(Queue* q)
-{
-    CHECK_FATAL(!q, "queue is null");
-
-    if (q->size == 0) {
-        queue_reset(q);
-        return;
-    }
-
-    // Don't shrink below minimum useful capacity
-    u32 min_capacity     = q->size > 4 ? q->size : 4;
-    u32 current_capacity = genVec_capacity(q->arr);
-
-    if (current_capacity > min_capacity) {
-        queue_compact(q, min_capacity);
-    }
-}
-
 
 static void queue_grow(Queue* q)
 {
@@ -285,7 +242,7 @@ static void queue_shrink(Queue* q)
     u32 new_cap     = (u32)((float)current_cap * QUEUE_SHRINK_BY);
 
     // Don't shrink below current size or minimum capacity
-    u32 min_capacity = q->size > 4 ? q->size : 4;
+    u32 min_capacity = q->size > QUEUE_MIN_CAP ? q->size : QUEUE_MIN_CAP;
     if (new_cap < min_capacity) {
         new_cap = min_capacity;
     }
@@ -318,3 +275,5 @@ static void queue_compact(Queue* q, u32 new_capacity)
     q->head = 0;
     q->tail = q->size % new_capacity;
 }
+
+

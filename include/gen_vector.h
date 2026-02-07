@@ -21,6 +21,8 @@ typedef void (*genVec_copy_fn)(u8* dest, const u8* src); // Deep copy resources
 typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, null src
 
 
+// TODO: can i define this in C file and still be user configurable?
+//
 // genVec growth/shrink settings (user can change)
 #ifndef GENVEC_GROWTH
     #define GENVEC_GROWTH 1.5F // vec capacity multiplier
@@ -106,6 +108,10 @@ void genVec_reserve(genVec* vec, u32 new_capacity);
 
 // Grow to new_capacity and fill new slots with val
 void genVec_reserve_val(genVec* vec, u32 new_capacity, const u8* val);
+
+// Shrink vector to it's size
+void genVec_shrink_to_fit(genVec* vec);
+
 
 
 // Operations
@@ -234,4 +240,56 @@ void genVec_filter(genVec* vec, b8 (*predicate)(const u8*));
 
 */
 
+/*
+
+void genVec_shrink_to_fit(genVec* vec)
+{
+    CHECK_FATAL(!vec, "vec is null");
+
+    if (vec->size == 0) {
+        genVec_reset(vec);
+        return;
+    }
+
+    // Don't shrink below minimum useful capacity
+    u32 min_capacity = vec->size > GENVEC_MIN_CAPACITY ? vec->size : GENVEC_MIN_CAPACITY;
+    u32 current_capacity = vec->capacity;
+
+    if (current_capacity <= min_capacity) {
+        return; // Already at or below target size
+    }
+
+    // Calculate SVO capacity
+    u32 svo_cap = GENVEC_SVO_CAPACITY(vec->data_size);
+
+    // Case 1: Currently in SVO mode and target fits in SVO
+    if (vec->svo && min_capacity <= svo_cap) {
+        vec->capacity = svo_cap;
+        return;
+    }
+
+    // Case 2: Currently in SVO mode but target needs heap
+    if (vec->svo && min_capacity > svo_cap) {
+        genVec_migrate_to_heap(vec, min_capacity);
+        return;
+    }
+
+    // Case 3: Currently on heap, target fits in SVO - migrate back to stack
+    if (!vec->svo && min_capacity <= svo_cap) {
+        u8 stack_backup[GENVEC_SVO_SIZE];
+        memcpy(stack_backup, vec->data.heap, GET_SCALED(vec, vec->size));
+        free(vec->data.heap);
+        memcpy(vec->data.stack, stack_backup, GET_SCALED(vec, vec->size));
+        vec->svo = true;
+        vec->capacity = svo_cap;
+        return;
+    }
+
+    // Case 4: Currently on heap, target stays on heap - just realloc
+    u8* new_data = realloc(vec->data.heap, GET_SCALED(vec, min_capacity));
+    CHECK_FATAL(!new_data, "realloc failed in shrink_to_fit");
+    vec->data.heap = new_data;
+    vec->capacity = min_capacity;
+}
+*/
 #endif // GEN_VECTOR_H

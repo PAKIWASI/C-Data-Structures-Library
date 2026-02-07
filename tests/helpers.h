@@ -32,6 +32,7 @@ void str_copy(u8* dest, const u8* src)
 // in case of String by val, buffer is malloced (but random)
 // we copy buffer entirely (all fields)
 // src must be heap allocated
+// dest is single ptr while src is double
 void str_move(u8* dest, u8** src)
 {
     memcpy(dest, *src, sizeof(String));
@@ -39,7 +40,6 @@ void str_move(u8* dest, u8** src)
     free(*src);
     *src = NULL;
 }
-
 
 // del buffer, not ptr
 void str_del(u8* elm)
@@ -144,7 +144,7 @@ void double_print(const u8* elm)
 #define VEC_PUSH_SIMP(vec, type, val) genVec_push(vec, (u8*)&(type){val})
 
 
-// for String, String*
+// for String, String* (push move takes double ptr to string)
 #define VEC_PUSH_CSTR(vec, cstr)               \
     do {                                       \
         String* _str = string_from_cstr(cstr); \

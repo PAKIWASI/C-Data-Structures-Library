@@ -21,7 +21,7 @@ AlignTrailingComments: true
 
 # Spacing (your preferences)
 KeepEmptyLinesAtTheStartOfBlocks: true
-MaxEmptyLinesToKeep: 2
+MaxEmptyLinesToKeep: 3
 SortIncludes: true
 
 # Common sane defaults

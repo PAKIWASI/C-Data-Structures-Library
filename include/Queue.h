@@ -17,11 +17,11 @@ Queue* queue_create_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy
 void queue_destroy(Queue* q);
 void queue_clear(Queue* q);
 void queue_reset(Queue* q);
+void queue_shrink_to_fit(Queue* q);
 
 void enqueue(Queue* q, const u8* x);
 void enqueue_move(Queue* q, u8** x);
 void dequeue(Queue* q, u8* out);
-void dequeue_move(Queue* q, u8** out);
 void queue_peek(Queue* q, u8* peek);
 const u8* queue_peek_ptr(Queue* q);
 

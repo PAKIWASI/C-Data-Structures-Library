@@ -7,9 +7,9 @@
 
 int main(void)
 {
-    // return genVec_test_7();
+    return genVec_test_7();
     // return hashmap_test_5();
     // return hashset_test_2();
     // return stack_test_1();
-    return queue_test_1();
+    // return queue_test_1();
 }
