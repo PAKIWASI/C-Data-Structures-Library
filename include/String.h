@@ -5,20 +5,10 @@
 #include "gen_vector.h"
 
 
-// #define STRING_SVO_OFF
-
-// TODO: how to do this?
-//
-#ifndef STRING_SVO_OFF
-    typedef genVec String;
-#else
-    typedef heap_genVec String;
-#endif
-
 
 // ===== STRING =====
 // the string is just a genVec of char type (length based string - not cstr)
-// typedef genVec String;
+typedef genVec String;
 // ==================
 
 

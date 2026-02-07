@@ -25,41 +25,22 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, 
 //
 // genVec growth/shrink settings (user can change)
 #ifndef GENVEC_GROWTH
-    #define GENVEC_GROWTH 1.5F // vec capacity multiplier
+#define GENVEC_GROWTH 1.5F // vec capacity multiplier
 #endif
 #ifndef GENVEC_SHRINK_AT
-    #define GENVEC_SHRINK_AT 0.25F // % filled to shrink at (25% filled)
+#define GENVEC_SHRINK_AT 0.25F // % filled to shrink at (25% filled)
 #endif
 #ifndef GENVEC_SHRINK_BY
-    #define GENVEC_SHRINK_BY 0.5F // capacity dividor (half)
+#define GENVEC_SHRINK_BY 0.5F // capacity dividor (half)
 #endif
 
 
-//      SMALL VECTOR OPTIMIZATION
-// if vector data takes <= 64 bytes, store it on the stack in the struct itself using union
-// entire union takes 64 bytes in the struct
-// when we heap alloc vector, then this is also on heap (not much improvement there)
-// but with stack vector, whole vector is then on the stack
-#ifndef GENVEC_SVO_SIZE
-    #define GENVEC_SVO_SIZE 64
-#endif
-
-// TODO: make svo size dynamic by making it depend on data_size ? ...maybe size / data_size ?
-
-
-
-// generic vector container
 typedef struct {
-    // Contiguous array of elements
-    union {
-        u8  stack[GENVEC_SVO_SIZE]; // for small vectors (on stack) -> capacity <= SVO_CAPACITY
-        u8* heap;                   // for large vectors (on heap)  -> capacity > SVO_CAPACITY
-    } data;
+    u8* data;
 
     u32 size;      // Number of elements currently in vector
     u32 capacity;  // Total allocated capacity
     u16 data_size; // Size of each element in bytes
-    b8  svo;       // Flag to determine if data is on stack or heap
 
     genVec_copy_fn   copy_fn; // Deep copy function for owned resources (or NULL)
     genVec_move_fn   move_fn; // Get a double pointer, transfer ownership and null original
@@ -67,25 +48,6 @@ typedef struct {
 } genVec;
 
 
-// TODO: can i do a genVec with union only containing heap (less size) ?
-// I could use that one for things that are completely on the heap
-// and the api whould be same, it's svo flag would be always false
-// the sizes are different but our del funcs handle that already
-typedef struct {
-    // Contiguous array of elements
-    union {
-        u8* heap;  // for large vectors (on heap)  -> capacity > SVO_CAPACITY
-    } data;
-
-    u32 size;      // Number of elements currently in vector
-    u32 capacity;  // Total allocated capacity
-    u16 data_size; // Size of each element in bytes
-    b8  svo;       // Flag to determine if data is on stack or heap         // ALWAYS OFF
-
-    genVec_copy_fn   copy_fn; // Deep copy function for owned resources (or NULL)
-    genVec_move_fn   move_fn; // Get a double pointer, transfer ownership and null original
-    genVec_delete_fn del_fn;  // Cleanup function for owned resources (or NULL)
-} heap_genVec;
 
 
 
@@ -105,8 +67,8 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_f
 genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                         genVec_delete_fn del_fn);
 
-void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, 
-        genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn, genVec* vec);
+void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+                         genVec_delete_fn del_fn, genVec* vec);
 
 // Destroy heap-allocated vector and clean up all elements
 void genVec_destroy(genVec* vec);
@@ -222,23 +184,11 @@ static inline u8 genVec_empty(const genVec* vec)
 }
 
 
-// Get maximum number of elements that can fit in SVO storage
-#define GENVEC_SVO_CAPACITY(data_size) (GENVEC_SVO_SIZE / (data_size))
-
-// Check if vector is using stack storage (SVO)
-static inline b8 genVec_isSVO(const genVec* vec)
-{
-    CHECK_FATAL(!vec, "vec is null");
-    return vec->svo;
-}
-
 
 // TODO: iterator support ?
 // TODO: add:
 /*
 
-// Resize vector to exact size (useful after bulk operations)
-void genVec_shrink_to_fit(genVec* vec);
 
 // Extend with multiple copies of val
 void genVec_extend(genVec* vec, const u8* val, u32 count);

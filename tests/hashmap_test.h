@@ -143,7 +143,6 @@ int hashmap_test_4(void)
     string_create_stk(&s4, "");
     string_reserve_char(&s4, 100, 'x');
     string_print(&s4);
-    printf("\n%d\n", s4.svo);
 
     hashmap_put(map, castptr(s2), cast(s4));
     hashmap_print(map, str_print, str_print);
@@ -166,20 +165,16 @@ void vec_copy(u8* dest, const u8* src)
 
     memcpy(d, s, sizeof(genVec));
 
-    if (s->svo) { // we already have all elements
-        return;
-    }
-
     // malloc data ptr
-    d->data.heap = (u8*)malloc(s->capacity*(u64)s->data_size);
+    d->data = (u8*)malloc(s->capacity*(u64)s->data_size);
 
     // Copy elements
     if (s->copy_fn) {
         for (u32 i = 0; i < s->size; i++) {
-            s->copy_fn((d->data.heap + ((u64)i * d->data_size)), genVec_get_ptr(s, i));
+            s->copy_fn((d->data + ((u64)i * d->data_size)), genVec_get_ptr(s, i));
         }
     } else {
-        memcpy(d->data.heap, s->data.heap, s->capacity*(u64)s->data_size);
+        memcpy(d->data, s->data, s->capacity*(u64)s->data_size);
     }
 }
 
@@ -190,12 +185,6 @@ void vec_move(u8* dest, u8** src)
 
     // memcpy all fields
     memcpy(d, s, sizeof(genVec));
-
-    //if svo, we already have everything
-    if (s->svo) { 
-        *src = NULL;
-        return; 
-    }
 
     // delete the struct (not data ptr)
     free(*src);    // TODO: is right?

@@ -4,6 +4,13 @@
 #include "String.h"
 #include <string.h>
 
+/* TODO: 
+ * make up rules for defining copy/move/del functions
+ * for storing by val vs by pointer
+ * a good example is String by val vs ptr
+ * or genVec val vs ptr (for vec of vecs)
+*/
+
 
 // === test vec of string (sizeof(String)) ===
 //============================================
@@ -17,19 +24,15 @@ void str_copy(u8* dest, const u8* src)
     // copy all field values
     memcpy(d, s, sizeof(String)); // both point to same data
 
-    if (s->svo) {
-        return;
-    }
-
     // allocate space for data
-    u32 n          = s->size * s->data_size;
-    d->data.heap = malloc(n);
+    u32 n   = s->size * s->data_size;
+    d->data = malloc(n);
 
     // copy data
-    memcpy(d->data.heap, s->data.heap, n);
+    memcpy(d->data, s->data, n);
 }
 
-// in case of String by val, buffer is malloced (but random)
+// in case of String by val, buffer is malloced (but unitialized)
 // we copy buffer entirely (all fields)
 // src must be heap allocated
 // dest is single ptr while src is double
@@ -72,17 +75,12 @@ void str_copy_ptr(u8* dest, const u8* src)
     // copy all the fields
     memcpy(d, s, sizeof(String));
 
-    if (s->svo) {
-        *(String**)dest = d;
-        return;
-    }
-
     // allocate memroy for new data
-    u32 n = s->size * s->data_size;
-    d->data.heap = malloc(n);
+    u32 n   = s->size * s->data_size;
+    d->data = malloc(n);
 
     // copy all elements
-    memcpy(d->data.heap, s->data.heap, n);
+    memcpy(d->data, s->data, n);
 
     *(String**)dest = d; // dest is double ptr to str
 }

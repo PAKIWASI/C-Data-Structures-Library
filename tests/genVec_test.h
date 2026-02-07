@@ -6,6 +6,7 @@
 
 
 
+
 // test push (copy)
 int genVec_test_1(void)
 {
@@ -158,29 +159,25 @@ int genVec_test_6(void)
     return 0;
 }
 
-
 int genVec_test_7(void)
 {
+    String str;
+    string_create_stk(&str, "what");
+
     genVec vec;
-    genVec_init_stk(10, sizeof(String*), str_copy_ptr, str_move_ptr, str_del_ptr, &vec);
+    genVec_init_val_stk(4, cast(str), sizeof(String), str_copy, str_move, str_del, &vec);
 
-    VEC_PUSH_CSTR(&vec, "hello");
-    VEC_PUSH_CSTR(&vec, "hello");
-    VEC_PUSH_CSTR(&vec, "world");
-    VEC_PUSH_CSTR(&vec, "hello");
-    VEC_PUSH_CSTR(&vec, "hello");
-    genVec_print(&vec, str_print_ptr); putchar('\n');
-    printf("%d\n%u\n%u\n",vec.svo, vec.size, vec.capacity);
+    genVec_print(&vec, str_print);
+    putchar('\n');
 
-    print_hex(cast(vec), sizeof(genVec), 8);
+    string_append_cstr(&str, " is up");
+    String* s2 = string_from_string(&str);
+    genVec_push_move(&vec, (u8**)&s2);  // MUST BE HEAP INITED
+    genVec_print(&vec, str_print);
+    putchar('\n');
 
-    genVec_shrink_to_fit(&vec);
-    genVec_print(&vec, str_print_ptr); putchar('\n');
-    printf("%d\n%u\n%u\n",vec.svo, vec.size, vec.capacity);
-
-    print_hex(cast(vec), sizeof(genVec), 8);
-
-    genVec_destroy_stk(&vec); 
+    string_destroy_stk(&str);
+    genVec_destroy_stk(&vec);
     return 0;
 }
 

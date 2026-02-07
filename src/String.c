@@ -1,10 +1,12 @@
 #include "String.h"
+#include "common.h"
+#include "gen_vector.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 
-
-#define GET_DATA(str) ((str)->svo ? (str)->data.stack : (str)->data.heap)
 
 
 // private func
@@ -20,24 +22,27 @@ String* string_create(void)
 
 void string_create_stk(String* str, const char* cstr)
 {
-    // the difference is that we dont use string_create(), so str is not heap initilised
+    // the difference is that we dont use string_create(), so str is not initilised
     CHECK_FATAL(!str, "str is null");
-    CHECK_FATAL(!cstr, "cstr is null");
 
-    u32 len = cstr_len(cstr);
-    genVec_init_stk(len, sizeof(char), NULL, NULL, NULL, str);
-    
-    if (len == 0) {
-        return;
+    u32 len = 0;
+    if (cstr) {
+        len = cstr_len(cstr);
     }
 
-    genVec_insert_multi(str, str->size, (const u8*)cstr, len);
+    genVec_init_stk(len, sizeof(char), NULL, NULL, NULL, str);
+    
+    if (len != 0) {
+        genVec_insert_multi(str, 0, (const u8*)cstr, len);
+    }
 }
 
 
 String* string_from_cstr(const char* cstr)
 {
     String* str = malloc(sizeof(String));
+    CHECK_FATAL(!str, "str malloc failed");
+
     string_create_stk(str, cstr);
     return str;
 }
@@ -47,10 +52,13 @@ String* string_from_string(const String* other)
 {
     CHECK_FATAL(!other, "other str is null");
 
-    String* str = string_create();
+    String* str = malloc(sizeof(String));
+    CHECK_FATAL(!str, "str malloc failed");
 
-    if (other->size > 0) { // Direct copy of buffer
-        genVec_insert_multi(str, 0, GET_DATA(other), other->size);
+    genVec_init_stk(other->size, sizeof(char), NULL, NULL, NULL, str);
+
+    if (other->size != 0) {
+        genVec_insert_multi(str, 0, other->data, other->size);
     }
 
     return str;
@@ -75,7 +83,7 @@ void string_destroy(String* str)
     free(str);
 }
 
-// cant free the stack allocated string, but buffer is heap. So seperate delete
+// cant free the stack allocated string, but buffer is. So seperate delete
 void string_destroy_stk(String* str)
 {
     genVec_destroy_stk(str);
@@ -99,12 +107,7 @@ void string_move(String* dest, String** src)
     // copy fields (including data ptr)
     memcpy(dest, *src, sizeof(String));
 
-    if ((*src)->svo) {
-        (*src)->size = 0;
-        return;
-    }
-
-    (*src)->data.heap = NULL;
+    (*src)->data = NULL;
     free(*src);
     *src = NULL;
 }
@@ -125,15 +128,11 @@ void string_copy(String* dest, const String* src)
     // copy all fields (data ptr too)
     memcpy(dest, src, sizeof(String));
 
-    if (src->svo) {
-        return;
-    }
-
     // malloc new data ptr
-    dest->data.heap = malloc(src->capacity);
+    dest->data = malloc(src->capacity);
 
     // copy all data (arr of chars)
-    memcpy(dest->data.heap, src->data.heap, src->size);
+    memcpy(dest->data, src->data, src->size);
 }
 
 
@@ -151,7 +150,7 @@ const char* string_to_cstr(const String* str)
     char* out = malloc(str->size + 1); // + 1 for null term
     CHECK_FATAL(!out, "out str malloc failed");
 
-    memcpy(out, GET_DATA(str), str->size);
+    memcpy(out, str->data, str->size);
 
     out[str->size] = '\0'; // add null term
 
@@ -167,7 +166,7 @@ char* string_data_ptr(const String* str)
         return NULL;
     }
 
-    return (char*)GET_DATA(str);
+    return (char*)str->data;
 }
 
 
@@ -195,7 +194,7 @@ void string_append_string(String* str, const String* other)
     }
 
     // direct insertion from other's buffer
-    genVec_insert_multi(str, str->size, GET_DATA(other), other->size);
+    genVec_insert_multi(str, str->size, other->data, other->size);
 }
 
 // append and consume source string
@@ -206,7 +205,7 @@ void string_append_string_move(String* str, String** other)
     CHECK_FATAL(!*other, "*other is null");
 
     if ((*other)->size > 0) {
-        genVec_insert_multi(str, str->size, GET_DATA(*other), (*other)->size);
+        genVec_insert_multi(str, str->size, (*other)->data, (*other)->size);
     }
 
     string_destroy(*other);
@@ -267,7 +266,7 @@ void string_insert_string(String* str, u32 i, const String* other)
     }
 
     // direct insertion
-    genVec_insert_multi(str, i, GET_DATA(other), other->size);
+    genVec_insert_multi(str, i, other->data, other->size);
 }
 
 
@@ -302,7 +301,7 @@ char string_char_at(const String* str, u32 i)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i >= str->size, "index out of bounds");
 
-    return ((char*)GET_DATA(str))[i];
+    return ((char*)str->data)[i];
 }
 
 
@@ -311,7 +310,7 @@ void string_set_char(String* str, u32 i, char c)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i >= str->size, "index out of bounds");
 
-    ((char*)GET_DATA(str))[i] = c;
+    ((char*)str->data)[i] = c;
 }
 
 
@@ -323,7 +322,7 @@ int string_compare(const String* str1, const String* str2)
     u32 min_len = str1->size < str2->size ? str1->size : str2->size;
 
     // Compare byte by byte
-    int cmp = memcmp(GET_DATA(str1), GET_DATA(str2), min_len);
+    int cmp = memcmp(str1->data, str2->data, min_len);
 
     if (cmp != 0) {
         return cmp;
@@ -363,7 +362,7 @@ b8 string_equals_cstr(const String* str, const char* cstr)
         return true;
     }
 
-    return memcmp(GET_DATA(str), cstr, len) == 0;
+    return memcmp(str->data, cstr, len) == 0;
 }
 
 
@@ -372,7 +371,7 @@ u32 string_find_char(const String* str, char c)
     CHECK_FATAL(!str, "str is null");
 
     for (u32 i = 0; i < str->size; i++) {
-        if (((char*)GET_DATA(str))[i] == c) {
+        if (((char*)str->data)[i] == c) {
             return i;
         }
     }
@@ -398,7 +397,7 @@ u32 string_find_cstr(const String* str, const char* substr)
     }
 
     for (u32 i = 0; i <= str->size - len; i++) {
-        if (memcmp(GET_DATA(str) + i, substr, len) == 0) {
+        if (memcmp(str->data + i, substr, len) == 0) {
             return i;
         }
     }
@@ -435,11 +434,11 @@ void string_print(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
 
-    printf("\"");
+    putchar('\"');
     for (u32 i = 0; i < str->size; i++) {
-        putchar(((char*)GET_DATA(str))[i]);
+        putchar(((char*)str->data)[i]);
     }
-    printf("\"");
+    putchar('\"');
 }
 
 
