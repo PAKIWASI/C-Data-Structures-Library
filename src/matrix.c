@@ -1,7 +1,4 @@
 #include "matrix.h"
-#include "arena.h"
-
-#include <string.h>
 
 
 

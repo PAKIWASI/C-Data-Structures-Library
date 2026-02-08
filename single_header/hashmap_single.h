@@ -1,5 +1,317 @@
-#include "hashmap.h"
 
+#ifndef HASHMAP_H
+#define HASHMAP_H
+
+#ifndef MAP_SETUP
+#define MAP_SETUP
+
+#ifndef COMMON_H
+#define COMMON_H
+
+
+// LOGGING/ERRORS
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define WARN(fmt, ...)                                                                       \
+    do {                                                                                     \
+        printf("[WARN] %s:%d:%s(): " fmt "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    } while (0)
+
+#define FATAL(fmt, ...)                                                                \
+    do {                                                                               \
+        fprintf(stderr, "[FATAL] %s:%d:%s(): " fmt "\n", __FILE__, __LINE__, __func__, \
+                ##__VA_ARGS__);                                                        \
+        exit(EXIT_FAILURE);                                                            \
+    } while (0)
+
+
+#define ASSERT_WARN(cond, fmt, ...)                                                  \
+    do {                                                                             \
+        if (!(cond)) { WARN("Assertion failed: (%s): " fmt, #cond, ##__VA_ARGS__); } \
+    } while (0)
+
+#define ASSERT_WARN_RET(cond, ret, fmt, ...)                            \
+    do {                                                                \
+        if (!(cond)) {                                                  \
+            WARN("Assertion failed: (%s): " fmt, #cond, ##__VA_ARGS__); \
+            return ret;                                                 \
+        }                                                               \
+    } while (0)
+
+#define ASSERT_FATAL(cond, fmt, ...)                                                  \
+    do {                                                                              \
+        if (!(cond)) { FATAL("Assertion failed: (%s): " fmt, #cond, ##__VA_ARGS__); } \
+    } while (0)
+
+#define CHECK_WARN(cond, fmt, ...)                                       \
+    do {                                                                 \
+        if ((cond)) { WARN("Check: (%s): " fmt, #cond, ##__VA_ARGS__); } \
+    } while (0)
+
+
+#define CHECK_WARN_RET(cond, ret, fmt, ...)                  \
+    do {                                                     \
+        if ((cond)) {                                        \
+            WARN("Check: (%s): " fmt, #cond, ##__VA_ARGS__); \
+            return ret;                                      \
+        }                                                    \
+    } while (0)
+
+#define CHECK_FATAL(cond, fmt, ...)                                     \
+    do {                                                                \
+        if (cond) { FATAL("Check: (%s): " fmt, #cond, ##__VA_ARGS__); } \
+    } while (0)
+
+
+// TYPES
+
+#include <stdint.h>
+
+typedef uint8_t  u8;
+typedef uint8_t  b8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+#define false ((b8)0)
+#define true  ((b8)1)
+
+
+// CASTING
+
+#define cast(x)    ((u8*)(&(x)))
+#define castptr(x) ((u8*)(x))
+
+
+// COMMON SIZES
+
+#define KB (1 << 10)
+#define MB (1 << 20)
+
+#define nKB(n) ((u32)((n) * KB))
+#define nMB(n) ((u32)((n) * MB))
+
+
+// RAW BYTES TO HEX
+
+void print_hex(const u8* ptr, u32 size, u32 bytes_per_line) 
+{
+    if (ptr == NULL | size == 0 | bytes_per_line == 0) { return; }
+
+    // hex rep 0-15
+    const char* hex = "0123456789ABCDEF";
+    
+    for (u32 i = 0; i < size; i++) 
+    {
+        u8 val1 = ptr[i] >> 4;      // get upper 4 bits as num b/w 0-15
+        u8 val2 = ptr[i] & 0x0F;    // get lower 4 bits as num b/w 0-15
+        
+        printf("%c%c", hex[val1], hex[val2]);
+        
+        // Add space or newline appropriately
+        if ((i + 1) % bytes_per_line == 0) {
+            printf("\n");
+        } else if (i < size - 1) {
+            printf(" ");
+        }
+    }
+
+    // Add final newline if we didn't just print one
+    if (size % bytes_per_line != 0) {
+        printf("\n");
+    }
+}
+
+
+
+
+#endif // COMMON_H
+#include <string.h>
+
+
+typedef enum {
+    EMPTY = 0,
+    FILLED = 1,
+    TOMBSTONE = 2
+} STATE;
+
+
+typedef void (*copy_fn)(u8* dest, const u8* src);
+typedef void (*move_fn)(u8* dest, u8** src);
+typedef void (*delete_fn)(u8* key); 
+typedef void (*map_print_fn)(const u8* elm);
+
+typedef u32 (*custom_hash_fn)(const u8* key, u32 size);     
+typedef int (*compare_fn)(const u8* a, const u8* b, u32 size);
+
+
+
+#define LOAD_FACTOR_GROW 0.70
+#define LOAD_FACTOR_SHRINK 0.20  
+#define HASHMAP_INIT_CAPACITY 17  //prime no (index = hash % capacity)
+
+
+/*
+====================DEFAULT FUNCTIONS====================
+*/
+// 32-bit FNV-1a (default hash)
+static u32 fnv1a_hash(const u8* bytes, u32 size) {
+    u32 hash = 2166136261U;  // FNV offset basis
+
+    for (u32 i = 0; i < size; i++) {
+        hash ^= bytes[i];   // XOR with current byte
+        hash *= 16777619U;  // Multiply by FNV prime
+    }
+
+    return hash;
+}
+
+
+// Default compare function
+static int default_compare(const u8* a, const u8* b, u32 size) 
+{
+    return memcmp(a, b, size);
+}
+
+static const u32 PRIMES[] = {
+    17, 37, 79, 163, 331, 673, 1361, 2729, 5471, 10949, 
+    21911, 43853, 87719, 175447, 350899, 701819, 1403641, 
+    2807303, 5614657, 11229331, 22458671, 44917381, 89834777
+};
+
+static const u32 PRIMES_COUNT = sizeof(PRIMES) / sizeof(PRIMES[0]);
+
+// Find the next prime number larger than current
+static u32 next_prime(u32 current) {
+    for (u32 i = 0; i < PRIMES_COUNT; i++) {
+        if (PRIMES[i] > current) {
+            return PRIMES[i];
+        }
+    }
+    
+    // If we've exceeded our prime table, fall back to approximate prime
+    // Using formula: next ≈ current * 2 + 1 (often prime or close to it)
+    printf("Warning: exceeded prime table, using approximation\n");
+    return (current * 2) + 1;
+}
+
+// Find the previous prime number smaller than current
+static u32 prev_prime(u32 current) {
+    // Search backwards through prime table
+    for (u32 i = PRIMES_COUNT - 1; i >= 0; i--) {
+        if (PRIMES[i] < current) {
+            return PRIMES[i];
+        }
+    }
+    
+    // Should never happen if HASHMAP_INIT_CAPACITY is in our table
+    printf("Warning: no smaller prime found\n");
+    return HASHMAP_INIT_CAPACITY;
+}
+
+
+
+#endif // MAP_SETUP
+
+
+typedef struct {
+    u8*             buckets;
+    u32             size;
+    u32             capacity;
+    u16             key_size;
+    u16             val_size;
+    custom_hash_fn  hash_fn;
+    compare_fn      cmp_fn;
+    copy_fn         key_copy_fn;
+    move_fn         key_move_fn;
+    delete_fn       key_del_fn;
+    copy_fn         val_copy_fn;
+    move_fn         val_move_fn;
+    delete_fn       val_del_fn;
+} hashmap;
+
+/**
+ * Create a new hashmap
+ */
+hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
+                        compare_fn cmp_fn, copy_fn key_copy, copy_fn val_copy,
+                        move_fn key_move, move_fn val_move,
+                        delete_fn key_del, delete_fn val_del);
+
+void hashmap_destroy(hashmap* map);
+
+/**
+ * Insert or update key-value pair (COPY semantics)
+ * Both key and val are passed as const u8*
+ * 
+ * @return 1 if key existed (updated), 0 if new key inserted
+ */
+b8 hashmap_put(hashmap* map, const u8* key, const u8* val);
+
+/**
+ * Insert or update key-value pair (MOVE semantics)
+ * Both key and val are passed as u8** and will be nulled
+ * 
+ * @return 1 if key existed (updated), 0 if new key inserted
+ */
+b8 hashmap_put_move(hashmap* map, u8** key, u8** val);
+
+/**
+ * Insert with mixed semantics
+ */
+b8 hashmap_put_val_move(hashmap* map, const u8* key, u8** val);
+b8 hashmap_put_key_move(hashmap* map, u8** key, const u8* val);
+
+/**
+ * Get value for key (copy semantics)
+ */
+b8 hashmap_get(const hashmap* map, const u8* key, u8* val);
+
+/**
+ * Get pointer to value (no copy)
+ * WARNING: Pointer invalidated by put/del operations
+ */
+u8* hashmap_get_ptr(hashmap* map, const u8* key);
+
+/**
+ * Delete key-value pair
+ * If out is provided, value is copied to it before deletion
+ */
+b8 hashmap_del(hashmap* map, const u8* key, u8* out);
+
+
+
+/**
+ * Check if key exists
+ */
+b8 hashmap_has(const hashmap* map, const u8* key);
+
+/**
+ * Print all key-value pairs
+ */
+void hashmap_print(const hashmap* map, map_print_fn key_print, map_print_fn val_print);
+
+
+
+static inline u32 hashmap_size(const hashmap* map)
+{
+    CHECK_FATAL(!map, "map is null");
+    return map->size;
+}
+
+static inline u32 hashmap_capacity(const hashmap* map)
+{
+    CHECK_FATAL(!map, "map is null");
+    return map->capacity;
+}
+
+static inline b8 hashmap_empty(const hashmap* map)
+{
+    CHECK_FATAL(!map, "map is null");
+    return map->size == 0;
+}
 
 
 #define GET_KV(data, i) ((KV*)(data) + i)
@@ -602,3 +914,5 @@ void hashmap_print(const hashmap* map, map_print_fn key_print, map_print_fn val_
 
 
 
+
+#endif // HASHMAP_H
