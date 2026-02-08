@@ -30,40 +30,30 @@ static void elm_destroy(delete_fn del_fn, const ELM* elm)
 ====================PRIVATE FUNCTIONS====================
 */
 
-static void reset_buckets(u8* buckets, u32 size)
+static void reset_buckets(u8* buckets, u64 size)
 {
     ELM elm = { 
         .elm = NULL, 
         .state = EMPTY 
     };
 
-    for (u32 i = 0; i < size; i++) {
+    for (u64 i = 0; i < size; i++) {
         memcpy(GET_ELM(buckets, i), &elm, sizeof(ELM));
     }
 }
 
-// static void destroy_data(delete_fn del_fn, u8* buckets, u32 cap)
-// {
-//     for (u32 i = 0; i < cap; i++) {
-//         const ELM* elm = GET_ELM(buckets, i);
-//         if (elm->state == FILLED) {
-//             elm_destroy(del_fn, elm);
-//         }
-//     }
-//     free(buckets);
-// }
 
-static u32 find_slot(const hashset* set, const u8* element,
+static u64 find_slot(const hashset* set, const u8* element,
                         b8* found, int* tombstone)
 {
-    u32 index = set->hash_fn(element, set->elm_size) % set->capacity;
+    u64 index = set->hash_fn(element, set->elm_size) % set->capacity;
 
     *found = 0;
     *tombstone = -1;
 
-    for (u32 x = 0; x < set->capacity; x++) 
+    for (u64 x = 0; x < set->capacity; x++) 
     {
-        u32 i = (index + x) % set->capacity;
+        u64 i = (index + x) % set->capacity;
         const ELM* elm = GET_ELM(set->buckets, i);
 
         switch (elm->state) {
@@ -84,17 +74,17 @@ static u32 find_slot(const hashset* set, const u8* element,
         }
     }
     
-    return (*tombstone != -1) ? (u32)*tombstone : 0;
+    return (*tombstone != -1) ? (u64)*tombstone : 0;
 }
 
-static void hashset_resize(hashset* set, u32 new_capacity) 
+static void hashset_resize(hashset* set, u64 new_capacity) 
 {
     if (new_capacity <= HASHMAP_INIT_CAPACITY) {
         new_capacity = HASHMAP_INIT_CAPACITY;
     }
 
     u8* old_buckets = set->buckets;
-    u32 old_cap = set->capacity;
+    u64 old_cap = set->capacity;
 
     set->buckets = malloc(new_capacity * sizeof(ELM));
     CHECK_FATAL(!set->buckets, "resize malloc failed");
@@ -103,14 +93,14 @@ static void hashset_resize(hashset* set, u32 new_capacity)
     set->capacity = new_capacity;
     set->size = 0;
 
-    for (u32 i = 0; i < old_cap; i++) 
+    for (u64 i = 0; i < old_cap; i++) 
     {
         const ELM* old_elm = GET_ELM(old_buckets, i);
         
         if (old_elm->state == FILLED) {
             b8 found = 0;
             int tombstone = -1;
-            u32 slot = find_slot(set, old_elm->elm, &found, &tombstone);
+            u64 slot = find_slot(set, old_elm->elm, &found, &tombstone);
 
             ELM* new_elm = GET_ELM(set->buckets, slot);
             new_elm->elm = old_elm->elm;
@@ -130,12 +120,12 @@ static void hashset_maybe_resize(hashset* set)
     double load_factor = (double)set->size / (double)set->capacity;
     
     if (load_factor > LOAD_FACTOR_GROW) {
-        u32 new_cap = next_prime(set->capacity);
+        u64 new_cap = next_prime(set->capacity);
         hashset_resize(set, new_cap);
     }
     else if (load_factor < LOAD_FACTOR_SHRINK && set->capacity > HASHMAP_INIT_CAPACITY) 
     {
-        u32 new_cap = prev_prime(set->capacity);
+        u64 new_cap = prev_prime(set->capacity);
         if (new_cap >= HASHMAP_INIT_CAPACITY) {
             hashset_resize(set, new_cap);
         }
@@ -146,7 +136,7 @@ static void hashset_maybe_resize(hashset* set)
 ====================PUBLIC FUNCTIONS====================
 */
 
-hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn, compare_fn cmp_fn, 
+hashset* hashset_create(u32 elm_size, custom_hash_fn hash_fn, compare_fn cmp_fn, 
                          copy_fn copy_fn, move_fn move_fn, delete_fn del_fn)
 {
     CHECK_FATAL(elm_size == 0, "elm size can't be 0");
@@ -178,7 +168,7 @@ void hashset_destroy(hashset* set)
     CHECK_FATAL(!set, "set is null");
     CHECK_FATAL(!set->buckets, "set bucket is null");
 
-    for (u32 i = 0; i < set->capacity; i++) {
+    for (u64 i = 0; i < set->capacity; i++) {
         const ELM* elm = GET_ELM(set->buckets, i);
         if (elm->state == FILLED) {
             elm_destroy(set->del_fn, elm);
@@ -193,7 +183,7 @@ void hashset_clear(hashset* set)
 {
     CHECK_FATAL(!set, "set is null");
     
-    for (u32 i = 0; i < set->capacity; i++) {
+    for (u64 i = 0; i < set->capacity; i++) {
         ELM* elm = GET_ELM(set->buckets, i);
         if (elm->state == FILLED) {
             elm_destroy(set->del_fn, elm);
@@ -234,7 +224,7 @@ b8 hashset_insert(hashset* set, const u8* elm)
 
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(set, elm, &found, &tombstone);
+    u64 slot = find_slot(set, elm, &found, &tombstone);
 
     if (found) {
         return 1; // already exists
@@ -270,7 +260,7 @@ b8 hashset_insert_move(hashset* set, u8** elm)
 
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(set, *elm, &found, &tombstone);
+    u64 slot = find_slot(set, *elm, &found, &tombstone);
 
     if (found) {
         // Element already exists - clean up the passed element
@@ -313,7 +303,7 @@ b8 hashset_remove(hashset* set, const u8* elm)
 
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(set, elm, &found, &tombstone);
+    u64 slot = find_slot(set, elm, &found, &tombstone);
 
     if (found) {
         ELM* elem = GET_ELM(set->buckets, slot);
@@ -349,10 +339,10 @@ void hashset_print(const hashset* set, map_print_fn print_fn)
     CHECK_FATAL(!print_fn, "print_fn is null");
 
     printf("\t=========\n");
-    printf("\tSize: %u / Capacity: %u\n", set->size, set->capacity);
+    printf("\tSize: %lu / Capacity: %lu\n", set->size, set->capacity);
     printf("\t=========\n");
 
-    for (u32 i = 0; i < set->capacity; i++) {
+    for (u64 i = 0; i < set->capacity; i++) {
         const ELM* elm = GET_ELM(set->buckets, i);
         if (elm->state == FILLED) {
             printf("\t   ");

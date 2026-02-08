@@ -83,7 +83,7 @@ int hashmap_test_2(void)
 
     hashmap_print(map, int_print, str_print);
 
-    printf("%d\n", hashmap_size(map));
+    printf("%lu\n", hashmap_size(map));
     
     string_destroy_stk(&s);
     hashmap_destroy(map);
@@ -108,7 +108,7 @@ int hashmap_test_3(void)
     String s1;
     string_create_stk(&s1, "what");
 
-    for (u32 i = 0; i < 10000; i++) {       // damn
+    for (u64 i = 0; i < 10000; i++) {       // damn
         String* val = (String*)hashmap_get_ptr(map, cast(s1));
         string_append_cstr(val, "__hi");
         hashmap_put(map, castptr(val), castptr(val)); 
@@ -170,8 +170,8 @@ void vec_copy(u8* dest, const u8* src)
 
     // Copy elements
     if (s->copy_fn) {
-        for (u32 i = 0; i < s->size; i++) {
-            s->copy_fn((d->data + ((u64)i * d->data_size)), genVec_get_ptr(s, i));
+        for (u64 i = 0; i < s->size; i++) {
+            s->copy_fn((d->data + (i * d->data_size)), genVec_get_ptr(s, i));
         }
     } else {
         memcpy(d->data, s->data, s->capacity*(u64)s->data_size);
@@ -203,7 +203,7 @@ void vec_print(const u8* elm)
 {
     genVec* v = (genVec*)elm;
     printf("[");
-    for (u32 i = 0; i < v->size; i++) {
+    for (u64 i = 0; i < v->size; i++) {
         printf("%d ", *(int*)genVec_get_ptr(v, i));
     }
     printf("]");

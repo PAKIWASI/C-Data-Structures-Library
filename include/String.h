@@ -27,10 +27,10 @@ String* string_from_cstr(const char* cstr);
 String* string_from_string(const String* other);
 
 // reserve a capacity for a string (must be greater than current cap)
-void string_reserve(String* str, u32 capacity);
+void string_reserve(String* str, u64 capacity);
 
 // reserve a capacity with a char
-void string_reserve_char(String* str, u32 capacity, char c);
+void string_reserve_char(String* str, u64 capacity, char c);
 
 // destroy the heap allocated string
 void string_destroy(String* str);
@@ -73,22 +73,22 @@ void string_append_string_move(String* str, String** other);
 void string_append_char(String* str, char c);
 
 // insert a char at index i of string
-void string_insert_char(String* str, u32 i, char c);
+void string_insert_char(String* str, u64 i, char c);
 
 // insert a cstr at index i
-void string_insert_cstr(String* str, u32 i, const char* cstr);
+void string_insert_cstr(String* str, u64 i, const char* cstr);
 
 // insert a string "str" at index i
-void string_insert_string(String* str, u32 i, const String* other);
+void string_insert_string(String* str, u64 i, const String* other);
 
 // remove char from end of a string
 char string_pop_char(String* str);
 
 // remove a char from index i of string
-void string_remove_char(String* str, u32 i);
+void string_remove_char(String* str, u64 i);
 
 // remove elements from l to r (inclusive)
-void string_remove_range(String* str, u32 l, u32 r);
+void string_remove_range(String* str, u64 l, u64 r);
 
 // remove all chars (keep memory)
 void string_clear(String* str);
@@ -97,10 +97,10 @@ void string_clear(String* str);
 // Access
 
 // return char at index i
-char string_char_at(const String* str, u32 i);
+char string_char_at(const String* str, u64 i);
 
 // set the value of char at index i
-void string_set_char(String* str, u32 i, char c);
+void string_set_char(String* str, u64 i, char c);
 
 // Comparison
 
@@ -119,13 +119,13 @@ b8 string_equals_cstr(const String* str, const char* cstr);
 
 
 // return index of char c (UINT_MAX otherwise)
-u32 string_find_char(const String* str, char c);
+u64 string_find_char(const String* str, char c);
 
 // return index of cstr "substr" (UINT_MAX otherwise)
-u32 string_find_cstr(const String* str, const char* substr);
+u64 string_find_cstr(const String* str, const char* substr);
 
 // Set a heap allocated string of a substring starting at index "start", upto length
-String* string_substr(const String* str, u32 start, u32 length);
+String* string_substr(const String* str, u64 start, u64 length);
 
 // TODO: pass a buffer version of substr??
 
@@ -137,7 +137,7 @@ void string_print(const String* str);
 // Basic properties
 
 // get the current length of the string
-static inline u32 string_len(const String* str)
+static inline u64 string_len(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
 
@@ -145,7 +145,7 @@ static inline u32 string_len(const String* str)
 }
 
 // get the capacity of the genVec container of string
-static inline u32 string_capacity(const String* str)
+static inline u64 string_capacity(const String* str)
 {
     return str->capacity;
 }
@@ -205,7 +205,7 @@ string view:
 
 typedef struct {
     const char* data;
-    u32 len;
+    u64 len;
 } StringView;
 
 */

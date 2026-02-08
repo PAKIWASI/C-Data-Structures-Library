@@ -6,10 +6,10 @@
 
 typedef struct {
     u8*             buckets;
-    u32             size;
-    u32             capacity;
-    u16             key_size;
-    u16             val_size;
+    u64             size;
+    u64             capacity;
+    u32             key_size;
+    u32             val_size;
     custom_hash_fn  hash_fn;
     compare_fn      cmp_fn;
     copy_fn         key_copy_fn;
@@ -23,7 +23,7 @@ typedef struct {
 /**
  * Create a new hashmap
  */
-hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
+hashmap* hashmap_create(u32 key_size, u32 val_size, custom_hash_fn hash_fn,
                         compare_fn cmp_fn, copy_fn key_copy, copy_fn val_copy,
                         move_fn key_move, move_fn val_move,
                         delete_fn key_del, delete_fn val_del);
@@ -83,13 +83,13 @@ void hashmap_print(const hashmap* map, map_print_fn key_print, map_print_fn val_
 
 
 
-static inline u32 hashmap_size(const hashmap* map)
+static inline u64 hashmap_size(const hashmap* map)
 {
     CHECK_FATAL(!map, "map is null");
     return map->size;
 }
 
-static inline u32 hashmap_capacity(const hashmap* map)
+static inline u64 hashmap_capacity(const hashmap* map)
 {
     CHECK_FATAL(!map, "map is null");
     return map->capacity;

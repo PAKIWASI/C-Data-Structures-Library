@@ -83,13 +83,13 @@ typedef uint64_t u64;
 #define KB (1 << 10)
 #define MB (1 << 20)
 
-#define nKB(n) ((u32)((n) * KB))
-#define nMB(n) ((u32)((n) * MB))
+#define nKB(n) ((u64)((n) * KB))
+#define nMB(n) ((u64)((n) * MB))
 
 
 // RAW BYTES TO HEX
 
-void print_hex(const u8* ptr, u32 size, u32 bytes_per_line);
+void print_hex(const u8* ptr, u64 size, u32 bytes_per_line);
 
 
 

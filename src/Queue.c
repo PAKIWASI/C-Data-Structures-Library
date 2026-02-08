@@ -28,7 +28,7 @@
 
 #define MAYBE_SHRINK(q)                                         \
     do {                                                        \
-        u32 capacity = (q)->arr->capacity;                      \
+        u64 capacity = (q)->arr->capacity;                      \
         if (capacity <= 4) {                                    \
             return;                                             \
         }                                                       \
@@ -42,10 +42,10 @@
 
 static void queue_grow(Queue* q);
 static void queue_shrink(Queue* q);
-static void queue_compact(Queue* q, u32 new_capacity);
+static void queue_compact(Queue* q, u64 new_capacity);
 
 
-Queue* queue_create(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
+Queue* queue_create(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
 {
     CHECK_FATAL(n == 0, "n can't be 0");
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
@@ -62,7 +62,7 @@ Queue* queue_create(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn
     return q;
 }
 
-Queue* queue_create_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+Queue* queue_create_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                         genVec_delete_fn del_fn)
 {
     CHECK_FATAL(n == 0, "n can't be 0");
@@ -120,8 +120,8 @@ void queue_shrink_to_fit(Queue* q)
     }
 
     // Don't shrink below minimum useful capacity
-    u32 min_capacity     = q->size > QUEUE_MIN_CAP ? q->size : QUEUE_MIN_CAP;
-    u32 current_capacity = genVec_capacity(q->arr);
+    u64 min_capacity     = q->size > QUEUE_MIN_CAP ? q->size : QUEUE_MIN_CAP;
+    u64 current_capacity = genVec_capacity(q->arr);
 
     if (current_capacity > min_capacity) {
         queue_compact(q, min_capacity);
@@ -209,12 +209,12 @@ void queue_print(Queue* q, genVec_print_fn print_fn)
     CHECK_FATAL(!q, "queue is empty");
     CHECK_FATAL(!print_fn, "print_fn is empty");
 
-    u32 h   = q->head;
-    u32 cap = genVec_capacity(q->arr);
+    u64 h   = q->head;
+    u64 cap = genVec_capacity(q->arr);
 
     printf("[ ");
     if (q->size != 0) {
-        for (u32 i = 0; i < q->size; i++) {
+        for (u64 i = 0; i < q->size; i++) {
             const u8* out = genVec_get_ptr(q->arr, h);
             print_fn(out);
             putchar(' ');
@@ -227,8 +227,8 @@ void queue_print(Queue* q, genVec_print_fn print_fn)
 
 static void queue_grow(Queue* q)
 {
-    u32 old_cap = genVec_capacity(q->arr);
-    u32 new_cap = (u32)((float)old_cap * QUEUE_GROWTH);
+    u64 old_cap = genVec_capacity(q->arr);
+    u64 new_cap = (u64)((float)old_cap * QUEUE_GROWTH);
     if (new_cap <= old_cap) {
         new_cap = old_cap + 1;
     }
@@ -238,11 +238,11 @@ static void queue_grow(Queue* q)
 
 static void queue_shrink(Queue* q)
 {
-    u32 current_cap = genVec_capacity(q->arr);
-    u32 new_cap     = (u32)((float)current_cap * QUEUE_SHRINK_BY);
+    u64 current_cap = genVec_capacity(q->arr);
+    u64 new_cap     = (u64)((float)current_cap * QUEUE_SHRINK_BY);
 
     // Don't shrink below current size or minimum capacity
-    u32 min_capacity = q->size > QUEUE_MIN_CAP ? q->size : QUEUE_MIN_CAP;
+    u64 min_capacity = q->size > QUEUE_MIN_CAP ? q->size : QUEUE_MIN_CAP;
     if (new_cap < min_capacity) {
         new_cap = min_capacity;
     }
@@ -254,16 +254,16 @@ static void queue_shrink(Queue* q)
 }
 
 
-static void queue_compact(Queue* q, u32 new_capacity)
+static void queue_compact(Queue* q, u64 new_capacity)
 {
     CHECK_FATAL(new_capacity < q->size, "new_capacity must be >= current size");
 
     genVec* new_arr = genVec_init(new_capacity, q->arr->data_size, q->arr->copy_fn, q->arr->move_fn, q->arr->del_fn);
 
-    u32 h       = q->head;
-    u32 old_cap = genVec_capacity(q->arr);
+    u64 h       = q->head;
+    u64 old_cap = genVec_capacity(q->arr);
 
-    for (u32 i = 0; i < q->size; i++) {
+    for (u64 i = 0; i < q->size; i++) {
         const u8* elem = genVec_get_ptr(q->arr, h);
         genVec_push(new_arr, elem);
         h = (h + 1) % old_cap;

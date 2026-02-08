@@ -2,7 +2,7 @@
 
 
 
-Matrix* matrix_create(u32 m, u32 n)
+Matrix* matrix_create(u64 m, u64 n)
 {
     CHECK_FATAL(n == 0 && m == 0, "n == m == 0");
 
@@ -17,7 +17,7 @@ Matrix* matrix_create(u32 m, u32 n)
     return mat;
 }
 
-Matrix* matrix_create_arr(u32 m, u32 n, const float* arr)
+Matrix* matrix_create_arr(u64 m, u64 n, const float* arr)
 {
     CHECK_FATAL(!arr, "input arr is null");
     Matrix* mat = matrix_create(m, n);
@@ -25,7 +25,7 @@ Matrix* matrix_create_arr(u32 m, u32 n, const float* arr)
     return mat;
 }
 
-void matrix_create_stk(Matrix* mat, u32 m, u32 n, float* data)
+void matrix_create_stk(Matrix* mat, u64 m, u64 n, float* data)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(!data, "data is null");
@@ -45,7 +45,7 @@ void matrix_destroy(Matrix* mat)
 }
 
 
-void matrix_set_val_arr(Matrix* mat, u32 count, const float* arr)
+void matrix_set_val_arr(Matrix* mat, u64 count, const float* arr)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(!arr, "arr is null");
@@ -54,7 +54,7 @@ void matrix_set_val_arr(Matrix* mat, u32 count, const float* arr)
     memcpy(mat->data, arr, sizeof(float) * count);
 }
 
-void matrix_set_val_arr2(Matrix* mat, u32 m, u32 n, const float** arr2)
+void matrix_set_val_arr2(Matrix* mat, u64 m, u64 n, const float** arr2)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(!arr2, "arr is null");
@@ -62,14 +62,14 @@ void matrix_set_val_arr2(Matrix* mat, u32 m, u32 n, const float** arr2)
     CHECK_FATAL(m != mat->m || n != mat->n,
                 "mat dimentions dont match passed arr2");
 
-    u32 idx = 0;
-    for (u32 i = 0; i < m; i++) {
+    u64 idx = 0;
+    for (u64 i = 0; i < m; i++) {
         memcpy(mat->data + idx, arr2[i], sizeof(float) * n);
         idx += n;
     }
 }
 
-void matrix_set_elm(Matrix* mat, float elm, u32 i, u32 j)
+void matrix_set_elm(Matrix* mat, float elm, u64 i, u64 j)
 {
     CHECK_FATAL(!mat, "matrix is null");
     CHECK_FATAL(i >= mat->m || j >= mat->n, "index out of bounds");
@@ -86,9 +86,9 @@ void matrix_add(Matrix* out, const Matrix* a, const Matrix* b)
                     a->n != out->n,
                 "a, b, out mat dimentions dont match");
 
-    u32 total = MATRIX_TOTAL(a);
+    u64 total = MATRIX_TOTAL(a);
 
-    for (u32 i = 0; i < total; i++) { 
+    for (u64 i = 0; i < total; i++) { 
         out->data[i] = a->data[i] + b->data[i]; 
     }
 }
@@ -104,9 +104,9 @@ void matrix_sub(Matrix* out, const Matrix* a, const Matrix* b)
                     a->n != out->n,
                 "a, b, out mat dimentions dont match");
 
-    u32 total = MATRIX_TOTAL(a);
+    u64 total = MATRIX_TOTAL(a);
 
-    for (u32 i = 0; i < total; i++) { 
+    for (u64 i = 0; i < total; i++) { 
         out->data[i] = a->data[i] - b->data[i]; 
     }
 }
@@ -123,31 +123,31 @@ void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b)
     CHECK_FATAL(out->m != a->m || out->n != b->n,
                 "output matrix has wrong dimensions");
 
-    u32 m = a->m; // rows of A
-    u32 k = a->n; // cols of A = rows of B
-    u32 n = b->n; // cols of B
+    u64 m = a->m; // rows of A
+    u64 k = a->n; // cols of A = rows of B
+    u64 n = b->n; // cols of B
 
     // Initialize output to zero
     memset(out->data, 0, sizeof(float) * m * n);
 
     // Block size for cache optimization
-    const u32 BLOCK_SIZE = 16;
+    const u64 BLOCK_SIZE = 16;
 
     // Blocked matrix multiplication (ikj order for cache efficiency)
-    for (u32 i = 0; i < m; i += BLOCK_SIZE) {
-        for (u32 k_outer = 0; k_outer < k; k_outer += BLOCK_SIZE) {
-            for (u32 j = 0; j < n; j += BLOCK_SIZE) {
+    for (u64 i = 0; i < m; i += BLOCK_SIZE) {
+        for (u64 k_outer = 0; k_outer < k; k_outer += BLOCK_SIZE) {
+            for (u64 j = 0; j < n; j += BLOCK_SIZE) {
                 // Block boundaries
-                u32 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m;
-                u32 k_max =
+                u64 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m;
+                u64 k_max =
                     (k_outer + BLOCK_SIZE < k) ? k_outer + BLOCK_SIZE : k;
-                u32 j_max = (j + BLOCK_SIZE < n) ? j + BLOCK_SIZE : n;
+                u64 j_max = (j + BLOCK_SIZE < n) ? j + BLOCK_SIZE : n;
                 // Multiply this block
-                for (u32 ii = i; ii < i_max; ii++) {
-                    for (u32 kk = k_outer; kk < k_max; kk++) {
+                for (u64 ii = i; ii < i_max; ii++) {
+                    for (u64 kk = k_outer; kk < k_max; kk++) {
 
                         float a_val = a->data[IDX(a, ii, kk)];
-                        for (u32 jj = j; jj < j_max; jj++) {
+                        for (u64 jj = j; jj < j_max; jj++) {
                             out->data[IDX(out, ii, jj)] +=
                                 a_val * b->data[IDX(b, kk, jj)];
                         }
@@ -171,9 +171,9 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
     CHECK_FATAL(out->m != a->m || out->n != b->n,
                 "output matrix has wrong dimensions");
 
-    u32 m = a->m;
-    u32 k = a->n;
-    u32 n = b->n;
+    u64 m = a->m;
+    u64 k = a->n;
+    u64 n = b->n;
 
     // Transpose B for cache-friendly access
     Matrix b_T;
@@ -183,20 +183,20 @@ void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b)
 
     memset(out->data, 0, sizeof(float) * m * n);
 
-    const u32 BLOCK_SIZE = 16;
+    const u64 BLOCK_SIZE = 16;
 
     // Now both A and B^T are accessed row-wise
-    for (u32 i = 0; i < m; i += BLOCK_SIZE) {
-        for (u32 j = 0; j < n; j += BLOCK_SIZE) {
-            u32 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m;
-            u32 j_max = (j + BLOCK_SIZE < n) ? j + BLOCK_SIZE : n;
+    for (u64 i = 0; i < m; i += BLOCK_SIZE) {
+        for (u64 j = 0; j < n; j += BLOCK_SIZE) {
+            u64 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m;
+            u64 j_max = (j + BLOCK_SIZE < n) ? j + BLOCK_SIZE : n;
 
-            for (u32 ii = i; ii < i_max; ii++) {
-                for (u32 jj = j; jj < j_max; jj++) {
+            for (u64 ii = i; ii < i_max; ii++) {
+                for (u64 jj = j; jj < j_max; jj++) {
 
                     float sum = 0;
                     // Dot product of A[ii] and B_T[jj] (both row-wise)
-                    for (u32 kk = 0; kk < k; kk++) {
+                    for (u64 kk = 0; kk < k; kk++) {
                         sum += a->data[IDX(a, ii, kk)] *
                                // b_T->data[IDX(b_T, jj, kk)];
                                b_T.data[IDX(&b_T, jj, kk)];
@@ -222,30 +222,30 @@ void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat)
     CHECK_FATAL(L->n != mat->n || L->m != mat->m, "L dimensions don't match");
     CHECK_FATAL(U->n != mat->n || U->m != mat->m, "U dimensions don't match");
 
-    const u32 n = mat->n;
+    const u64 n = mat->n;
 
     // 0 init matrices
     memset(L->data, 0, sizeof(float) * n * n);
     memset(U->data, 0, sizeof(float) * n * n);
     // L main diagonal is 1
-    for (u32 i = 0; i < n; i++) { L->data[IDX(L, i, i)] = 1; }
+    for (u64 i = 0; i < n; i++) { L->data[IDX(L, i, i)] = 1; }
 
 
     // Build U and L row by row
-    for (u32 i = 0; i < n; i++) {
+    for (u64 i = 0; i < n; i++) {
         // Upper triangular matrix U (row i, columns from i to n-1)
-        for (u32 k = i; k < n; k++) {
+        for (u64 k = i; k < n; k++) {
             float sum = 0;
-            for (u32 j = 0; j < i; j++) {
+            for (u64 j = 0; j < i; j++) {
                 sum += L->data[IDX(L, i, j)] * U->data[IDX(U, j, k)];
             }
             U->data[IDX(U, i, k)] = MATRIX_AT(mat, i, k) - sum;
         }
 
         // Lower triangular matrix L (column i, rows from i+1 to n-1)
-        for (u32 k = i + 1; k < n; k++) {
+        for (u64 k = i + 1; k < n; k++) {
             float sum = 0;
-            for (u32 j = 0; j < i; j++) {
+            for (u64 j = 0; j < i; j++) {
                 sum += L->data[IDX(L, k, j)] * U->data[IDX(U, j, i)];
             }
 
@@ -278,7 +278,7 @@ float matrix_det(const Matrix* mat)
     CHECK_FATAL(mat->m != mat->n, "only square matrices have determinant");
 
 
-    u32 n = mat->n;
+    u64 n = mat->n;
 
     Matrix L, U;
     float  Ldata[n * n]; // random vals
@@ -291,8 +291,8 @@ float matrix_det(const Matrix* mat)
 
     // Calculate determinant as product of U's diagonal
     float det = 1;
-    // for (u32 i = 0; i < n; i++) { det *= U->data[IDX(U, i, i)]; }
-    for (u32 i = 0; i < n; i++) { det *= U.data[IDX(&U, i, i)]; }
+    // for (u64 i = 0; i < n; i++) { det *= U->data[IDX(U, i, i)]; }
+    for (u64 i = 0; i < n; i++) { det *= U.data[IDX(&U, i, i)]; }
 
     return det;
 }
@@ -306,19 +306,19 @@ void matrix_T(Matrix* out, const Matrix* mat)
                 "incompatible matrix dimensions");
 
     // Block size for cache optimization (tune based on cache line size)
-    const u32 BLOCK_SIZE = 16; // TODO: user adjustable macro?
+    const u64 BLOCK_SIZE = 16; // TODO: user adjustable macro?
 
     // Blocked transpose: process matrix in BLOCK_SIZE x BLOCK_SIZE tiles
-    for (u32 i = 0; i < mat->m; i += BLOCK_SIZE) {
-        for (u32 j = 0; j < mat->n; j += BLOCK_SIZE) {
+    for (u64 i = 0; i < mat->m; i += BLOCK_SIZE) {
+        for (u64 j = 0; j < mat->n; j += BLOCK_SIZE) {
 
             // Calculate block boundaries
-            u32 i_max = (i + BLOCK_SIZE < mat->m) ? i + BLOCK_SIZE : mat->m;
-            u32 j_max = (j + BLOCK_SIZE < mat->n) ? j + BLOCK_SIZE : mat->n;
+            u64 i_max = (i + BLOCK_SIZE < mat->m) ? i + BLOCK_SIZE : mat->m;
+            u64 j_max = (j + BLOCK_SIZE < mat->n) ? j + BLOCK_SIZE : mat->n;
 
             // Transpose the block
-            for (u32 ii = i; ii < i_max; ii++) {
-                for (u32 jj = j; jj < j_max; jj++) {
+            for (u64 ii = i; ii < i_max; ii++) {
+                for (u64 jj = j; jj < j_max; jj++) {
                     // mat[ii][jj] -> out[jj][ii]
                     out->data[IDX(out, jj, ii)] = mat->data[IDX(mat, ii, jj)];
                 }
@@ -331,8 +331,8 @@ void matrix_scale(Matrix* mat, float val)
 {
     CHECK_FATAL(!mat, "matrix is null");
 
-    u32 total = MATRIX_TOTAL(mat);
-    for (u32 i = 0; i < total; i++) { mat->data[i] *= val; }
+    u64 total = MATRIX_TOTAL(mat);
+    for (u64 i = 0; i < total; i++) { mat->data[i] *= val; }
 }
 
 
@@ -341,8 +341,8 @@ void matrix_div(Matrix* mat, float val)
     CHECK_FATAL(!mat, "mat is null");
     CHECK_FATAL(val == 0, "division by zero!");
 
-    u32 total = MATRIX_TOTAL(mat);
-    for (u32 i = 0; i < total; i++) { mat->data[i] /= val; }
+    u64 total = MATRIX_TOTAL(mat);
+    for (u64 i = 0; i < total; i++) { mat->data[i] /= val; }
 }
 
 void matrix_copy(Matrix* dest, const Matrix* src)
@@ -359,10 +359,10 @@ void matrix_print(const Matrix* mat)
 {
     CHECK_FATAL(!mat, "matrix is null");
 
-    u32 total = mat->m * mat->n;
+    u64 total = mat->m * mat->n;
 
     // Single linear loop O(n)
-    for (u32 i = 0; i < total; i++) {
+    for (u64 i = 0; i < total; i++) {
         // Print row separator
         if (i % mat->n == 0) {           // divide by columns to detect new row
             if (i > 0) { putchar('|'); } // Close previous row
@@ -379,4 +379,6 @@ void matrix_print(const Matrix* mat)
     putchar('|');
     putchar('\n');
 }
+
+
 

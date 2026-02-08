@@ -17,8 +17,8 @@ typedef void (*move_fn)(u8* dest, u8** src);
 typedef void (*delete_fn)(u8* key); 
 typedef void (*map_print_fn)(const u8* elm);
 
-typedef u32 (*custom_hash_fn)(const u8* key, u32 size);     
-typedef int (*compare_fn)(const u8* a, const u8* b, u32 size);
+typedef u64 (*custom_hash_fn)(const u8* key, u64 size);     
+typedef int (*compare_fn)(const u8* a, const u8* b, u64 size);
 
 
 
@@ -31,10 +31,10 @@ typedef int (*compare_fn)(const u8* a, const u8* b, u32 size);
 ====================DEFAULT FUNCTIONS====================
 */
 // 32-bit FNV-1a (default hash)
-static u32 fnv1a_hash(const u8* bytes, u32 size) {
+static u64 fnv1a_hash(const u8* bytes, u64 size) {
     u32 hash = 2166136261U;  // FNV offset basis
 
-    for (u32 i = 0; i < size; i++) {
+    for (u64 i = 0; i < size; i++) {
         hash ^= bytes[i];   // XOR with current byte
         hash *= 16777619U;  // Multiply by FNV prime
     }
@@ -44,7 +44,7 @@ static u32 fnv1a_hash(const u8* bytes, u32 size) {
 
 
 // Default compare function
-static int default_compare(const u8* a, const u8* b, u32 size) 
+static int default_compare(const u8* a, const u8* b, u64 size) 
 {
     return memcmp(a, b, size);
 }
@@ -58,8 +58,8 @@ static const u32 PRIMES[] = {
 static const u32 PRIMES_COUNT = sizeof(PRIMES) / sizeof(PRIMES[0]);
 
 // Find the next prime number larger than current
-static u32 next_prime(u32 current) {
-    for (u32 i = 0; i < PRIMES_COUNT; i++) {
+static u64 next_prime(u64 current) {
+    for (u64 i = 0; i < PRIMES_COUNT; i++) {
         if (PRIMES[i] > current) {
             return PRIMES[i];
         }
@@ -72,9 +72,9 @@ static u32 next_prime(u32 current) {
 }
 
 // Find the previous prime number smaller than current
-static u32 prev_prime(u32 current) {
+static u64 prev_prime(u64 current) {
     // Search backwards through prime table
-    for (u32 i = PRIMES_COUNT - 1; i >= 0; i--) {
+    for (u64 i = PRIMES_COUNT - 1; i >= 0; i--) {
         if (PRIMES[i] < current) {
             return PRIMES[i];
         }

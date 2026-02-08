@@ -71,7 +71,7 @@
 
 typedef uint8_t  u8;
 typedef uint8_t  b8;
-typedef uint16_t u16;
+typedef uint16_t u32;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
@@ -96,14 +96,14 @@ typedef uint64_t u64;
 
 // RAW BYTES TO HEX
 
-void print_hex(const u8* ptr, u32 size, u32 bytes_per_line) 
+void print_hex(const u8* ptr, u64 size, u32 bytes_per_line) 
 {
     if (ptr == NULL | size == 0 | bytes_per_line == 0) { return; }
 
     // hex rep 0-15
     const char* hex = "0123456789ABCDEF";
     
-    for (u32 i = 0; i < size; i++) 
+    for (u64 i = 0; i < size; i++) 
     {
         u8 val1 = ptr[i] >> 4;      // get upper 4 bits as num b/w 0-15
         u8 val2 = ptr[i] & 0x0F;    // get lower 4 bits as num b/w 0-15
@@ -164,9 +164,9 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, 
 typedef struct {
     u8* data;       // pointer to generic data
 
-    u32 size;      // Number of elements currently in vector
-    u32 capacity;  // Total allocated capacity
-    u16 data_size; // Size of each element in bytes
+    u64 size;      // Number of elements currently in vector
+    u64 capacity;  // Total allocated capacity
+    u32 data_size; // Size of each element in bytes
 
     genVec_copy_fn   copy_fn; // Deep copy function for owned resources (or NULL)
     genVec_move_fn   move_fn; // Get a double pointer, transfer ownership and null original
@@ -182,24 +182,24 @@ typedef struct {
 
 // Initialize vector with capacity n. If elements own heap resources,
 // provide copy_fn (deep copy) and del_fn (cleanup). Otherwise pass NULL.
-genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
+genVec* genVec_init(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
 
 // Initialize vector on stack with data on heap
 // SVO works best here as it is on the stack***
-void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn,
+void genVec_init_stk(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn,
                      genVec* vec);
 
 // Initialize vector of size n, all elements set to val
-genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                         genVec_delete_fn del_fn);
 
-void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                          genVec_delete_fn del_fn, genVec* vec);
 
 // vector COMPLETELY on stack (can't grow in size)
 // you provide a stack inited array which becomes internal array of vector
 // WARNING - This crashes when size = capacity and you try to push
-void genVec_init_arr(u32 n, u8* arr, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+void genVec_init_arr(u64 n, u8* arr, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                          genVec_delete_fn del_fn, genVec* vec);
 
 // Destroy heap-allocated vector and clean up all elements
@@ -215,10 +215,10 @@ void genVec_clear(genVec* vec);
 void genVec_reset(genVec* vec);
 
 // Ensure vector has at least new_capacity space (never shrinks)
-void genVec_reserve(genVec* vec, u32 new_capacity);
+void genVec_reserve(genVec* vec, u64 new_capacity);
 
 // Grow to new_capacity and fill new slots with val
-void genVec_reserve_val(genVec* vec, u32 new_capacity, const u8* val);
+void genVec_reserve_val(genVec* vec, u64 new_capacity, const u8* val);
 
 // Shrink vector to it's size (reallocates)
 void genVec_shrink_to_fit(genVec* vec);
@@ -239,38 +239,38 @@ void genVec_push_move(genVec* vec, u8** data);
 void genVec_pop(genVec* vec, u8* popped);
 
 // Copy element at index i into out buffer
-void genVec_get(const genVec* vec, u32 i, u8* out);
+void genVec_get(const genVec* vec, u64 i, u8* out);
 
 // Get pointer to element at index i
 // Note: Pointer invalidated by push/insert/remove operations
-const u8* genVec_get_ptr(const genVec* vec, u32 i);
+const u8* genVec_get_ptr(const genVec* vec, u64 i);
 
 // apply a function on each value of the array
 void genVec_for_each(genVec* vec, void (*for_each)(u8* elm));
 
 // Replace element at index i with data (cleans up old element)
-void genVec_replace(genVec* vec, u32 i, const u8* data);
+void genVec_replace(genVec* vec, u64 i, const u8* data);
 
 // Replace element at index i, transfer ownership (cleans up old element)
-void genVec_replace_move(genVec* vec, u32 i, u8** data);
+void genVec_replace_move(genVec* vec, u64 i, u8** data);
 
 // Insert element at index i, shifting elements right
-void genVec_insert(genVec* vec, u32 i, const u8* data);
+void genVec_insert(genVec* vec, u64 i, const u8* data);
 
 // Insert element at index i with ownership transfer, shifting elements right
-void genVec_insert_move(genVec* vec, u32 i, u8** data);
+void genVec_insert_move(genVec* vec, u64 i, u8** data);
 
 // Insert num_data elements from data arr to vec. data should have same size data as vec
-void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data);
+void genVec_insert_multi(genVec* vec, u64 i, const u8* data, u64 num_data);
 
 // Insert (move) num_data  elements from data starting at index i. Transfers ownership
-void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data);
+void genVec_insert_multi_move(genVec* vec, u64 i, u8** data, u64 num_data);
 
 // Remove element at index i, optionally copy to out, shift elements left
-void genVec_remove(genVec* vec, u32 i, u8* out);
+void genVec_remove(genVec* vec, u64 i, u8* out);
 
 // Remove elements in range [l, r] inclusive.
-void genVec_remove_range(genVec* vec, u32 l, u32 r);
+void genVec_remove_range(genVec* vec, u64 l, u64 r);
 
 // Get pointer to first element
 const u8* genVec_front(const genVec* vec);
@@ -353,7 +353,7 @@ void genVec_shrink(genVec* vec);
 
 // API Implementation
 
-genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
+genVec* genVec_init(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
 {
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
 
@@ -380,7 +380,7 @@ genVec* genVec_init(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn
 }
 
 
-void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn,
+void genVec_init_stk(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn,
                      genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -398,7 +398,7 @@ void genVec_init_stk(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_f
     vec->del_fn    = del_fn;
 }
 
-genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                         genVec_delete_fn del_fn)
 {
     CHECK_FATAL(!val, "val can't be null");
@@ -408,7 +408,7 @@ genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy
 
     vec->size = n; //capacity set to n in upper func
 
-    for (u32 i = 0; i < n; i++) {
+    for (u64 i = 0; i < n; i++) {
         if (copy_fn) {
             copy_fn(GET_PTR(vec, i), val);
         } else {
@@ -419,7 +419,7 @@ genVec* genVec_init_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy
     return vec;
 }
 
-void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                          genVec_delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!val, "val can't be null");
@@ -429,7 +429,7 @@ void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, genVec_copy_fn cop
 
     vec->size = n;
 
-    for (u32 i = 0; i < n; i++) {
+    for (u64 i = 0; i < n; i++) {
         if (copy_fn) {
             copy_fn(GET_PTR(vec, i), val);
         } else {
@@ -438,7 +438,7 @@ void genVec_init_val_stk(u32 n, const u8* val, u16 data_size, genVec_copy_fn cop
     }
 }
 
-void genVec_init_arr(u32 n, u8* arr, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+void genVec_init_arr(u64 n, u8* arr, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                      genVec_delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!arr, "arr is null");
@@ -476,7 +476,7 @@ void genVec_destroy_stk(genVec* vec)
 
     if (vec->del_fn) {
         // Custom cleanup for each element
-        for (u32 i = 0; i < vec->size; i++) {
+        for (u64 i = 0; i < vec->size; i++) {
             vec->del_fn(GET_PTR(vec, i));
         }
     }
@@ -491,7 +491,7 @@ void genVec_clear(genVec* vec)
     CHECK_FATAL(!vec, "vec is null");
 
     if (vec->del_fn) { // owns resources
-        for (u32 i = 0; i < vec->size; i++) {
+        for (u64 i = 0; i < vec->size; i++) {
             vec->del_fn(GET_PTR(vec, i));
         }
     }
@@ -504,7 +504,7 @@ void genVec_reset(genVec* vec)
     CHECK_FATAL(!vec, "vec is null");
 
     if (vec->del_fn) {
-        for (u32 i = 0; i < vec->size; i++) {
+        for (u64 i = 0; i < vec->size; i++) {
             vec->del_fn(GET_PTR(vec, i));
         }
     }
@@ -516,7 +516,7 @@ void genVec_reset(genVec* vec)
 }
 
 
-void genVec_reserve(genVec* vec, u32 new_capacity)
+void genVec_reserve(genVec* vec, u64 new_capacity)
 {
     CHECK_FATAL(!vec, "vec is null");
 
@@ -532,7 +532,7 @@ void genVec_reserve(genVec* vec, u32 new_capacity)
     vec->capacity = new_capacity;
 }
 
-void genVec_reserve_val(genVec* vec, u32 new_capacity, const u8* val)
+void genVec_reserve_val(genVec* vec, u64 new_capacity, const u8* val)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!val, "val is null");
@@ -540,7 +540,7 @@ void genVec_reserve_val(genVec* vec, u32 new_capacity, const u8* val)
 
     genVec_reserve(vec, new_capacity);
 
-    for (u32 i = vec->size; i < new_capacity; i++) {
+    for (u64 i = vec->size; i < new_capacity; i++) {
         if (vec->copy_fn) {
             vec->copy_fn(GET_PTR(vec, i), val);
         } else {
@@ -634,7 +634,7 @@ void genVec_pop(genVec* vec, u8* popped)
     MAYBE_SHRINK(vec);
 }
 
-void genVec_get(const genVec* vec, u32 i, u8* out)
+void genVec_get(const genVec* vec, u64 i, u8* out)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(i >= vec->size, "index out of bounds");
@@ -647,7 +647,7 @@ void genVec_get(const genVec* vec, u32 i, u8* out)
     }
 }
 
-const u8* genVec_get_ptr(const genVec* vec, u32 i)
+const u8* genVec_get_ptr(const genVec* vec, u64 i)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(i >= vec->size, "index out of bounds");
@@ -660,12 +660,12 @@ void genVec_for_each(genVec* vec, void (*for_each)(u8* elm))
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!for_each, "for_each function is null");
 
-    for (u32 i = 0; i < vec->size; i++) {
+    for (u64 i = 0; i < vec->size; i++) {
         for_each(GET_PTR(vec, i));
     }
 }
 
-void genVec_insert(genVec* vec, u32 i, const u8* data)
+void genVec_insert(genVec* vec, u64 i, const u8* data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!data, "data is null");
@@ -697,7 +697,7 @@ void genVec_insert(genVec* vec, u32 i, const u8* data)
     vec->size++;
 }
 
-void genVec_insert_move(genVec* vec, u32 i, u8** data)
+void genVec_insert_move(genVec* vec, u64 i, u8** data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!data, "data is null");
@@ -732,7 +732,7 @@ void genVec_insert_move(genVec* vec, u32 i, u8** data)
 }
 
 
-void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
+void genVec_insert_multi(genVec* vec, u64 i, const u8* data, u64 num_data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!data, "data is null");
@@ -765,7 +765,7 @@ void genVec_insert_multi(genVec* vec, u32 i, const u8* data, u32 num_data)
     }
 }
 
-void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data)
+void genVec_insert_multi_move(genVec* vec, u64 i, u8** data, u64 num_data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!data, "data is null");
@@ -795,7 +795,7 @@ void genVec_insert_multi_move(genVec* vec, u32 i, u8** data, u32 num_data)
     *data = NULL; // Transfer ownership
 }
 
-void genVec_remove(genVec* vec, u32 i, u8* out)
+void genVec_remove(genVec* vec, u64 i, u8* out)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(i >= vec->size, "index out of bounds");
@@ -828,7 +828,7 @@ void genVec_remove(genVec* vec, u32 i, u8* out)
 }
 
 
-void genVec_remove_range(genVec* vec, u32 l, u32 r)
+void genVec_remove_range(genVec* vec, u64 l, u64 r)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(l >= vec->size, "index out of range");
@@ -839,7 +839,7 @@ void genVec_remove_range(genVec* vec, u32 l, u32 r)
     }
 
     if (vec->del_fn) {
-        for (u32 i = l; i <= r; i++) {
+        for (u64 i = l; i <= r; i++) {
             u8* elm = GET_PTR(vec, i);
             vec->del_fn(elm);
         }
@@ -858,7 +858,7 @@ void genVec_remove_range(genVec* vec, u32 l, u32 r)
 }
 
 
-void genVec_replace(genVec* vec, u32 i, const u8* data)
+void genVec_replace(genVec* vec, u64 i, const u8* data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(i >= vec->size, "index out of bounds");
@@ -878,7 +878,7 @@ void genVec_replace(genVec* vec, u32 i, const u8* data)
 }
 
 
-void genVec_replace_move(genVec* vec, u32 i, u8** data)
+void genVec_replace_move(genVec* vec, u64 i, u8** data)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(i >= vec->size, "index out of bounds");
@@ -924,7 +924,7 @@ void genVec_print(const genVec* vec, genVec_print_fn print_fn)
     CHECK_FATAL(!print_fn, "print func is null");
 
     printf("[ ");
-    for (u32 i = 0; i < vec->size; i++) {
+    for (u64 i = 0; i < vec->size; i++) {
         print_fn(GET_PTR(vec, i));
         putchar(' ');
     }
@@ -952,7 +952,7 @@ void genVec_copy(genVec* dest, const genVec* src)
 
     // Copy elements
     if (src->copy_fn) {
-        for (u32 i = 0; i < src->size; i++) {
+        for (u64 i = 0; i < src->size; i++) {
             src->copy_fn(GET_PTR(dest, i), GET_PTR(src, i));
         }
     } else {
@@ -991,7 +991,7 @@ void genVec_grow(genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
 
-    u32 new_cap;
+    u64 new_cap;
     if (vec->capacity < GENVEC_MIN_CAPACITY) {
         new_cap = vec->capacity + 1;
     } else {
@@ -1013,7 +1013,7 @@ void genVec_shrink(genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
 
-    u32 reduced_cap = (u32)((float)vec->capacity * GENVEC_SHRINK_BY);
+    u64 reduced_cap = (u32)((float)vec->capacity * GENVEC_SHRINK_BY);
     if (reduced_cap < vec->size || reduced_cap == 0) {
         return;
     }
@@ -1055,10 +1055,10 @@ String* string_from_cstr(const char* cstr);
 String* string_from_string(const String* other);
 
 // reserve a capacity for a string (must be greater than current cap)
-void string_reserve(String* str, u32 capacity);
+void string_reserve(String* str, u64 capacity);
 
 // reserve a capacity with a char
-void string_reserve_char(String* str, u32 capacity, char c);
+void string_reserve_char(String* str, u64 capacity, char c);
 
 // destroy the heap allocated string
 void string_destroy(String* str);
@@ -1101,22 +1101,22 @@ void string_append_string_move(String* str, String** other);
 void string_append_char(String* str, char c);
 
 // insert a char at index i of string
-void string_insert_char(String* str, u32 i, char c);
+void string_insert_char(String* str, u64 i, char c);
 
 // insert a cstr at index i
-void string_insert_cstr(String* str, u32 i, const char* cstr);
+void string_insert_cstr(String* str, u64 i, const char* cstr);
 
 // insert a string "str" at index i
-void string_insert_string(String* str, u32 i, const String* other);
+void string_insert_string(String* str, u64 i, const String* other);
 
 // remove char from end of a string
 char string_pop_char(String* str);
 
 // remove a char from index i of string
-void string_remove_char(String* str, u32 i);
+void string_remove_char(String* str, u64 i);
 
 // remove elements from l to r (inclusive)
-void string_remove_range(String* str, u32 l, u32 r);
+void string_remove_range(String* str, u64 l, u64 r);
 
 // remove all chars (keep memory)
 void string_clear(String* str);
@@ -1125,10 +1125,10 @@ void string_clear(String* str);
 // Access
 
 // return char at index i
-char string_char_at(const String* str, u32 i);
+char string_char_at(const String* str, u64 i);
 
 // set the value of char at index i
-void string_set_char(String* str, u32 i, char c);
+void string_set_char(String* str, u64 i, char c);
 
 // Comparison
 
@@ -1153,7 +1153,7 @@ u32 string_find_char(const String* str, char c);
 u32 string_find_cstr(const String* str, const char* substr);
 
 // Set a heap allocated string of a substring starting at index "start", upto length
-String* string_substr(const String* str, u32 start, u32 length);
+String* string_substr(const String* str, u32 start, u64 length);
 
 // TODO: pass a buffer version of substr??
 
@@ -1202,7 +1202,7 @@ void string_create_stk(String* str, const char* cstr)
     // the difference is that we dont use string_create(), so str is not initilised
     CHECK_FATAL(!str, "str is null");
 
-    u32 len = 0;
+    u64 len = 0;
     if (cstr) {
         len = cstr_len(cstr);
     }
@@ -1242,13 +1242,13 @@ String* string_from_string(const String* other)
 }
 
 
-void string_reserve(String* str, u32 capacity)
+void string_reserve(String* str, u64 capacity)
 {
     genVec_reserve(str, capacity);
 }
 
 
-void string_reserve_char(String* str, u32 capacity, char c)
+void string_reserve_char(String* str, u64 capacity, char c)
 {
     genVec_reserve_val(str, capacity, cast(c));
 }
@@ -1352,7 +1352,7 @@ void string_append_cstr(String* str, const char* cstr)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
 
-    u32 len = cstr_len(cstr);
+    u64 len = cstr_len(cstr);
     if (len == 0) {
         return;
     }
@@ -1408,7 +1408,7 @@ char string_pop_char(String* str)
 }
 
 
-void string_insert_char(String* str, u32 i, char c)
+void string_insert_char(String* str, u64 i, char c)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i > str->size, "index out of bounds");
@@ -1417,13 +1417,13 @@ void string_insert_char(String* str, u32 i, char c)
 }
 
 
-void string_insert_cstr(String* str, u32 i, const char* cstr)
+void string_insert_cstr(String* str, u64 i, const char* cstr)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
     CHECK_FATAL(i > str->size, "index out of bounds");
 
-    u32 len = cstr_len(cstr);
+    u64 len = cstr_len(cstr);
     if (len == 0) {
         return;
     }
@@ -1432,7 +1432,7 @@ void string_insert_cstr(String* str, u32 i, const char* cstr)
 }
 
 
-void string_insert_string(String* str, u32 i, const String* other)
+void string_insert_string(String* str, u64 i, const String* other)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!other, "other is null");
@@ -1447,7 +1447,7 @@ void string_insert_string(String* str, u32 i, const String* other)
 }
 
 
-void string_remove_char(String* str, u32 i)
+void string_remove_char(String* str, u64 i)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i >= str->size, "index out of bounds");
@@ -1456,7 +1456,7 @@ void string_remove_char(String* str, u32 i)
 }
 
 
-void string_remove_range(String* str, u32 l, u32 r)
+void string_remove_range(String* str, u64 l, u64 r)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(l >= str->size, "index out of bounds");
@@ -1473,7 +1473,7 @@ void string_clear(String* str)
 }
 
 
-char string_char_at(const String* str, u32 i)
+char string_char_at(const String* str, u64 i)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i >= str->size, "index out of bounds");
@@ -1482,7 +1482,7 @@ char string_char_at(const String* str, u32 i)
 }
 
 
-void string_set_char(String* str, u32 i, char c)
+void string_set_char(String* str, u64 i, char c)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i >= str->size, "index out of bounds");
@@ -1528,7 +1528,7 @@ b8 string_equals_cstr(const String* str, const char* cstr)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
 
-    u32 len = cstr_len(cstr);
+    u64 len = cstr_len(cstr);
 
     // Different lengths = not equal
     if (str->size != len) {
@@ -1547,7 +1547,7 @@ u32 string_find_char(const String* str, char c)
 {
     CHECK_FATAL(!str, "str is null");
 
-    for (u32 i = 0; i < str->size; i++) {
+    for (u64 i = 0; i < str->size; i++) {
         if (((char*)str->data)[i] == c) {
             return i;
         }
@@ -1562,7 +1562,7 @@ u32 string_find_cstr(const String* str, const char* substr)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!substr, "substr is null");
 
-    u32 len = cstr_len(substr);
+    u64 len = cstr_len(substr);
 
     // Empty substring is found at index 0
     if (len == 0) {
@@ -1573,7 +1573,7 @@ u32 string_find_cstr(const String* str, const char* substr)
         return (u32)-1;
     }
 
-    for (u32 i = 0; i <= str->size - len; i++) {
+    for (u64 i = 0; i <= str->size - len; i++) {
         if (memcmp(str->data + i, substr, len) == 0) {
             return i;
         }
@@ -1583,7 +1583,7 @@ u32 string_find_cstr(const String* str, const char* substr)
 }
 
 
-String* string_substr(const String* str, u32 start, u32 length)
+String* string_substr(const String* str, u32 start, u64 length)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(start >= str->size, "index out of bounds");
@@ -1612,7 +1612,7 @@ void string_print(const String* str)
     CHECK_FATAL(!str, "str is null");
 
     putchar('\"');
-    for (u32 i = 0; i < str->size; i++) {
+    for (u64 i = 0; i < str->size; i++) {
         putchar(((char*)str->data)[i]);
     }
     putchar('\"');
@@ -1621,8 +1621,8 @@ void string_print(const String* str)
 
 u32 cstr_len(const char* cstr)
 {
-    u32 len = 0;
-    u32 i   = 0;
+    u64 len = 0;
+    u64 i   = 0;
 
     while (cstr[i++] != '\0') {
         len++;

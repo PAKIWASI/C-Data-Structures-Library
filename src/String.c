@@ -6,7 +6,7 @@
 
 
 // private func
-u32 cstr_len(const char* cstr);
+u64 cstr_len(const char* cstr);
 
 
 
@@ -21,7 +21,7 @@ void string_create_stk(String* str, const char* cstr)
     // the difference is that we dont use string_create(), so str is not initilised
     CHECK_FATAL(!str, "str is null");
 
-    u32 len = 0;
+    u64 len = 0;
     if (cstr) {
         len = cstr_len(cstr);
     }
@@ -61,13 +61,13 @@ String* string_from_string(const String* other)
 }
 
 
-void string_reserve(String* str, u32 capacity)
+void string_reserve(String* str, u64 capacity)
 {
     genVec_reserve(str, capacity);
 }
 
 
-void string_reserve_char(String* str, u32 capacity, char c)
+void string_reserve_char(String* str, u64 capacity, char c)
 {
     genVec_reserve_val(str, capacity, cast(c));
 }
@@ -79,7 +79,6 @@ void string_destroy(String* str)
     free(str);
 }
 
-// cant free the stack allocated string, but buffer is. So seperate delete
 void string_destroy_stk(String* str)
 {
     genVec_destroy_stk(str);
@@ -171,7 +170,7 @@ void string_append_cstr(String* str, const char* cstr)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
 
-    u32 len = cstr_len(cstr);
+    u64 len = cstr_len(cstr);
     if (len == 0) {
         return;
     }
@@ -227,7 +226,7 @@ char string_pop_char(String* str)
 }
 
 
-void string_insert_char(String* str, u32 i, char c)
+void string_insert_char(String* str, u64 i, char c)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i > str->size, "index out of bounds");
@@ -236,13 +235,13 @@ void string_insert_char(String* str, u32 i, char c)
 }
 
 
-void string_insert_cstr(String* str, u32 i, const char* cstr)
+void string_insert_cstr(String* str, u64 i, const char* cstr)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
     CHECK_FATAL(i > str->size, "index out of bounds");
 
-    u32 len = cstr_len(cstr);
+    u64 len = cstr_len(cstr);
     if (len == 0) {
         return;
     }
@@ -251,7 +250,7 @@ void string_insert_cstr(String* str, u32 i, const char* cstr)
 }
 
 
-void string_insert_string(String* str, u32 i, const String* other)
+void string_insert_string(String* str, u64 i, const String* other)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!other, "other is null");
@@ -266,7 +265,7 @@ void string_insert_string(String* str, u32 i, const String* other)
 }
 
 
-void string_remove_char(String* str, u32 i)
+void string_remove_char(String* str, u64 i)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i >= str->size, "index out of bounds");
@@ -275,7 +274,7 @@ void string_remove_char(String* str, u32 i)
 }
 
 
-void string_remove_range(String* str, u32 l, u32 r)
+void string_remove_range(String* str, u64 l, u64 r)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(l >= str->size, "index out of bounds");
@@ -292,7 +291,7 @@ void string_clear(String* str)
 }
 
 
-char string_char_at(const String* str, u32 i)
+char string_char_at(const String* str, u64 i)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i >= str->size, "index out of bounds");
@@ -301,7 +300,7 @@ char string_char_at(const String* str, u32 i)
 }
 
 
-void string_set_char(String* str, u32 i, char c)
+void string_set_char(String* str, u64 i, char c)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(i >= str->size, "index out of bounds");
@@ -315,7 +314,7 @@ int string_compare(const String* str1, const String* str2)
     CHECK_FATAL(!str1, "str1 is null");
     CHECK_FATAL(!str2, "str2 is null");
 
-    u32 min_len = str1->size < str2->size ? str1->size : str2->size;
+    u64 min_len = str1->size < str2->size ? str1->size : str2->size;
 
     // Compare byte by byte
     int cmp = memcmp(str1->data, str2->data, min_len);
@@ -347,7 +346,7 @@ b8 string_equals_cstr(const String* str, const char* cstr)
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!cstr, "cstr is null");
 
-    u32 len = cstr_len(cstr);
+    u64 len = cstr_len(cstr);
 
     // Different lengths = not equal
     if (str->size != len) {
@@ -362,26 +361,26 @@ b8 string_equals_cstr(const String* str, const char* cstr)
 }
 
 
-u32 string_find_char(const String* str, char c)
+u64 string_find_char(const String* str, char c)
 {
     CHECK_FATAL(!str, "str is null");
 
-    for (u32 i = 0; i < str->size; i++) {
+    for (u64 i = 0; i < str->size; i++) {
         if (((char*)str->data)[i] == c) {
             return i;
         }
     }
 
-    return (u32)-1; // Not found
+    return (u64)-1; // Not found
 }
 
 
-u32 string_find_cstr(const String* str, const char* substr)
+u64 string_find_cstr(const String* str, const char* substr)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(!substr, "substr is null");
 
-    u32 len = cstr_len(substr);
+    u64 len = cstr_len(substr);
 
     // Empty substring is found at index 0
     if (len == 0) {
@@ -389,33 +388,33 @@ u32 string_find_cstr(const String* str, const char* substr)
     }
 
     if (len > str->size) {
-        return (u32)-1;
+        return (u64)-1;
     }
 
-    for (u32 i = 0; i <= str->size - len; i++) {
+    for (u64 i = 0; i <= str->size - len; i++) {
         if (memcmp(str->data + i, substr, len) == 0) {
             return i;
         }
     }
 
-    return (u32)-1;
+    return (u64)-1;
 }
 
 
-String* string_substr(const String* str, u32 start, u32 length)
+String* string_substr(const String* str, u64 start, u64 length)
 {
     CHECK_FATAL(!str, "str is null");
     CHECK_FATAL(start >= str->size, "index out of bounds");
 
     String* result = string_create();
 
-    u32 end     = start + length;
-    u32 str_len = string_len(str);
+    u64 end     = start + length;
+    u64 str_len = string_len(str);
     if (end > str_len) {
         end = str_len;
     }
 
-    u32 actual_len = end - start;
+    u64 actual_len = end - start;
 
     if (actual_len > 0) { // Insert substring all at once
         const char* csrc = string_data_ptr(str) + start;
@@ -431,17 +430,17 @@ void string_print(const String* str)
     CHECK_FATAL(!str, "str is null");
 
     putchar('\"');
-    for (u32 i = 0; i < str->size; i++) {
+    for (u64 i = 0; i < str->size; i++) {
         putchar(((char*)str->data)[i]);
     }
     putchar('\"');
 }
 
 
-u32 cstr_len(const char* cstr)
+u64 cstr_len(const char* cstr)
 {
-    u32 len = 0;
-    u32 i   = 0;
+    u64 len = 0;
+    u64 i   = 0;
 
     while (cstr[i++] != '\0') {
         len++;

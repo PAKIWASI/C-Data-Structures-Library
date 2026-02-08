@@ -4,13 +4,13 @@
 #include "String.h"
 
 
-u32 murmurhash3_str(const u8* key, u32 size) 
+u64 murmurhash3_str(const u8* key, u64 size) 
 {
     (void)size;
     
     String* str= (String*)key;
     const char* data = string_data_ptr(str);
-    u32 len = string_len(str);
+    u64 len = string_len(str);
     
     const u32 c1 = 0xcc9e2d51;
     const u32 c2 = 0x1b873593;
@@ -20,9 +20,9 @@ u32 murmurhash3_str(const u8* key, u32 size)
     
     // Body - process 4-byte chunks
     const u32* blocks = (const u32*)data;
-    const u32 nblocks = len / 4;
+    const u64 nblocks = len / 4;
     
-    for (u32 i = 0; i < nblocks; i++) {
+    for (u64 i = 0; i < nblocks; i++) {
         u32 k1 = blocks[i];
         
         k1 *= c1;

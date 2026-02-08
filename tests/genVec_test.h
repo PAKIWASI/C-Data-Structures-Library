@@ -175,12 +175,12 @@ int genVec_test_7(void)
     String* s2 = string_from_string(&str);
     genVec_push_move(&vec, (u8**)&s2);  // MUST BE HEAP INITED
     genVec_print(&vec, str_print);
-    printf("\n%u\n%u\n", vec.size, vec.capacity);
+    printf("\n%lu\n%lu\n", vec.size, vec.capacity);
 
     genVec_shrink_to_fit(&vec);
 
     genVec_print(&vec, str_print);
-    printf("\n%u\n%u\n", vec.size, vec.capacity);
+    printf("\n%lu\n%lu\n", vec.size, vec.capacity);
 
     string_destroy_stk(&str);
     genVec_destroy_stk(&vec);
@@ -201,7 +201,7 @@ int genVec_test_8(void)
     VEC_PUSH_SIMP(&vec, int, 7);
 
     genVec_print(&vec, int_print);
-    printf("\n%u\n%u\n", vec.size, vec.capacity);
+    printf("\n%lu\n%lu\n", vec.size, vec.capacity);
 
     print_hex(cast(vec.data), sizeof(data), 8);
 

@@ -68,7 +68,7 @@
 
 typedef uint8_t  u8;
 typedef uint8_t  b8;
-typedef uint16_t u16;
+typedef uint16_t u32;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
@@ -93,14 +93,14 @@ typedef uint64_t u64;
 
 // RAW BYTES TO HEX
 
-void print_hex(const u8* ptr, u32 size, u32 bytes_per_line) 
+void print_hex(const u8* ptr, u64 size, u32 bytes_per_line) 
 {
     if (ptr == NULL | size == 0 | bytes_per_line == 0) { return; }
 
     // hex rep 0-15
     const char* hex = "0123456789ABCDEF";
     
-    for (u32 i = 0; i < size; i++) 
+    for (u64 i = 0; i < size; i++) 
     {
         u8 val1 = ptr[i] >> 4;      // get upper 4 bits as num b/w 0-15
         u8 val2 = ptr[i] & 0x0F;    // get lower 4 bits as num b/w 0-15
@@ -130,8 +130,8 @@ void print_hex(const u8* ptr, u32 size, u32 bytes_per_line)
 
 typedef struct {
     u8* base;
-    u32 idx;
-    u32 size;
+    u64 idx;
+    u64 size;
 } Arena;
 
 
@@ -148,12 +148,12 @@ with a region with the specified size. Providing a
 size = 0 results in size = ARENA_DEFAULT_SIZE (user can modify)
 
 Parameters:
-  u32 size    |    The size (in bytes) of the arena
+  u64 size    |    The size (in bytes) of the arena
                       memory region.
 Return:
   Pointer to arena on success, NULL on failure
 */
-Arena* arena_create(u32 capacity);
+Arena* arena_create(u64 capacity);
 
 /*
 Initialize an arena object with pointers to the arena and a
@@ -167,7 +167,7 @@ Parameters:
   u8*    data     |   The region to be arena-fyed.
   u32    size     |   The size of the region in bytes.
 */
-void arena_create_arr_stk(Arena* arena, u8* data, u32 size);
+void arena_create_arr_stk(Arena* arena, u8* data, u64 size);
 
 /*
 Reset the pointer to the arena region to the beginning
@@ -201,14 +201,14 @@ Parameters:
   Arena* arena    |    The arena of which the pointer
                        from the region will be
                        distributed
-  u32 size        |    The size (in bytes) of
+  u64 size        |    The size (in bytes) of
                        allocated memory planned to be
                        used.
 Return:
   Pointer to arena region segment on success, NULL on
   failure.
 */
-u8* arena_alloc(Arena* arena, u32 size);
+u8* arena_alloc(Arena* arena, u64 size);
 
 /*
 Same as arena_alloc, except you can specify a memory
@@ -225,16 +225,16 @@ Parameters:
   Arena* arena              |    The arena of which the pointer
                                  from the region will be
                                  distributed
-  u32 size                  |    The size (in bytes) of
+  u64 size                  |    The size (in bytes) of
                                  allocated memory planned to be
                                  used.
-  u16 alignment             |    Alignment (in bytes) for each
+  u32 alignment             |    Alignment (in bytes) for each
                                  memory allocation.
 Return:
   Pointer to arena region segment on success, NULL on
   failure.
 */
-u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment);
+u8* arena_alloc_aligned(Arena* arena, u64 size, u32 alignment);
 
 
 /*
@@ -361,7 +361,7 @@ ARENA_SCRATCH(scratch, arena) {
 
 
 
-Arena* arena_create(u32 capacity)
+Arena* arena_create(u64 capacity)
 {
     if (capacity == 0) {
         capacity = ARENA_DEFAULT_SIZE;
@@ -379,7 +379,7 @@ Arena* arena_create(u32 capacity)
     return arena;
 }
 
-void arena_create_arr_stk(Arena* arena, u8* data, u32 size)
+void arena_create_arr_stk(Arena* arena, u8* data, u64 size)
 {
     CHECK_FATAL(!arena, "arena is null");
     CHECK_FATAL(!data, "data is null");
@@ -405,7 +405,7 @@ void arena_release(Arena* arena)
     free(arena);
 }
 
-u8* arena_alloc(Arena* arena, u32 size)
+u8* arena_alloc(Arena* arena, u64 size)
 {
     CHECK_FATAL(!arena, "arena is null");
     CHECK_FATAL(size == 0, "can't have allocation of size = 0");
@@ -422,7 +422,7 @@ u8* arena_alloc(Arena* arena, u32 size)
     return ptr;
 }
 
-u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment)
+u8* arena_alloc_aligned(Arena* arena, u64 size, u32 alignment)
 {
 
     CHECK_FATAL(!arena, "arena is null");

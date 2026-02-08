@@ -11,7 +11,7 @@ align to 4 bytes
 */
 // Align a value to alignment boundary
 #define ALIGN_UP(val, align) \
-    (((val) + ((u32)(align) - 1)) & ~(((u32)align) - 1))
+    (((val) + ((align) - 1)) & ~((align) - 1))      // WARN: removed u32 cast
 
 // align value to ARENA_DEFAULT_ALIGNMENT
 #define ALIGN_UP_DEFAULT(val) \
@@ -20,7 +20,7 @@ align to 4 bytes
 // Align a pointer to alignment boundary  
 // turn ptr to a u64 val to align, then turn to ptr again
 #define ALIGN_PTR(ptr, align) \
-    ((u8*)ALIGN_UP((u64)(ptr), (align)))
+    ((u8*)ALIGN_UP((ptr), (align)))             // WARN: removed u64 cast
 
 // align a pointer to ARENA_DEFAULT_ALIGNMENT
 #define ALIGN_PTR_DEFAULT(ptr) \
@@ -34,7 +34,7 @@ align to 4 bytes
 
 
 
-Arena* arena_create(u32 capacity)
+Arena* arena_create(u64 capacity)
 {
     if (capacity == 0) {
         capacity = ARENA_DEFAULT_SIZE;
@@ -52,7 +52,7 @@ Arena* arena_create(u32 capacity)
     return arena;
 }
 
-void arena_create_arr_stk(Arena* arena, u8* data, u32 size)
+void arena_create_arr_stk(Arena* arena, u8* data, u64 size)
 {
     CHECK_FATAL(!arena, "arena is null");
     CHECK_FATAL(!data, "data is null");
@@ -78,13 +78,13 @@ void arena_release(Arena* arena)
     free(arena);
 }
 
-u8* arena_alloc(Arena* arena, u32 size)
+u8* arena_alloc(Arena* arena, u64 size)
 {
     CHECK_FATAL(!arena, "arena is null");
     CHECK_FATAL(size == 0, "can't have allocation of size = 0");
     
     // Align the current index first
-    u32 aligned_idx = ALIGN_UP_DEFAULT(arena->idx);
+    u64 aligned_idx = ALIGN_UP_DEFAULT(arena->idx);
     
     CHECK_WARN_RET(arena->size - aligned_idx < size,
                    NULL, "not enough space in arena for SIZE");
@@ -95,7 +95,7 @@ u8* arena_alloc(Arena* arena, u32 size)
     return ptr;
 }
 
-u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment)
+u8* arena_alloc_aligned(Arena* arena, u64 size, u32 alignment)
 {
 
     CHECK_FATAL(!arena, "arena is null");
@@ -104,7 +104,7 @@ u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment)
                 "alignment must be power of two");
 
 
-    u32 aligned_idx = ALIGN_UP(arena->idx, alignment);
+    u64 aligned_idx = ALIGN_UP(arena->idx, alignment);
 
     CHECK_WARN_RET(arena->size - aligned_idx < size,
                    NULL, "not enough space in arena for SIZE");
@@ -115,14 +115,14 @@ u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment)
     return ptr;
 }
 
-u32 arena_get_mark(Arena* arena)
+u64 arena_get_mark(Arena* arena)
 {
     CHECK_FATAL(!arena, "arena is null");
 
     return arena->idx;
 }
 
-void arena_clear_mark(Arena* arena, u32 mark)
+void arena_clear_mark(Arena* arena, u64 mark)
 {
     CHECK_FATAL(!arena, "arena is null");
     CHECK_FATAL(mark > arena->idx, "mark is out of bounds");

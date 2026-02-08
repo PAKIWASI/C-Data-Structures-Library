@@ -217,7 +217,7 @@ int matrix_test_7(void)
 
     matrix_print(mat);
 
-    printf("%u\n%u\n", arena->idx, arena->size);
+    printf("%lu\n%lu\n", arena->idx, arena->size);
     arena_release(arena);
     return 0;
 }

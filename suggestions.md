@@ -129,10 +129,10 @@ const char* error_string(ResultCode code) {
 ```c
 // arena.h - Add new versions
 // Old (keep for compatibility):
-u8* arena_alloc(Arena* arena, u32 size);
+u8* arena_alloc(Arena* arena, u64 size);
 
 // New (add alongside):
-Error arena_alloc_safe(Arena* arena, u32 size, u8** out);
+Error arena_alloc_safe(Arena* arena, u64 size, u8** out);
 ```
 
 **arena.c implementation:**
@@ -140,7 +140,7 @@ Error arena_alloc_safe(Arena* arena, u32 size, u8** out);
 ```c
 #include "result.h"
 
-Error arena_alloc_safe(Arena* arena, u32 size, u8** out) {
+Error arena_alloc_safe(Arena* arena, u64 size, u8** out) {
     CHECK_ERR(!arena, ERR_NULL_PTR, "arena is null");
     CHECK_ERR(!out, ERR_NULL_PTR, "output pointer is null");
     CHECK_ERR(size == 0, ERR_INVALID_SIZE, "size cannot be zero");
@@ -158,7 +158,7 @@ Error arena_alloc_safe(Arena* arena, u32 size, u8** out) {
 }
 
 // Keep old version for backward compatibility
-u8* arena_alloc(Arena* arena, u32 size) {
+u8* arena_alloc(Arena* arena, u64 size) {
     u8* result = NULL;
     Error err = arena_alloc_safe(arena, size, &result);
     
@@ -222,7 +222,7 @@ Error genVec_push_safe(genVec* vec, const u8* data) {
 }
 
 static Error genVec_grow_safe(genVec* vec) {
-    u32 new_cap = (u32)((float)vec->capacity * GENVEC_GROWTH);
+    u64 new_cap = (u32)((float)vec->capacity * GENVEC_GROWTH);
     if (new_cap <= vec->capacity) {
         new_cap = vec->capacity + 1;
     }
@@ -717,7 +717,7 @@ int main(void) {
         
         BENCHMARK("genVec iteration", 1000, {
             int sum = 0;
-            for (u32 i = 0; i < vec->size; i++) {
+            for (u64 i = 0; i < vec->size; i++) {
                 sum += *(int*)genVec_get_ptr(vec, i);
             }
             (void)sum;  // Prevent optimization
@@ -914,7 +914,7 @@ MemPool* pool_create(u32 block_size, u32 block_count) {
     
     // Build free list
     pool->free_list = NULL;
-    for (u32 i = 0; i < block_count; i++) {
+    for (u64 i = 0; i < block_count; i++) {
         PoolBlock* block = (PoolBlock*)(pool->memory + (u64)i * block_size);
         block->next = pool->free_list;
         pool->free_list = block;
@@ -1020,42 +1020,42 @@ void matrix_add_simd(Matrix* out, const Matrix* a, const Matrix* b) {
 #ifdef __AVX__
     // Process 8 floats at a time with AVX
     u32 simd_count = total / 8;
-    u32 remainder = total % 8;
+    u64 remainder = total % 8;
     
     __m256* a_simd = (__m256*)a->data;
     __m256* b_simd = (__m256*)b->data;
     __m256* out_simd = (__m256*)out->data;
     
-    for (u32 i = 0; i < simd_count; i++) {
+    for (u64 i = 0; i < simd_count; i++) {
         out_simd[i] = _mm256_add_ps(a_simd[i], b_simd[i]);
     }
     
     // Handle remainder
-    for (u32 i = simd_count * 8; i < total; i++) {
+    for (u64 i = simd_count * 8; i < total; i++) {
         out->data[i] = a->data[i] + b->data[i];
     }
     
 #elif defined(__SSE__)
     // Process 4 floats at a time with SSE
     u32 simd_count = total / 4;
-    u32 remainder = total % 4;
+    u64 remainder = total % 4;
     
     __m128* a_simd = (__m128*)a->data;
     __m128* b_simd = (__m128*)b->data;
     __m128* out_simd = (__m128*)out->data;
     
-    for (u32 i = 0; i < simd_count; i++) {
+    for (u64 i = 0; i < simd_count; i++) {
         out_simd[i] = _mm_add_ps(a_simd[i], b_simd[i]);
     }
     
     // Handle remainder
-    for (u32 i = simd_count * 4; i < total; i++) {
+    for (u64 i = simd_count * 4; i < total; i++) {
         out->data[i] = a->data[i] + b->data[i];
     }
     
 #else
     // Fallback to scalar
-    for (u32 i = 0; i < total; i++) {
+    for (u64 i = 0; i < total; i++) {
         out->data[i] = a->data[i] + b->data[i];
     }
 #endif
@@ -1070,11 +1070,11 @@ void matrix_scale_simd(Matrix* mat, float val) {
     u32 simd_count = total / 8;
     __m256* mat_simd = (__m256*)mat->data;
     
-    for (u32 i = 0; i < simd_count; i++) {
+    for (u64 i = 0; i < simd_count; i++) {
         mat_simd[i] = _mm256_mul_ps(mat_simd[i], scale_vec);
     }
     
-    for (u32 i = simd_count * 8; i < total; i++) {
+    for (u64 i = simd_count * 8; i < total; i++) {
         mat->data[i] *= val;
     }
     
@@ -1084,16 +1084,16 @@ void matrix_scale_simd(Matrix* mat, float val) {
     u32 simd_count = total / 4;
     __m128* mat_simd = (__m128*)mat->data;
     
-    for (u32 i = 0; i < simd_count; i++) {
+    for (u64 i = 0; i < simd_count; i++) {
         mat_simd[i] = _mm_mul_ps(mat_simd[i], scale_vec);
     }
     
-    for (u32 i = simd_count * 4; i < total; i++) {
+    for (u64 i = simd_count * 4; i < total; i++) {
         mat->data[i] *= val;
     }
     
 #else
-    for (u32 i = 0; i < total; i++) {
+    for (u64 i = 0; i < total; i++) {
         mat->data[i] *= val;
     }
 #endif
@@ -1124,7 +1124,7 @@ int main(void) {
     Matrix* out = matrix_create(SIZE, SIZE);
     
     // Fill with random data
-    for (u32 i = 0; i < SIZE * SIZE; i++) {
+    for (u64 i = 0; i < SIZE * SIZE; i++) {
         a->data[i] = (float)rand() / RAND_MAX;
         b->data[i] = (float)rand() / RAND_MAX;
     }
@@ -1410,7 +1410,7 @@ void error_stack_print(void) {
 // arena.c
 #include "error.h"
 
-DSError arena_alloc(Arena* arena, u32 size, u8** out) {
+DSError arena_alloc(Arena* arena, u64 size, u8** out) {
     CHECK_ERROR(!arena, DS_ERR_NULL_ARENA, "arena parameter is null");
     CHECK_ERROR(!out, DS_ERR_NULL_PTR, "output pointer is null");
     CHECK_ERROR(size == 0, DS_ERR_INVALID_SIZE, "requested size is zero");
@@ -1432,7 +1432,7 @@ DSError arena_alloc(Arena* arena, u32 size, u8** out) {
     return DS_OK;
 }
 
-DSError arena_alloc_aligned(Arena* arena, u32 size, u16 alignment, u8** out) {
+DSError arena_alloc_aligned(Arena* arena, u64 size, u32 alignment, u8** out) {
     CHECK_ERROR(!arena, DS_ERR_NULL_ARENA, "arena is null");
     CHECK_ERROR(!out, DS_ERR_NULL_PTR, "output pointer is null");
     CHECK_ERROR(size == 0, DS_ERR_INVALID_SIZE, "size is zero");
@@ -1460,7 +1460,7 @@ DSError arena_alloc_aligned(Arena* arena, u32 size, u16 alignment, u8** out) {
 #include "error.h"
 
 static DSError genVec_grow(genVec* vec) {
-    u32 new_cap = (u32)((float)vec->capacity * GENVEC_GROWTH);
+    u64 new_cap = (u32)((float)vec->capacity * GENVEC_GROWTH);
     if (new_cap <= vec->capacity) new_cap = vec->capacity + 1;
     
     u8* new_data = (u8*)realloc(vec->data, (u64)new_cap * vec->data_size);
@@ -1494,7 +1494,7 @@ DSError genVec_push(genVec* vec, const u8* data) {
     return DS_OK;
 }
 
-DSError genVec_get(const genVec* vec, u32 i, u8* out) {
+DSError genVec_get(const genVec* vec, u64 i, u8* out) {
     CHECK_ERROR(!vec, DS_ERR_NULL_VECTOR, "vector is null");
     CHECK_ERROR(!out, DS_ERR_NULL_PTR, "output pointer is null");
     
@@ -1516,7 +1516,7 @@ DSError genVec_get(const genVec* vec, u32 i, u8* out) {
     return DS_OK;
 }
 
-DSError genVec_insert(genVec* vec, u32 i, const u8* data) {
+DSError genVec_insert(genVec* vec, u64 i, const u8* data) {
     CHECK_ERROR(!vec, DS_ERR_NULL_VECTOR, "vector is null");
     CHECK_ERROR(!data, DS_ERR_NULL_DATA, "data is null");
     CHECK_ERROR(i > vec->size, DS_ERR_INDEX_OUT_OF_BOUNDS, 

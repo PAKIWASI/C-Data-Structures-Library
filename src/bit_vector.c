@@ -24,12 +24,12 @@ void bitVec_destroy(bitVec* bvec)
 }
 
 // Set bit i to 1
-void bitVec_set(bitVec* bvec, u32 i)
+void bitVec_set(bitVec* bvec, u64 i)
 {
     CHECK_FATAL(!bvec, "bvec is null");
     
-    u32 byte_index = i / 8; // which byte (elm) 
-    u32 bit_index = i % 8; // which bit in the byte
+    u64 byte_index = i / 8; // which byte (elm) 
+    u64 bit_index = i % 8; // which bit in the byte
     
     // Ensure byte capacity
     while (byte_index >= bvec->arr->size) {
@@ -51,14 +51,14 @@ void bitVec_set(bitVec* bvec, u32 i)
 }
 
 // Clear bit i (set to 0)
-void bitVec_clear(bitVec* bvec, u32 i)
+void bitVec_clear(bitVec* bvec, u64 i)
 {
     CHECK_FATAL(!bvec, "bvec is null");
 
     CHECK_FATAL(i >= bvec->size, "index out of bounds");     
 
-    u32 byte_index = i / 8;
-    u32 bit_index = i % 8;
+    u64 byte_index = i / 8;
+    u64 bit_index = i % 8;
 
     u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index);
     *byte &= ~(1 << bit_index);  // Clear the bit
@@ -68,14 +68,14 @@ void bitVec_clear(bitVec* bvec, u32 i)
 }
 
 // Test bit i (returns 1 or 0)
-u8 bitVec_test(bitVec* bvec, u32 i)
+u8 bitVec_test(bitVec* bvec, u64 i)
 {
     CHECK_FATAL(!bvec, "bvec is null");
     
     CHECK_FATAL(i >= bvec->size, "index out of bounds");
 
-    u32 byte_index = i / 8;
-    u32 bit_index = i % 8;
+    u64 byte_index = i / 8;
+    u64 bit_index = i % 8;
 
     //u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index); 
     return (*genVec_get_ptr(bvec->arr, byte_index) >> bit_index) & 1;  // copy of dereferenced byte data returned
@@ -84,14 +84,14 @@ u8 bitVec_test(bitVec* bvec, u32 i)
 }
 
 // Toggle bit i
-void bitVec_toggle(bitVec* bvec, u32 i)
+void bitVec_toggle(bitVec* bvec, u64 i)
 {
     CHECK_FATAL(!bvec, "bvec is null");
     
     CHECK_FATAL(i >= bvec->size, "index out of bounds");
 
-    u32 byte_index = i / 8;
-    u32 bit_index = i % 8;
+    u64 byte_index = i / 8;
+    u64 bit_index = i % 8;
 
     u8* byte = (u8*)genVec_get_ptr(bvec->arr, byte_index);
     *byte ^= (1 << bit_index); // lvalue so byte is modified
@@ -116,7 +116,7 @@ void bitVec_pop(bitVec* bvec)
     }
 }
 
-void bitVec_print(bitVec *bvec, u32 byteI)
+void bitVec_print(bitVec *bvec, u64 byteI)
 {
     CHECK_FATAL(!bvec, "bvec is null");
 
@@ -125,7 +125,7 @@ void bitVec_print(bitVec *bvec, u32 byteI)
     u8 bits_to_print = 8;
     // If this is the last byte, only print the valid bits
     if (byteI == bvec->arr->size - 1) {
-        u32 remaining = bvec->size % 8;
+        u64 remaining = bvec->size % 8;
         bits_to_print = (remaining == 0) ? 8 : (u8)remaining;
     }
 
@@ -133,8 +133,6 @@ void bitVec_print(bitVec *bvec, u32 byteI)
         // we print from 0th bit to 7th bit (there are no lsb, msb)
         printf("%d", ((*genVec_get_ptr(bvec->arr, byteI)) >> i) & 1);// we lose data from right
     }
-
-    printf("\n");
 }
 
 

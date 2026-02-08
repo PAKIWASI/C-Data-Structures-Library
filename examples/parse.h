@@ -16,11 +16,11 @@
 char* clean_word(const char* token, char* output, u32 output_size) {
     if (!token || !output || output_size == 0) { return NULL; }
     
-    u32 len = strlen(token);
+    u64 len = strlen(token);
     u32 out_idx = 0;
     bool has_letters = false;
     
-    for (u32 i = 0; i < len && out_idx < output_size - 1; i++) {
+    for (u64 i = 0; i < len && out_idx < output_size - 1; i++) {
         unsigned char c = (unsigned char)token[i];
         
         // Skip digits completely - remove numbers like 1023
@@ -35,7 +35,7 @@ char* clean_word(const char* token, char* output, u32 output_size) {
                           (unsigned char)token[i+2] == 0x99)) {
             
             // If it's a UTF-8 curly quote, skip the 3-byte sequence
-            u32 next_pos = i + 1;
+            u64 next_pos = i + 1;
             if (c == 0xE2) {
                 i += 2; // Skip the remaining bytes of UTF-8 sequence
                 next_pos = i + 1;
@@ -142,8 +142,8 @@ int parse(void)
     
 
     // Print summary
-    printf("\nTotal words processed: %u\n", total_words);
-    printf("Unique words: %u\n\n", map->size);
+    printf("\nTotal words processed: %lu\n", total_words);
+    printf("Unique words: %lu\n\n", map->size);
 
     String str;
     string_create_onstk(&str, "gay");

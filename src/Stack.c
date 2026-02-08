@@ -2,12 +2,12 @@
 
 
 
-Stack* stack_create(u32 n, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
+Stack* stack_create(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
 {
     return genVec_init(n, data_size, copy_fn, move_fn, del_fn);
 }
 
-Stack* stack_create_val(u32 n, const u8* val, u16 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
+Stack* stack_create_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
                         genVec_delete_fn del_fn)
 {
     return genVec_init_val(n, val, data_size, copy_fn, move_fn, del_fn);

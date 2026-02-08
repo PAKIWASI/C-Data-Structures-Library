@@ -6,9 +6,9 @@
 
 typedef struct {
     u8*             buckets;
-    u32             size;
-    u32             capacity;
-    u16             elm_size;
+    u64             size;
+    u64             capacity;
+    u32             elm_size;
     custom_hash_fn  hash_fn;
     compare_fn      cmp_fn;
     copy_fn         copy_fn;
@@ -28,7 +28,7 @@ typedef struct {
  * @param move_fn - Move function for elms (or NULL for default move)
  * @param del_fn - Cleanup function for elms (or NULL if elms don't own resources)
  */
-hashset* hashset_create(u16 elm_size, custom_hash_fn hash_fn, compare_fn cmp_fn, 
+hashset* hashset_create(u32 elm_size, custom_hash_fn hash_fn, compare_fn cmp_fn, 
                          copy_fn copy_fn, move_fn move_fn, delete_fn del_fn);
 
 /**
@@ -80,13 +80,13 @@ void hashset_clear(hashset* set);
 void hashset_reset(hashset* set);
 
 // Inline utility functions
-static inline u32 hashset_size(const hashset* set)
+static inline u64 hashset_size(const hashset* set)
 {
     CHECK_FATAL(!set, "set is null");
     return set->size;
 }
 
-static inline u32 hashset_capacity(const hashset* set)
+static inline u64 hashset_capacity(const hashset* set)
 {
     CHECK_FATAL(!set, "set is null");
     return set->capacity;

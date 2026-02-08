@@ -25,7 +25,7 @@ void str_copy(u8* dest, const u8* src)
     memcpy(d, s, sizeof(String)); // both point to same data
 
     // allocate space for data
-    u32 n   = s->size * s->data_size;
+    u64 n   = s->size * s->data_size;
     d->data = malloc(n);
 
     // copy data
@@ -76,7 +76,7 @@ void str_copy_ptr(u8* dest, const u8* src)
     memcpy(d, s, sizeof(String));
 
     // allocate memroy for new data
-    u32 n   = s->size * s->data_size;
+    u64 n   = s->size * s->data_size;
     d->data = malloc(n);
 
     // copy all elements
@@ -109,13 +109,13 @@ void str_print_ptr(const u8* elm)
     string_print(*(const String**)elm);
 }
 
-int str_cmp(const u8* a, const u8* b, u32 size)
+int str_cmp(const u8* a, const u8* b, u64 size)
 {
     (void)size;
     return string_compare((const String*)a, (const String*)b);
 }
 
-int str_cmp_ptr(const u8* a, const u8* b, u32 size)
+int str_cmp_ptr(const u8* a, const u8* b, u64 size)
 {
     (void)size;
     return string_compare(*(String**)a, *(String**)b);

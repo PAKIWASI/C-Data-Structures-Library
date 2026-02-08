@@ -9,8 +9,8 @@
 // ROW MAJOR 2D MATRIX
 typedef struct {
     float* data;
-    u32    m; // rows
-    u32    n; // cols
+    u64    m; // rows
+    u64    n; // cols
 } Matrix;
 
 
@@ -18,13 +18,13 @@ typedef struct {
 // ============================================================================
 
 // create heap matrix with m rows and n cols
-Matrix* matrix_create(u32 m, u32 n);
+Matrix* matrix_create(u64 m, u64 n);
 
 // create heap matrix with m rows and n cols and an array of size m x n
-Matrix* matrix_create_arr(u32 m, u32 n, const float* arr);
+Matrix* matrix_create_arr(u64 m, u64 n, const float* arr);
 
 // create matrix with everything on the stack
-void matrix_create_stk(Matrix* mat, u32 m, u32 n, float* data);
+void matrix_create_stk(Matrix* mat, u64 m, u64 n, float* data);
 
 // destroy the matrix created with matrix_create or matrix_create_arr
 // DO NOT use on stack-allocated matrices (created with matrix_create_stk)
@@ -44,13 +44,13 @@ void matrix_destroy(Matrix* mat);
            {7, 8, 9}
        });
 */
-void matrix_set_val_arr(Matrix* mat, u32 count, const float* arr);
+void matrix_set_val_arr(Matrix* mat, u64 count, const float* arr);
 
 // for 2D arrays (array of pointers)
-void matrix_set_val_arr2(Matrix* mat, u32 m, u32 n, const float** arr2);
+void matrix_set_val_arr2(Matrix* mat, u64 m, u64 n, const float** arr2);
 
 // set the value at position (i, j) where i is row and j is column
-void matrix_set_elm(Matrix* mat, float elm, u32 i, u32 j);
+void matrix_set_elm(Matrix* mat, float elm, u64 i, u64 j);
 
 
 // BASIC OPERATIONS
@@ -119,7 +119,7 @@ void matrix_inv(Matrix* out, const Matrix* mat);
 // print the formatted, aligned matrix to stdout
 void matrix_print(const Matrix* mat);
 
-#define MATRIX_TOTAL(mat)    ((u32)((mat)->n * (mat)->m))
+#define MATRIX_TOTAL(mat)    ((u64)((mat)->n * (mat)->m))
 #define IDX(mat, i, j)       (((i) * (mat)->n) + (j))
 #define MATRIX_AT(mat, i, j) ((mat)->data[((i) * (mat)->n) + (j)])
 
@@ -140,7 +140,7 @@ No need to call matrix_destroy - freed when arena is cleared/released
 Usage:
     Matrix* mat = MATRIX_ARENA(arena, 3, 3);
 */
-static inline Matrix* matrix_arena_alloc(Arena* arena, u32 m, u32 n)
+static inline Matrix* matrix_arena_alloc(Arena* arena, u64 m, u64 n)
 {
     CHECK_FATAL(m == 0 && n == 0, "n == m == 0");
 
@@ -150,7 +150,7 @@ static inline Matrix* matrix_arena_alloc(Arena* arena, u32 m, u32 n)
     mat->m = m;
     mat->n = n;
 
-    mat->data = ARENA_ALLOC_N(arena, float, (u32)(m * n));
+    mat->data = ARENA_ALLOC_N(arena, float, (u64)(m * n));
     CHECK_FATAL(!mat->data, "matrix data arena allocation failed");
 
     return mat;
@@ -164,7 +164,7 @@ Usage:
     Matrix* mat = MATRIX_ARENA_ARR(arena, 3, 3, (float[9]){1,2,3,4,5,6,7,8,9});
 */
 
-static inline Matrix* matrix_arena_arr_alloc(Arena* arena, u32 m, u32 n, const float* arr)
+static inline Matrix* matrix_arena_arr_alloc(Arena* arena, u64 m, u64 n, const float* arr)
 {
     CHECK_FATAL(m == 0 || n == 0, "matrix dims must be > 0");
     CHECK_FATAL(!arr, "input arr is null");
@@ -190,9 +190,9 @@ static inline Matrix* matrix_arena_arr_alloc(Arena* arena, u32 m, u32 n, const f
  3. Matrix views (zero-copy slicing)
     typedef struct {
         int* data;
-        u32  n, m;
-        u32  stride;    // for non-contiguous access
-        u32  offset;    // starting position
+        u64  n, m;
+        u64  stride;    // for non-contiguous access
+        u64  offset;    // starting position
     } MatrixView;
     
     - Slicing without copying
@@ -200,7 +200,7 @@ static inline Matrix* matrix_arena_arr_alloc(Arena* arena, u32 m, u32 n, const f
     - SIMD-friendly kernels with custom strides
     
  4. Identity matrix creation
-    Matrix* matrix_iden(u32 n, u32 m);
+    Matrix* matrix_iden(u64 n, u64 m);
     
  5. Additional operations
     - Power operations

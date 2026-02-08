@@ -7,8 +7,8 @@
 
 typedef struct {
     u8* base;
-    u32 idx;
-    u32 size;
+    u64 idx;
+    u64 size;
 } Arena;
 
 
@@ -25,12 +25,12 @@ with a region with the specified size. Providing a
 size = 0 results in size = ARENA_DEFAULT_SIZE (user can modify)
 
 Parameters:
-  u32 size    |    The size (in bytes) of the arena
+  u64 size    |    The size (in bytes) of the arena
                       memory region.
 Return:
   Pointer to arena on success, NULL on failure
 */
-Arena* arena_create(u32 capacity);
+Arena* arena_create(u64 capacity);
 
 /*
 Initialize an arena object with pointers to the arena and a
@@ -42,9 +42,9 @@ Note that ARENA_DEFAULT_SIZE is not used.
 Parameters:
   Arena* arena    |   The arena object being initialized.
   u8*    data     |   The region to be arena-fyed.
-  u32    size     |   The size of the region in bytes.
+  u64    size     |   The size of the region in bytes.
 */
-void arena_create_arr_stk(Arena* arena, u8* data, u32 size);
+void arena_create_arr_stk(Arena* arena, u8* data, u64 size);
 
 /*
 Reset the pointer to the arena region to the beginning
@@ -78,14 +78,14 @@ Parameters:
   Arena* arena    |    The arena of which the pointer
                        from the region will be
                        distributed
-  u32 size        |    The size (in bytes) of
+  u64 size        |    The size (in bytes) of
                        allocated memory planned to be
                        used.
 Return:
   Pointer to arena region segment on success, NULL on
   failure.
 */
-u8* arena_alloc(Arena* arena, u32 size);
+u8* arena_alloc(Arena* arena, u64 size);
 
 /*
 Same as arena_alloc, except you can specify a memory
@@ -102,16 +102,16 @@ Parameters:
   Arena* arena              |    The arena of which the pointer
                                  from the region will be
                                  distributed
-  u32 size                  |    The size (in bytes) of
+  u64 size                  |    The size (in bytes) of
                                  allocated memory planned to be
                                  used.
-  u16 alignment             |    Alignment (in bytes) for each
+  u32 alignment             |    Alignment (in bytes) for each
                                  memory allocation.
 Return:
   Pointer to arena region segment on success, NULL on
   failure.
 */
-u8* arena_alloc_aligned(Arena* arena, u32 size, u16 alignment);
+u8* arena_alloc_aligned(Arena* arena, u64 size, u32 alignment);
 
 
 /*
@@ -124,27 +124,27 @@ Parameters:
 Return:
   The current value of idx variable
 */
-u32 arena_get_mark(Arena* arena);
+u64 arena_get_mark(Arena* arena);
 
 /*
 Clear the arena from current index back to mark
 
 Parameters:
   Arena* arena          |   The arena you want to clear using it's mark
-  u32    mark           |   The mark previosly obtained by arena_get_mark 
+  u64    mark           |   The mark previosly obtained by arena_get_mark 
 */
-void arena_clear_mark(Arena* arena, u32 mark);
+void arena_clear_mark(Arena* arena, u64 mark);
 
 
 // Get used capacity
-static inline u32 arena_used(Arena* arena)
+static inline u64 arena_used(Arena* arena)
 {
     CHECK_FATAL(!arena, "arena is null");
     return arena->idx;
 }
 
 // Get remaining capacity
-static inline u32 arena_remaining(Arena* arena)
+static inline u64 arena_remaining(Arena* arena)
 {
     CHECK_FATAL(!arena, "arena is null");
     return arena->size - arena->idx;
@@ -156,7 +156,7 @@ static inline u32 arena_remaining(Arena* arena)
 
 typedef struct {
     Arena* arena;
-    u32 saved_idx;
+    u64 saved_idx;
 } arena_scratch;
 
 
@@ -217,8 +217,8 @@ ARENA_SCRATCH(scratch, arena) {
 // V. COOL:  Scratch Arena
 
 #define ARENA_SCRATCH(arena) \
-    for (u32 mark_##arena= arena_get_mark(arena); mark_##arena != (u32) - 1;\
-        arena_clear_mark(arena, mark_##arena), mark_##arena = (u32) - 1)
+    for (u64 mark_##arena= arena_get_mark(arena); mark_##arena != (u64) - 1;\
+        arena_clear_mark(arena, mark_##arena), mark_##arena = (u64) - 1)
 
 
 USAGE:

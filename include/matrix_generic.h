@@ -19,7 +19,7 @@
     typedef struct {      \
         T*  data;         \
         u32 m; /* rows */ \
-        u32 n; /* cols */ \
+        u64 n; /* cols */ \
     } Matrix_##T
 
 
@@ -37,7 +37,7 @@
 // ============================================================================
 
 #define MATRIX_CREATE(T)                                           \
-    Matrix_##T* matrix_create_##T(u32 m, u32 n)                    \
+    Matrix_##T* matrix_create_##T(u32 m, u64 n)                    \
     {                                                              \
         CHECK_FATAL(n == 0 && m == 0, "n == m == 0");              \
         Matrix_##T* mat = (Matrix_##T*)malloc(sizeof(Matrix_##T)); \
@@ -50,7 +50,7 @@
     }
 
 #define MATRIX_CREATE_ARR(T)                                      \
-    Matrix_##T* matrix_create_arr_##T(u32 m, u32 n, const T* arr) \
+    Matrix_##T* matrix_create_arr_##T(u32 m, u64 n, const T* arr) \
     {                                                             \
         CHECK_FATAL(!arr, "input arr is null");                   \
         Matrix_##T* mat = matrix_create_##T(m, n);                \
@@ -59,7 +59,7 @@
     }
 
 #define MATRIX_CREATE_STK(T)                                           \
-    void matrix_create_stk_##T(Matrix_##T* mat, u32 m, u32 n, T* data) \
+    void matrix_create_stk_##T(Matrix_##T* mat, u32 m, u64 n, T* data) \
     {                                                                  \
         CHECK_FATAL(!mat, "matrix is null");                           \
         CHECK_FATAL(!data, "data is null");                            \
@@ -102,7 +102,7 @@
 
 // For 2D arrays (array of pointers)
 #define MATRIX_SET_VAL_ARR2(T)                                  \
-    void matrix_set_val_arr2_##T(Matrix_##T* mat, u32 m, u32 n, \
+    void matrix_set_val_arr2_##T(Matrix_##T* mat, u32 m, u64 n, \
                                  const T** arr2)                \
     {                                                           \
         CHECK_FATAL(!mat, "matrix is null");                    \
@@ -111,15 +111,15 @@
         CHECK_FATAL(m != mat->m || n != mat->n,                 \
                     "mat dimensions dont match passed arr2");   \
                                                                 \
-        u32 idx = 0;                                            \
-        for (u32 i = 0; i < m; i++) {                           \
+        u64 idx = 0;                                            \
+        for (u64 i = 0; i < m; i++) {                           \
             memcpy(mat->data + idx, arr2[i], sizeof(T) * n);    \
             idx += n;                                           \
         }                                                       \
     }
 
 #define MATRIX_SET_ELM(T)                                               \
-    void matrix_set_elm_##T(Matrix_##T* mat, T elm, u32 i, u32 j)       \
+    void matrix_set_elm_##T(Matrix_##T* mat, T elm, u64 i, u32 j)       \
     {                                                                   \
         CHECK_FATAL(!mat, "matrix is null");                            \
         CHECK_FATAL(i >= mat->m || j >= mat->n, "index out of bounds"); \
@@ -141,7 +141,7 @@
                         a->n != out->n,                               \
                     "a, b, out mat dimensions don't match");          \
         u32 total = MATRIX_TOTAL(a);                                  \
-        for (u32 i = 0; i < total; i++) {                             \
+        for (u64 i = 0; i < total; i++) {                             \
             out->data[i] = a->data[i] + b->data[i];                   \
         }                                                             \
     }
@@ -157,7 +157,7 @@
                         a->n != out->n,                               \
                     "a, b, out mat dimensions don't match");          \
         u32 total = MATRIX_TOTAL(a);                                  \
-        for (u32 i = 0; i < total; i++) {                             \
+        for (u64 i = 0; i < total; i++) {                             \
             out->data[i] = a->data[i] - b->data[i];                   \
         }                                                             \
     }
@@ -167,7 +167,7 @@
     {                                                            \
         CHECK_FATAL(!mat, "matrix is null");                     \
         u32 total = MATRIX_TOTAL(mat);                           \
-        for (u32 i = 0; i < total; i++) { mat->data[i] *= val; } \
+        for (u64 i = 0; i < total; i++) { mat->data[i] *= val; } \
     }
 
 #define MATRIX_DIV(T)                                            \
@@ -176,7 +176,7 @@
         CHECK_FATAL(!mat, "mat is null");                        \
         CHECK_FATAL(val == 0, "division by zero!");              \
         u32 total = MATRIX_TOTAL(mat);                           \
-        for (u32 i = 0; i < total; i++) { mat->data[i] /= val; } \
+        for (u64 i = 0; i < total; i++) { mat->data[i] /= val; } \
     }
 
 // ============================================================================
@@ -197,21 +197,21 @@
                                                                                \
         u32 m = a->m;                                                          \
         u32 k = a->n;                                                          \
-        u32 n = b->n;                                                          \
+        u64 n = b->n;                                                          \
                                                                                \
         memset(out->data, 0, sizeof(T) * m * n);                               \
                                                                                \
         const u32 BLOCK_SIZE = 16;                                             \
                                                                                \
-        for (u32 i = 0; i < m; i += BLOCK_SIZE) {                              \
+        for (u64 i = 0; i < m; i += BLOCK_SIZE) {                              \
             for (u32 k_outer = 0; k_outer < k; k_outer += BLOCK_SIZE) {        \
                 for (u32 j = 0; j < n; j += BLOCK_SIZE) {                      \
-                    u32 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m;     \
+                    u64 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m;     \
                     u32 k_max =                                                \
                         (k_outer + BLOCK_SIZE < k) ? k_outer + BLOCK_SIZE : k; \
                     u32 j_max = (j + BLOCK_SIZE < n) ? j + BLOCK_SIZE : n;     \
                                                                                \
-                    for (u32 ii = i; ii < i_max; ii++) {                       \
+                    for (u64 ii = i; ii < i_max; ii++) {                       \
                         for (u32 kk = k_outer; kk < k_max; kk++) {             \
                             T a_val = a->data[IDX(a, ii, kk)];                 \
                             for (u32 jj = j; jj < j_max; jj++) {               \
@@ -244,7 +244,7 @@
                                                                        \
         u32 m = a->m;                                                  \
         u32 k = a->n;                                                  \
-        u32 n = b->n;                                                  \
+        u64 n = b->n;                                                  \
                                                                        \
         Matrix_##T* b_T = matrix_create_##T(n, k);                     \
         matrix_T_##T(b_T, b);                                          \
@@ -253,12 +253,12 @@
                                                                        \
         const u32 BLOCK_SIZE = 16;                                     \
                                                                        \
-        for (u32 i = 0; i < m; i += BLOCK_SIZE) {                      \
+        for (u64 i = 0; i < m; i += BLOCK_SIZE) {                      \
             for (u32 j = 0; j < n; j += BLOCK_SIZE) {                  \
-                u32 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m; \
+                u64 i_max = (i + BLOCK_SIZE < m) ? i + BLOCK_SIZE : m; \
                 u32 j_max = (j + BLOCK_SIZE < n) ? j + BLOCK_SIZE : n; \
                                                                        \
-                for (u32 ii = i; ii < i_max; ii++) {                   \
+                for (u64 ii = i; ii < i_max; ii++) {                   \
                     for (u32 jj = j; jj < j_max; jj++) {               \
                         T sum = 0;                                     \
                         for (u32 kk = 0; kk < k; kk++) {               \
@@ -287,14 +287,14 @@
                                                                          \
         const u32 BLOCK_SIZE = 16;                                       \
                                                                          \
-        for (u32 i = 0; i < mat->m; i += BLOCK_SIZE) {                   \
+        for (u64 i = 0; i < mat->m; i += BLOCK_SIZE) {                   \
             for (u32 j = 0; j < mat->n; j += BLOCK_SIZE) {               \
-                u32 i_max =                                              \
+                u64 i_max =                                              \
                     (i + BLOCK_SIZE < mat->m) ? i + BLOCK_SIZE : mat->m; \
                 u32 j_max =                                              \
                     (j + BLOCK_SIZE < mat->n) ? j + BLOCK_SIZE : mat->n; \
                                                                          \
-                for (u32 ii = i; ii < i_max; ii++) {                     \
+                for (u64 ii = i; ii < i_max; ii++) {                     \
                     for (u32 jj = j; jj < j_max; jj++) {                 \
                         out->data[IDX(out, jj, ii)] =                    \
                             mat->data[IDX(mat, ii, jj)];                 \
@@ -335,14 +335,14 @@
         CHECK_FATAL(U->n != mat->n || U->m != mat->m,                        \
                     "U dimensions don't match");                             \
                                                                              \
-        const u32 n = mat->n;                                                \
+        const u64 n = mat->n;                                                \
                                                                              \
         memset(L->data, 0, sizeof(T) * n * n);                               \
         memset(U->data, 0, sizeof(T) * n * n);                               \
                                                                              \
-        for (u32 i = 0; i < n; i++) { L->data[IDX(L, i, i)] = (T)1; }        \
+        for (u64 i = 0; i < n; i++) { L->data[IDX(L, i, i)] = (T)1; }        \
                                                                              \
-        for (u32 i = 0; i < n; i++) {                                        \
+        for (u64 i = 0; i < n; i++) {                                        \
             for (u32 k = i; k < n; k++) {                                    \
                 double sum = 0;                                              \
                 for (u32 j = 0; j < i; j++) {                                \
@@ -388,7 +388,7 @@
         matrix_LU_Decomp_##T(L, U, mat);                                      \
                                                                               \
         double det = 1.0;                                                     \
-        for (u32 i = 0; i < n; i++) { det *= (double)U->data[IDX(U, i, i)]; } \
+        for (u64 i = 0; i < n; i++) { det *= (double)U->data[IDX(U, i, i)]; } \
                                                                               \
         matrix_destroy_##T(L);                                                \
         matrix_destroy_##T(U);                                                \
@@ -406,7 +406,7 @@
         CHECK_FATAL(!mat, "matrix is null");     \
         u32 total = mat->m * mat->n;             \
                                                  \
-        for (u32 i = 0; i < total; i++) {        \
+        for (u64 i = 0; i < total; i++) {        \
             if (i % mat->n == 0) {               \
                 if (i > 0) { putchar('|'); }     \
                 putchar('\n');                   \

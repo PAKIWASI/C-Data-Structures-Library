@@ -71,7 +71,7 @@
 
 typedef uint8_t  u8;
 typedef uint8_t  b8;
-typedef uint16_t u16;
+typedef uint16_t u32;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
@@ -96,14 +96,14 @@ typedef uint64_t u64;
 
 // RAW BYTES TO HEX
 
-void print_hex(const u8* ptr, u32 size, u32 bytes_per_line) 
+void print_hex(const u8* ptr, u64 size, u32 bytes_per_line) 
 {
     if (ptr == NULL | size == 0 | bytes_per_line == 0) { return; }
 
     // hex rep 0-15
     const char* hex = "0123456789ABCDEF";
     
-    for (u32 i = 0; i < size; i++) 
+    for (u64 i = 0; i < size; i++) 
     {
         u8 val1 = ptr[i] >> 4;      // get upper 4 bits as num b/w 0-15
         u8 val2 = ptr[i] & 0x0F;    // get lower 4 bits as num b/w 0-15
@@ -143,8 +143,8 @@ typedef void (*move_fn)(u8* dest, u8** src);
 typedef void (*delete_fn)(u8* key); 
 typedef void (*map_print_fn)(const u8* elm);
 
-typedef u32 (*custom_hash_fn)(const u8* key, u32 size);     
-typedef int (*compare_fn)(const u8* a, const u8* b, u32 size);
+typedef u32 (*custom_hash_fn)(const u8* key, u64 size);     
+typedef int (*compare_fn)(const u8* a, const u8* b, u64 size);
 
 
 
@@ -157,10 +157,10 @@ typedef int (*compare_fn)(const u8* a, const u8* b, u32 size);
 ====================DEFAULT FUNCTIONS====================
 */
 // 32-bit FNV-1a (default hash)
-static u32 fnv1a_hash(const u8* bytes, u32 size) {
+static u32 fnv1a_hash(const u8* bytes, u64 size) {
     u32 hash = 2166136261U;  // FNV offset basis
 
-    for (u32 i = 0; i < size; i++) {
+    for (u64 i = 0; i < size; i++) {
         hash ^= bytes[i];   // XOR with current byte
         hash *= 16777619U;  // Multiply by FNV prime
     }
@@ -170,7 +170,7 @@ static u32 fnv1a_hash(const u8* bytes, u32 size) {
 
 
 // Default compare function
-static int default_compare(const u8* a, const u8* b, u32 size) 
+static int default_compare(const u8* a, const u8* b, u64 size) 
 {
     return memcmp(a, b, size);
 }
@@ -184,8 +184,8 @@ static const u32 PRIMES[] = {
 static const u32 PRIMES_COUNT = sizeof(PRIMES) / sizeof(PRIMES[0]);
 
 // Find the next prime number larger than current
-static u32 next_prime(u32 current) {
-    for (u32 i = 0; i < PRIMES_COUNT; i++) {
+static u64 next_prime(u32 current) {
+    for (u64 i = 0; i < PRIMES_COUNT; i++) {
         if (PRIMES[i] > current) {
             return PRIMES[i];
         }
@@ -200,7 +200,7 @@ static u32 next_prime(u32 current) {
 // Find the previous prime number smaller than current
 static u32 prev_prime(u32 current) {
     // Search backwards through prime table
-    for (u32 i = PRIMES_COUNT - 1; i >= 0; i--) {
+    for (u64 i = PRIMES_COUNT - 1; i >= 0; i--) {
         if (PRIMES[i] < current) {
             return PRIMES[i];
         }
@@ -220,8 +220,8 @@ typedef struct {
     u8*             buckets;
     u32             size;
     u32             capacity;
-    u16             key_size;
-    u16             val_size;
+    u32             key_size;
+    u32             val_size;
     custom_hash_fn  hash_fn;
     compare_fn      cmp_fn;
     copy_fn         key_copy_fn;
@@ -235,7 +235,7 @@ typedef struct {
 /**
  * Create a new hashmap
  */
-hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
+hashmap* hashmap_create(u32 key_size, u32 val_size, custom_hash_fn hash_fn,
                         compare_fn cmp_fn, copy_fn key_copy, copy_fn val_copy,
                         move_fn key_move, move_fn val_move,
                         delete_fn key_del, delete_fn val_del);
@@ -350,7 +350,7 @@ static void kv_destroy(delete_fn key_del, delete_fn val_del, const KV* kv)
 ====================PRIVATE FUNCTIONS====================
 */
 
-static void reset_buckets(u8* buckets, u32 size)
+static void reset_buckets(u8* buckets, u64 size)
 {
     KV kv = { 
         .key = NULL, 
@@ -358,7 +358,7 @@ static void reset_buckets(u8* buckets, u32 size)
         .state = EMPTY 
     };
 
-    for (u32 i = 0; i < size; i++) {
+    for (u64 i = 0; i < size; i++) {
         memcpy(GET_KV(buckets, i), &kv, sizeof(KV));
     }
 }
@@ -367,7 +367,7 @@ static void reset_buckets(u8* buckets, u32 size)
 // static void destroy_data(delete_fn key_del, delete_fn val_del, u8* buckets, u32 cap)
 // {
 //     // if KV own memory, free it
-//     for (u32 i = 0; i < cap; i++) {
+//     for (u64 i = 0; i < cap; i++) {
 //         const KV* kv = GET_KV(buckets, i);
 //         if (kv->state == FILLED) {
 //             kv_destroy(key_del, val_del, kv); // we dont modify map
@@ -380,14 +380,14 @@ static void reset_buckets(u8* buckets, u32 size)
 static u32 find_slot(const hashmap* map, const u8* key,
                         b8* found, int* tombstone)
 {
-    u32 index = map->hash_fn(key, map->key_size) % map->capacity;
+    u64 index = map->hash_fn(key, map->key_size) % map->capacity;
 
     *found = 0;
     *tombstone = -1;
 
     for (u32 x = 0; x < map->capacity; x++) 
     {
-        u32 i = (index + x) % map->capacity;
+        u64 i = (index + x) % map->capacity;
         const KV* kv = GET_KV(map->buckets, i);
 
         switch (kv->state) {
@@ -411,7 +411,7 @@ static u32 find_slot(const hashmap* map, const u8* key,
     return (*tombstone != -1) ? (u32)*tombstone : 0;
 }
 
-static void hashmap_resize(hashmap* map, u32 new_capacity) 
+static void hashmap_resize(hashmap* map, u64 new_capacity) 
 {
     if (new_capacity <= HASHMAP_INIT_CAPACITY) {
         new_capacity = HASHMAP_INIT_CAPACITY;
@@ -427,14 +427,14 @@ static void hashmap_resize(hashmap* map, u32 new_capacity)
     map->size = 0;
 
 
-    for (u32 i = 0; i < old_cap; i++) 
+    for (u64 i = 0; i < old_cap; i++) 
     {
         const KV* old_kv = GET_KV(old_vec, i);
         
         if (old_kv->state == FILLED) {
             b8 found = 0;
             int tombstone = -1;
-            u32 slot = find_slot(map, old_kv->key, &found, &tombstone);
+            u64 slot = find_slot(map, old_kv->key, &found, &tombstone);
 
             KV* new_kv = GET_KV(map->buckets, slot);
             new_kv->key = old_kv->key;
@@ -456,12 +456,12 @@ static void hashmap_maybe_resize(hashmap* map)
     double load_factor = (double)map->size / (double)map->capacity;
     
     if (load_factor > LOAD_FACTOR_GROW) {
-        u32 new_cap = next_prime(map->capacity);
+        u64 new_cap = next_prime(map->capacity);
         hashmap_resize(map, new_cap);
     }
     else if (load_factor < LOAD_FACTOR_SHRINK && map->capacity > HASHMAP_INIT_CAPACITY) 
     {
-        u32 new_cap = prev_prime(map->capacity);
+        u64 new_cap = prev_prime(map->capacity);
         if (new_cap >= HASHMAP_INIT_CAPACITY) {
             hashmap_resize(map, new_cap);
         }
@@ -472,7 +472,7 @@ static void hashmap_maybe_resize(hashmap* map)
 ====================PUBLIC FUNCTIONS====================
 */
 
-hashmap* hashmap_create(u16 key_size, u16 val_size, custom_hash_fn hash_fn,
+hashmap* hashmap_create(u32 key_size, u32 val_size, custom_hash_fn hash_fn,
                         compare_fn cmp_fn, copy_fn key_copy, copy_fn val_copy,
                         move_fn key_move, move_fn val_move,
                         delete_fn key_del, delete_fn val_del)
@@ -514,7 +514,7 @@ void hashmap_destroy(hashmap* map)
     CHECK_FATAL(!map->buckets, "map bucket is null");
 
     // if KV own memory, free it
-    for (u32 i = 0; i < map->capacity; i++) {
+    for (u64 i = 0; i < map->capacity; i++) {
         const KV* kv = GET_KV(map->buckets, i);
         if (kv->state == FILLED) {
             kv_destroy(map->key_del_fn, map->val_del_fn, kv);
@@ -539,7 +539,7 @@ b8 hashmap_put(hashmap* map, const u8* key, const u8* val)
     
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+    u64 slot = find_slot(map, key, &found, &tombstone);
     
     // found the key - update val
     if (found) {
@@ -609,7 +609,7 @@ b8 hashmap_put_move(hashmap* map, u8** key, u8** val)
     b8 found = 0;
     int tombstone = -1;
     // IMPORTANT: Dereference *key to pass u8* to find_slot
-    u32 slot = find_slot(map, *key, &found, &tombstone);
+    u64 slot = find_slot(map, *key, &found, &tombstone);
     
     if (found) {
         KV* kv = GET_KV(map->buckets, slot);
@@ -682,7 +682,7 @@ b8 hashmap_put_val_move(hashmap* map, const u8* key, u8** val)
     
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+    u64 slot = find_slot(map, key, &found, &tombstone);
     
     if (found) {
         KV* kv = GET_KV(map->buckets, slot);
@@ -743,7 +743,7 @@ b8 hashmap_put_key_move(hashmap* map, u8** key, const u8* val)
     
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, *key, &found, &tombstone);
+    u64 slot = find_slot(map, *key, &found, &tombstone);
     
     if (found) {
         KV* kv = GET_KV(map->buckets, slot);
@@ -805,7 +805,7 @@ b8 hashmap_get(const hashmap* map, const u8* key, u8* val)
     
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+    u64 slot = find_slot(map, key, &found, &tombstone);
 
     if (found) {
         const KV* kv = GET_KV(map->buckets, slot);
@@ -829,7 +829,7 @@ u8* hashmap_get_ptr(hashmap* map, const u8* key)
 
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+    u64 slot = find_slot(map, key, &found, &tombstone);
 
     if (found) {
         return (GET_KV(map->buckets, slot))->val;
@@ -847,7 +847,7 @@ b8 hashmap_del(hashmap* map, const u8* key, u8* out)
 
     b8 found = 0;
     int tombstone = -1;
-    u32 slot = find_slot(map, key, &found, &tombstone);
+    u64 slot = find_slot(map, key, &found, &tombstone);
 
     if (found) {
         KV* kv = GET_KV(map->buckets, slot);
@@ -895,10 +895,10 @@ void hashmap_print(const hashmap* map, map_print_fn key_print, map_print_fn val_
     CHECK_FATAL(!val_print, "val_print is null");
 
     printf("\t=========\n");
-    printf("\tSize: %u / Capacity: %u\n", map->size, map->capacity);
+    printf("\tSize: %lu / Capacity: %lu\n", map->size, map->capacity);
     printf("\t=========\n");
 
-    for (u32 i = 0; i < map->capacity; i++) {
+    for (u64 i = 0; i < map->capacity; i++) {
         const KV* kv = GET_KV(map->buckets, i);
         if (kv->state == FILLED) {
             putchar('\t');
