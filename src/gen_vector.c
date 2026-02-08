@@ -714,3 +714,5 @@ void genVec_shrink(genVec* vec)
     vec->data     = new_data;
     vec->capacity = reduced_cap;
 }
+
+

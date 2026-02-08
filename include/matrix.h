@@ -2,22 +2,15 @@
 #define MATRIX_H
 
 #include "common.h"
+#include <string.h>
+
 
 
 // ROW MAJOR 2D MATRIX
-
-#define MATRIX_TOTAL(mat)    ((u32)((mat)->n * (mat)->m))
-#define IDX(mat, i, j)       (((i) * (mat)->n) + (j))
-#define MATRIX_AT(mat, i, j) ((mat)->data[((i) * (mat)->n) + (j)])
-
-#define ZEROS_1D(n)    ((float[n]){0})
-#define ZEROS_2D(m, n) ((float[m][n]){0})
-
-
 typedef struct {
     float* data;
-    u32  m; // rows
-    u32  n; // cols
+    u32    m; // rows
+    u32    n; // cols
 } Matrix;
 
 
@@ -126,9 +119,65 @@ void matrix_inv(Matrix* out, const Matrix* mat);
 // print the formatted, aligned matrix to stdout
 void matrix_print(const Matrix* mat);
 
+#define MATRIX_TOTAL(mat)    ((u32)((mat)->n * (mat)->m))
+#define IDX(mat, i, j)       (((i) * (mat)->n) + (j))
+#define MATRIX_AT(mat, i, j) ((mat)->data[((i) * (mat)->n) + (j)])
+
+#define ZEROS_1D(n)    ((float[n]){0})
+#define ZEROS_2D(m, n) ((float[m][n]){0})
+
+
+
+// ARENA-BASED MATRIX ALLOCATION MACROS
+// ============================================================================
+#include "arena.h"
+
+/*
+Create a matrix allocated from arena (heap-style)
+Matrix struct and data both allocated from arena
+No need to call matrix_destroy - freed when arena is cleared/released
+
+Usage:
+    Matrix* mat = MATRIX_ARENA(arena, 3, 3);
+*/
+static inline Matrix* matrix_arena_alloc(Arena* arena, u32 m, u32 n)
+{
+    CHECK_FATAL(m == 0 && n == 0, "n == m == 0");
+
+    Matrix* mat = ARENA_ALLOC(arena, Matrix);
+    CHECK_FATAL(!mat, "matrix arena allocation failed");
+
+    mat->m = m;
+    mat->n = n;
+
+    mat->data = ARENA_ALLOC_N(arena, float, (u32)(m * n));
+    CHECK_FATAL(!mat->data, "matrix data arena allocation failed");
+
+    return mat;
+}
+
+/*
+Create a matrix allocated from arena with initial values
+Matrix struct and data allocated from arena
+
+Usage:
+    Matrix* mat = MATRIX_ARENA_ARR(arena, 3, 3, (float[9]){1,2,3,4,5,6,7,8,9});
+*/
+
+static inline Matrix* matrix_arena_arr_alloc(Arena* arena, u32 m, u32 n, const float* arr)
+{
+    CHECK_FATAL(m == 0 || n == 0, "matrix dims must be > 0");
+    CHECK_FATAL(!arr, "input arr is null");
+
+    Matrix* mat = matrix_arena_alloc(arena, m, n);
+    memcpy(mat->data, arr, sizeof(float) * m * n);
+    return mat;
+}
+
+
 
 /* 
- FUTURE ENHANCEMENTS / TODO:
+ TODO:
  
  1. Generic macro approach (see matrix_generic.h for implementation)
     - Support for multiple data types (int, float, double, etc.)
@@ -154,7 +203,6 @@ void matrix_print(const Matrix* mat);
     Matrix* matrix_iden(u32 n, u32 m);
     
  5. Additional operations
-    - Matrix division (element-wise)
     - Power operations
     - Trace
     - Rank calculation

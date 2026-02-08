@@ -1,7 +1,8 @@
 #ifndef MATRIX_TEST_H
 #define MATRIX_TEST_H
 
-/*
+#include "arena.h"
+#include "common.h"
 #include "matrix.h"
 #include <stdio.h>
 
@@ -187,19 +188,37 @@ int matrix_test_6(void)
 
     return 0;
 }
-*/
-#include "matrix_generic.h"
-INSTANTIATE_MATRIX(double, "%lf")
 
+
+// ARENAS ARE SOO COOL
 int matrix_test_7(void)
 {
-    Matrix_double mat;
-    matrix_create_stk_double(&mat, 3, 3, (double*)(double[3][3]){
-        {1, 1, 1},
-        {1, 1, 1},
-        {1, 1, 1},
-    });
+    Arena* arena = arena_create(nKB(1));
 
+    Matrix* mat = matrix_arena_alloc(arena, 4, 4);
+
+    ARENA_SCRATCH(xplyy, arena) {
+        Matrix* t1 = matrix_arena_arr_alloc(arena, 4, 4, (float*)(float[4][4]){
+            {1, 2, 3, 4},
+            {1, 2, 3, 4},
+            {1, 2, 3, 4},
+            {1, 2, 3, 4}
+        });
+
+        Matrix* t2 = matrix_arena_arr_alloc(arena, 4, 4, (float*)(float[4][4]){
+            {1, 2, 3, 4},
+            {1, 2, 3, 4},
+            {1, 2, 3, 4},
+            {1, 2, 3, 4}
+        });
+
+        matrix_xply(mat, t1, t2);
+    }
+
+    matrix_print(mat);
+
+    printf("%u\n%u\n", arena->idx, arena->size);
+    arena_release(arena);
     return 0;
 }
 

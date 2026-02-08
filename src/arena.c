@@ -1,7 +1,7 @@
 #include "arena.h"
 
 
-/*
+/* python
 align to 8 bytes
 >>> 4 + 7 & ~(7)
 8
@@ -52,7 +52,7 @@ Arena* arena_create(u32 capacity)
     return arena;
 }
 
-void arena_create_stk(Arena* arena, u8* data, u32 size)
+void arena_create_arr_stk(Arena* arena, u8* data, u32 size)
 {
     CHECK_FATAL(!arena, "arena is null");
     CHECK_FATAL(!data, "data is null");
@@ -131,6 +131,4 @@ void arena_clear_mark(Arena* arena, u32 mark)
 
     arena->idx = mark;
 }
-
-
 

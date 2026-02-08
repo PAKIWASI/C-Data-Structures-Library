@@ -12,7 +12,6 @@ typedef genVec String;
 // ==================
 
 
-
 // Construction/Destruction
 
 // create string on the heap
@@ -51,6 +50,7 @@ const char* string_to_cstr(const String* str);
 // get ptr to the cstr buffer
 // Note: NO NULL TERMINATOR
 char* string_data_ptr(const String* str);
+
 
 // TODO:
 // void string_to_cstr_buf(const String* str, char* buf, u32 buf_size);
@@ -157,8 +157,9 @@ static inline b8 string_empty(const String* str)
 }
 
 
+// TODO: string view?
+// TODO: sso ?
 // TODO:
-
 /*
 // Split string by delimiter
 String** string_split(const String* str, char delim, u32* out_count);

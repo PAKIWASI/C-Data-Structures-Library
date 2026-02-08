@@ -1,6 +1,8 @@
 #include "matrix.h"
+#include "arena.h"
 
 #include <string.h>
+
 
 
 Matrix* matrix_create(u32 m, u32 n)
@@ -281,11 +283,6 @@ float matrix_det(const Matrix* mat)
 
     u32 n = mat->n;
 
-    // TODO: use stack for init?
-    // Create temporary matrices for LU decomposition
-    //
-    // Matrix* L = matrix_create(n, n);
-    // Matrix* U = matrix_create(n, n);
     Matrix L, U;
     float  Ldata[n * n]; // random vals
     float  Udata[n * n];
@@ -299,10 +296,6 @@ float matrix_det(const Matrix* mat)
     float det = 1;
     // for (u32 i = 0; i < n; i++) { det *= U->data[IDX(U, i, i)]; }
     for (u32 i = 0; i < n; i++) { det *= U.data[IDX(&U, i, i)]; }
-
-    // Cleanup
-    // matrix_destroy(L);
-    // matrix_destroy(U);
 
     return det;
 }
@@ -389,5 +382,4 @@ void matrix_print(const Matrix* mat)
     putchar('|');
     putchar('\n');
 }
-
 

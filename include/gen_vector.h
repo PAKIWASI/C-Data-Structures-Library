@@ -15,28 +15,28 @@
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b);
+typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b);
 typedef void (*genVec_delete_fn)(u8* elm);               // Cleanup owned resources
 typedef void (*genVec_copy_fn)(u8* dest, const u8* src); // Deep copy resources
 typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, null src
 
 
-// TODO: can i define this in C file and still be user configurable?
-//
+
 // genVec growth/shrink settings (user can change)
 #ifndef GENVEC_GROWTH
-#define GENVEC_GROWTH 1.5F // vec capacity multiplier
+    #define GENVEC_GROWTH 1.5F // vec capacity multiplier
 #endif
 #ifndef GENVEC_SHRINK_AT
-#define GENVEC_SHRINK_AT 0.25F // % filled to shrink at (25% filled)
+    #define GENVEC_SHRINK_AT 0.25F // % filled to shrink at (25% filled)
 #endif
 #ifndef GENVEC_SHRINK_BY
-#define GENVEC_SHRINK_BY 0.5F // capacity dividor (half)
+    #define GENVEC_SHRINK_BY 0.5F // capacity dividor (half)
 #endif
 
 
+// generic vector container
 typedef struct {
-    u8* data;
+    u8* data;       // pointer to generic data
 
     u32 size;      // Number of elements currently in vector
     u32 capacity;  // Total allocated capacity
@@ -191,6 +191,7 @@ static inline u8 genVec_empty(const genVec* vec)
 
 
 
+// TODO: genVec view?
 // TODO: iterator support ?
 // TODO: add:
 /*

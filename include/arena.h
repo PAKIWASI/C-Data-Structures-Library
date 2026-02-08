@@ -4,8 +4,6 @@
 #include "common.h"
 
 
-// TODO: macros to add arrays etc into arena (like in vid)
-
 
 typedef struct {
     u8* base;
@@ -13,10 +11,12 @@ typedef struct {
     u32 size;
 } Arena;
 
- 
+
+
+
 // Tweakable settings
-#define ARENA_DEFAULT_ALIGNMENT (sizeof(u64))   // 8 byte
-#define ARENA_DEFAULT_SIZE (nKB(4))             // 4 KB
+#define ARENA_DEFAULT_ALIGNMENT (sizeof(u64)) // 8 byte
+#define ARENA_DEFAULT_SIZE      (nKB(4))      // 4 KB
 
 
 /*
@@ -44,7 +44,7 @@ Parameters:
   u8*    data     |   The region to be arena-fyed.
   u32    size     |   The size of the region in bytes.
 */
-void arena_create_stk(Arena* arena, u8* data, u32 size);
+void arena_create_arr_stk(Arena* arena, u8* data, u32 size);
 
 /*
 Reset the pointer to the arena region to the beginning
@@ -135,6 +135,7 @@ Parameters:
 */
 void arena_clear_mark(Arena* arena, u32 mark);
 
+
 // Get used capacity
 static inline u32 arena_used(Arena* arena)
 {
@@ -150,34 +151,83 @@ static inline u32 arena_remaining(Arena* arena)
 }
 
 
+
+// explicit scratch arena
+
+typedef struct {
+    Arena* arena;
+    u32 saved_idx;
+} arena_scratch;
+
+
+static inline arena_scratch arena_scratch_begin(Arena* arena) {
+    CHECK_FATAL(!arena, "arena is null");
+    return (arena_scratch){ .arena = arena, .saved_idx = arena->idx };
+}
+
+static inline void arena_scratch_end(arena_scratch* scratch) {
+    if (scratch && scratch->arena) {
+        scratch->arena->idx = scratch->saved_idx;
+    }
+}
+
+// macro for automatic cleanup arena_scratch
+#define ARENA_SCRATCH(name, arena_ptr) \
+    for (arena_scratch name = arena_scratch_begin(arena_ptr); \
+         (name).arena != NULL; \
+         arena_scratch_end(&(name)), (name).arena = NULL)
+
+/* USAGE:
+// Manual:
+ScratchArena scratch = arena_scratch_begin(arena);
+char* tmp = ARENA_ALLOC_N(arena, char, 256);
+arena_scratch_end(&scratch);
+
+// Automatic:
+ARENA_SCRATCH(scratch, arena) {
+    char* tmp = ARENA_ALLOC_N(arena, char, 256);
+} // auto cleanup
+*/
+
+
 // USEFULL MACROS
 
+#define ARENA_CREATE_STK_ARR(arena, n) (arena_create_arr_stk((arena), (u8[nKB(n)]){0}, nKB(n)))
 
 // typed allocation
-#define ARENA_ALLOC(arena, T) \
-    ((T*)arena_alloc((arena), sizeof(T)))
+#define ARENA_ALLOC(arena, T) ((T*)arena_alloc((arena), sizeof(T)))
 
-#define ARENA_ALLOC_N(arena, T, n) \
-    ((T*)arena_alloc((arena), sizeof(T) * (n)))
+#define ARENA_ALLOC_N(arena, T, n) ((T*)arena_alloc((arena), sizeof(T) * (n)))
 
 // common for structs
-#define ARENA_ALLOC_ZERO(arena, T) \
-    ((T*)memset(ARENA_ALLOC(arena, T), 0, sizeof(T)))
+#define ARENA_ALLOC_ZERO(arena, T) ((T*)memset(ARENA_ALLOC(arena, T), 0, sizeof(T)))
 
-#define ARENA_ALLOC_ZERO_N(arena, T, n) \
-    ((T*)memset(ARENA_ALLOC_N(arena, T, n), 0, sizeof(T) * (n)))
+#define ARENA_ALLOC_ZERO_N(arena, T, n) ((T*)memset(ARENA_ALLOC_N(arena, T, n), 0, sizeof(T) * (n)))
 
-// Scratch Arena
+// Allocate and copy array into arena
+#define ARENA_PUSH_ARRAY(arena, T, src, count)      \
+    ({                                              \
+        (T)* _dst = ARENA_ALLOC_N(arena, T, count); \
+        memcpy(_dst, src, sizeof(T) * (count));     \
+        _dst;                                       \
+    })
+
+
+/*
+// V. COOL:  Scratch Arena
 
 #define ARENA_SCRATCH(arena) \
-    for (u32 _mark = arena_get_mark(arena); _mark != (u32)-1; \
-         arena_clear_mark(arena, _mark), _mark = (u32)-1)
-/* USAGE:
+    for (u32 mark_##arena= arena_get_mark(arena); mark_##arena != (u32) - 1;\
+        arena_clear_mark(arena, mark_##arena), mark_##arena = (u32) - 1)
+
+
+USAGE:
 ARENA_SCRATCH(arena) {
     char* tmp = ARENA_ALLOC_N(arena, char, 256);
     // temp work
 } // auto rollback
 */
+
 
 
 

@@ -3,7 +3,8 @@
 
 
 #include "arena.h"
-#include "common.h"
+#include "gen_vector.h"
+#include <stdio.h>
 
 
 int arena_test_1(void)
@@ -50,7 +51,7 @@ int arena_test_2(void)
 {
     Arena arena;
     int buff[nKB(1)];
-    arena_create_stk(&arena, (u8*)buff, nKB(1));
+    arena_create_arr_stk(&arena, (u8*)buff, nKB(1));
 
 
     float* b = (float*)arena_alloc_aligned(&arena, sizeof(float), sizeof(float));
@@ -61,6 +62,39 @@ int arena_test_2(void)
 
     print_hex(arena.base, 16, 4);
 
+    return 0;
+}
+
+int arena_test_3(void)
+{
+    Arena* arena = arena_create(0);
+
+    print_hex(castptr(arena), sizeof(*arena), 8);
+    putchar('\n');
+
+    ARENA_SCRATCH(temp, arena) {
+        u8* a = arena_alloc(arena, nKB(1));
+
+        print_hex(castptr(arena), sizeof(*arena), 8);
+        putchar('\n');
+    }
+
+    print_hex(castptr(arena), sizeof(*arena), 8);
+    putchar('\n');
+
+    arena_scratch sc = arena_scratch_begin(arena);
+
+    u8* a = arena_alloc(arena, nKB(2));
+
+    print_hex(castptr(arena), sizeof(*arena), 8);
+    putchar('\n');
+
+    arena_scratch_end(&sc);
+
+    print_hex(castptr(arena), sizeof(*arena), 8);
+    putchar('\n');
+
+    arena_release(arena);
     return 0;
 }
 
