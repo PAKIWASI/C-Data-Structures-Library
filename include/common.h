@@ -2,6 +2,14 @@
 #define COMMON_H
 
 
+/*
+ * C Data Structures Library
+ * Copyright (c) 2026 Wasi Ullah (PAKIWASI)
+ * Licensed under the MIT License. See LICENSE file for details.
+ */
+
+
+
 // LOGGING/ERRORS
 
 #include <stdio.h>
