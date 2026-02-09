@@ -131,7 +131,7 @@ void string_copy(String* dest, const String* src)
 }
 
 
-const char* string_to_cstr(const String* str)
+char* string_to_cstr(const String* str)
 {
     CHECK_FATAL(!str, "str is null");
 
@@ -149,7 +149,7 @@ const char* string_to_cstr(const String* str)
 
     out[str->size] = '\0'; // add null term
 
-    return (const char*)out;
+    return out;
 }
 
 

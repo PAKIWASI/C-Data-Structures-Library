@@ -45,7 +45,7 @@ genVec* genVec_init(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn
     CHECK_FATAL(!vec, "vec init failed");
 
     // Only allocate memory if n > 0, otherwise data can be NULL
-    vec->data = (n > 0) ? (u8*)malloc((size_t)data_size * n) : NULL;
+    vec->data = (n > 0) ? malloc(data_size * n) : NULL;
 
     // Only check for allocation failure if we actually tried to allocate
     if (n > 0 && !vec->data) {
@@ -71,7 +71,7 @@ void genVec_init_stk(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_f
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
 
     // Only allocate memory if n > 0, otherwise data can be NULL
-    vec->data = (n > 0) ? (u8*)malloc((size_t)data_size * n) : NULL;
+    vec->data = (n > 0) ? malloc(data_size * n) : NULL;
     CHECK_FATAL(n > 0 && !vec->data, "data init failed");
 
     vec->size      = 0;

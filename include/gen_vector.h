@@ -15,7 +15,7 @@
 
 // User-provided callback functions
 typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b);
+typedef b8 (*genVec_compare_fn)(const u8* a, const u8* b);
 typedef void (*genVec_delete_fn)(u8* elm);               // Cleanup owned resources
 typedef void (*genVec_copy_fn)(u8* dest, const u8* src); // Deep copy resources
 typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, null src
@@ -24,19 +24,19 @@ typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, 
 
 // genVec growth/shrink settings (user can change)
 #ifndef GENVEC_GROWTH
-    #define GENVEC_GROWTH 1.5F // vec capacity multiplier
+#define GENVEC_GROWTH 1.5F // vec capacity multiplier
 #endif
 #ifndef GENVEC_SHRINK_AT
-    #define GENVEC_SHRINK_AT 0.25F // % filled to shrink at (25% filled)
+#define GENVEC_SHRINK_AT 0.25F // % filled to shrink at (25% filled)
 #endif
 #ifndef GENVEC_SHRINK_BY
-    #define GENVEC_SHRINK_BY 0.5F // capacity dividor (half)
+#define GENVEC_SHRINK_BY 0.5F // capacity dividor (half)
 #endif
 
 
 // generic vector container
 typedef struct {
-    u8* data;       // pointer to generic data
+    u8* data; // pointer to generic data
 
     u64 size;      // Number of elements currently in vector
     u64 capacity;  // Total allocated capacity
@@ -48,7 +48,6 @@ typedef struct {
 } genVec;
 
 // 8 8 8 4  '4'  8 8 8  = 56
-
 
 
 
@@ -75,7 +74,7 @@ void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, genVec_copy_fn cop
 // you provide a stack inited array which becomes internal array of vector
 // WARNING - This crashes when size = capacity and you try to push
 void genVec_init_arr(u64 n, u8* arr, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                         genVec_delete_fn del_fn, genVec* vec);
+                     genVec_delete_fn del_fn, genVec* vec);
 
 // Destroy heap-allocated vector and clean up all elements
 void genVec_destroy(genVec* vec);
@@ -189,7 +188,6 @@ static inline b8 genVec_empty(const genVec* vec)
     CHECK_FATAL(!vec, "vec is null");
     return vec->size == 0;
 }
-
 
 
 // TODO: genVec view?

@@ -171,7 +171,7 @@
     }
 
 #define MATRIX_DIV(T)                                            \
-    void matrix_div(Matrix_##T* mat, T val)                          \
+    void matrix_div_##T(Matrix_##T* mat, T val)                          \
     {                                                            \
         CHECK_FATAL(!mat, "mat is null");                        \
         CHECK_FATAL(val == 0, "division by zero!");              \

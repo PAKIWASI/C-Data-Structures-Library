@@ -12,17 +12,18 @@
         printf("[WARN] %s:%d:%s(): " fmt "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
     } while (0)
 
-#define FATAL(fmt, ...)                                                                \
-    do {                                                                               \
-        fprintf(stderr, "[FATAL] %s:%d:%s(): " fmt "\n", __FILE__, __LINE__, __func__, \
-                ##__VA_ARGS__);                                                        \
-        exit(EXIT_FAILURE);                                                            \
+#define FATAL(fmt, ...)                                                                                \
+    do {                                                                                               \
+        fprintf(stderr, "[FATAL] %s:%d:%s(): " fmt "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        exit(EXIT_FAILURE);                                                                            \
     } while (0)
 
 
-#define ASSERT_WARN(cond, fmt, ...)                                                  \
-    do {                                                                             \
-        if (!(cond)) { WARN("Assertion failed: (%s): " fmt, #cond, ##__VA_ARGS__); } \
+#define ASSERT_WARN(cond, fmt, ...)                                     \
+    do {                                                                \
+        if (!(cond)) {                                                  \
+            WARN("Assertion failed: (%s): " fmt, #cond, ##__VA_ARGS__); \
+        }                                                               \
     } while (0)
 
 #define ASSERT_WARN_RET(cond, ret, fmt, ...)                            \
@@ -33,14 +34,18 @@
         }                                                               \
     } while (0)
 
-#define ASSERT_FATAL(cond, fmt, ...)                                                  \
-    do {                                                                              \
-        if (!(cond)) { FATAL("Assertion failed: (%s): " fmt, #cond, ##__VA_ARGS__); } \
+#define ASSERT_FATAL(cond, fmt, ...)                                     \
+    do {                                                                 \
+        if (!(cond)) {                                                   \
+            FATAL("Assertion failed: (%s): " fmt, #cond, ##__VA_ARGS__); \
+        }                                                                \
     } while (0)
 
-#define CHECK_WARN(cond, fmt, ...)                                       \
-    do {                                                                 \
-        if ((cond)) { WARN("Check: (%s): " fmt, #cond, ##__VA_ARGS__); } \
+#define CHECK_WARN(cond, fmt, ...)                           \
+    do {                                                     \
+        if ((cond)) {                                        \
+            WARN("Check: (%s): " fmt, #cond, ##__VA_ARGS__); \
+        }                                                    \
     } while (0)
 
 
@@ -52,9 +57,17 @@
         }                                                    \
     } while (0)
 
-#define CHECK_FATAL(cond, fmt, ...)                                     \
-    do {                                                                \
-        if (cond) { FATAL("Check: (%s): " fmt, #cond, ##__VA_ARGS__); } \
+#define CHECK_FATAL(cond, fmt, ...)                           \
+    do {                                                      \
+        if (cond) {                                           \
+            FATAL("Check: (%s): " fmt, #cond, ##__VA_ARGS__); \
+        }                                                     \
+    } while (0)
+
+
+#define LOG(fmt, ...)                               \
+    do {                                            \
+        printf("[LOG] : %s(): " fmt "\n", __func__, ##__VA_ARGS__); \
     } while (0)
 
 
@@ -90,7 +103,6 @@ typedef uint64_t u64;
 // RAW BYTES TO HEX
 
 void print_hex(const u8* ptr, u64 size, u32 bytes_per_line);
-
 
 
 

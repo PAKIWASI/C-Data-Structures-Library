@@ -46,7 +46,8 @@ void string_move(String* dest, String** src);
 void string_copy(String* dest, const String* src);
 
 // get cstr as COPY ('\0' present)
-const char* string_to_cstr(const String* str);
+// cstr is MALLOCED and must be freed by user
+char* string_to_cstr(const String* str);
 // get ptr to the cstr buffer
 // Note: NO NULL TERMINATOR
 char* string_data_ptr(const String* str);

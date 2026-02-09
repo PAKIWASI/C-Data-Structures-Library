@@ -1,623 +1,1156 @@
-# Generic Data Structures Library in C
+# C Data Structures Library
 
-A collection of high-performance, generic data structures implemented in C, including vectors, hashmaps, hashsets, binary search trees, queues, stacks, bit vectors, and dynamic strings.
+A comprehensive, type-safe C library providing modern data structures with value semantics, memory management flexibility, and performance optimizations.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Core Components](#core-components)
+  - [Arena Allocator](#arena-allocator)
+  - [Generic Vector](#generic-vector)
+  - [String](#string)
+  - [Stack](#stack)
+  - [Queue](#queue)
+  - [HashMap](#hashmap)
+  - [HashSet](#hashset)
+  - [Matrix](#matrix)
+  - [Bit Vector](#bit-vector)
+- [Design Philosophy](#design-philosophy)
+- [Performance Considerations](#performance-considerations)
+- [Examples](#examples)
+- [License](#license)
+
+---
+
+## Overview
+
+This library provides production-ready data structures for C with a focus on:
+- **Value semantics** - Elements are stored inline with user-controlled copy/move behavior
+- **Memory safety** - Comprehensive error checking and configurable allocation strategies
+- **Performance** - Cache-friendly layouts and optimized algorithms
+- **Flexibility** - Arena allocation support, stack/heap allocation options, and customizable callbacks
+
+---
 
 ## Features
 
-- **Generic Vector (`genVec`)**: Dynamic array with automatic resizing
-- **HashMap**: Hash table with linear probing and dynamic resizing
-- **HashSet**: Set implementation using hash table
-- **Binary Search Tree (`BST`)**: Array-based BST with bit vector for tracking occupied nodes
-- **Bit Vector (`bitVec`)**: Space-efficient bit array
-- **Queue**: Circular queue implementation
-- **Stack**: LIFO stack wrapper around vector
-- **String**: Dynamic string with rich manipulation API
-- **Trie**: Prefix tree for string storage (header-only)
-- Custom memory management with optional delete functions
-- Type-safe generic operations using `uint8_t*` casting
-
-## Components
-
-### 1. Generic Vector (`genVec`)
-A dynamic array that can store any data type.
-
-**Key Features:**
-- Automatic growth (1.5x) and shrinking (0.5x at 25% capacity)
-- Custom delete functions for complex types
-- Efficient memory management
-- Rich API for insertion, removal, and access operations
-- Stack allocation support with `genVec_init_stk()`
-
-**Usage:**
-```c
-// Create a vector of integers
-genVec* vec = genVec_init(10, sizeof(int), NULL);
-
-// Push elements
-int value = 42;
-genVec_push(vec, (u8*)&value);
-
-// Access elements
-int result;
-genVec_get(vec, 0, (u8*)&result);
-
-// Stack allocation
-genVec vec_stk;
-genVec_init_stk(10, sizeof(int), NULL, &vec_stk);
-genVec_destroy_stk(&vec_stk);
-
-// Cleanup
-genVec_destroy(vec);
-```
-
-### 2. HashMap
-A hash table implementation with linear probing collision resolution.
-
-**Key Features:**
-- Dynamic resizing (grows at 70% load factor, shrinks at 20%)
-- Prime number capacities for better distribution
-- Tombstone marking for efficient deletion
-- Custom hash, compare, and delete functions
-- FNV-1a hash function by default
-- In-place value modification with `hashmap_modify()`
-
-**Usage:**
-```c
-// Create a hashmap with String keys and int values
-hashmap* map = hashmap_create(
-    sizeof(String), 
-    sizeof(int),
-    murmurhash3_string,  // Custom hash for String
-    string_custom_delete, // Delete function for keys
-    NULL,                 // No delete needed for int values
-    string_custom_compare // Compare function for keys
-);
-
-// Insert key-value pair
-String key;
-string_create_onstack(&key, "hello");
-int value = 100;
-hashmap_put(map, (u8*)&key, (u8*)&value);
-
-// Retrieve value
-int retrieved;
-if (hashmap_get(map, (u8*)&key, (u8*)&retrieved) == 0) {
-    printf("Value: %d\n", retrieved);
-}
-
-// Cleanup
-string_destroy_fromstk(&key);
-hashmap_destroy(map);
-```
-
-### 3. HashSet
-A set implementation for storing unique elements.
-
-**Key Features:**
-- Same collision resolution and resizing strategy as HashMap
-- Efficient membership testing
-- Automatic duplicate prevention
-- Linear probing with tombstone marking
-- Dynamic resizing based on load factor
-
-**Usage:**
-```c
-// Create a hashset of integers
-hashset* set = hashset_create(
-    sizeof(int),
-    NULL,  // Use default FNV-1a hash
-    NULL,  // No custom delete needed for ints
-    NULL   // Use default memcmp compare
-);
-
-// Insert elements
-int value = 42;
-hashset_insert(set, (u8*)&value);
-
-// Check membership
-if (hashset_has(set, (u8*)&value)) {
-    printf("Element 42 found!\n");
-}
-
-// Remove element
-hashset_remove(set, (u8*)&value);
-
-// Cleanup
-hashset_destroy(set);
-```
-
-### 4. Binary Search Tree (`BST`)
-An array-based BST implementation using implicit heap indexing.
-
-**Key Features:**
-- Array-based storage with implicit parent-child relationships
-- Bit vector to track occupied vs empty array slots
-- Standard BST operations (insert, remove, search)
-- Multiple traversal methods (preorder, inorder, postorder, BFS)
-- Find min/max operations
-- Balance operation (experimental)
-
-**Implementation Details:**
-- Parent index: `(i - 1) / 2`
-- Left child: `2 * i + 1`
-- Right child: `2 * i + 2`
-- Uses bit vector to distinguish allocated vs occupied slots
-
-**Usage:**
-```c
-// Create BST for integers
-BST* bst = bst_create(
-    sizeof(int),
-    int_cmp,      // Comparison function
-    int_to_str,   // Convert to String for traversal
-    NULL          // No custom delete needed
-);
-
-// Insert elements
-int values[] = {50, 30, 70, 20, 40, 60, 80};
-for (int i = 0; i < 7; i++) {
-    bst_insert(bst, (u8*)&values[i]);
-}
-
-// Search
-int search_val = 40;
-if (bst_search(bst, (u8*)&search_val)) {
-    printf("Found %d\n", search_val);
-}
-
-// Traversals
-String* inorder = bst_inorder(bst);
-printf("Inorder: %s\n", string_to_cstr(inorder));
-string_destroy(inorder);
-
-String* bfs = bst_bfs(bst);
-printf("BFS: %s\n", string_to_cstr(bfs));
-string_destroy(bfs);
-
-// Find min/max
-int min, max;
-bst_find_min(bst, (u8*)&min);
-bst_find_max(bst, (u8*)&max);
-printf("Min: %d, Max: %d\n", min, max);
-
-// Balance (WARNING: experimental, may have issues)
-bst_balance(bst);
-
-// Cleanup
-bst_destroy(bst);
-```
-
-### 5. Bit Vector (`bitVec`)
-A space-efficient bit array using byte-packed storage.
-
-**Key Features:**
-- 8x memory savings compared to bool arrays
-- Individual bit manipulation (set, clear, test, toggle)
-- Push/pop operations
-- Built on top of `genVec` for automatic resizing
-
-**Usage:**
-```c
-// Create bit vector
-bitVec* bvec = bitVec_create();
-
-// Set bits
-bitVec_set(bvec, 0);   // Set bit 0
-bitVec_set(bvec, 5);   // Set bit 5
-bitVec_set(bvec, 10);  // Set bit 10
-
-// Test bits
-if (bitVec_test(bvec, 5)) {
-    printf("Bit 5 is set\n");
-}
-
-// Clear bit
-bitVec_clear(bvec, 5);
-
-// Toggle bit
-bitVec_toggle(bvec, 0);
-
-// Push a set bit
-bitVec_push(bvec);
-
-// Print byte at index
-bitVec_print(bvec, 0);  // Print first byte
-
-// Cleanup
-bitVec_destroy(bvec);
-```
-
-### 6. Queue
-A circular queue implementation with automatic growth.
-
-**Key Features:**
-- Circular buffer for O(1) enqueue/dequeue
-- Automatic resizing (1.5x growth)
-- No shrinking (for performance)
-- Built on top of `genVec`
-
-**Usage:**
-```c
-// Create queue of integers
-Queue* q = queue_create(10, sizeof(int), NULL);
-
-// Enqueue elements
-for (int i = 0; i < 5; i++) {
-    enqueue(q, (u8*)&i);
-}
-
-// Dequeue element
-int val;
-dequeue(q, (u8*)&val);
-printf("Dequeued: %d\n", val);
-
-// Peek at front
-queue_peek(q, (u8*)&val);
-printf("Front: %d\n", val);
-
-// Check size
-printf("Size: %zu\n", queue_size(q));
-
-// Cleanup
-queue_destroy(q);
-```
-
-### 7. Stack
-A simple LIFO stack wrapper around `genVec`.
-
-**Key Features:**
-- Standard push/pop/peek operations
-- Automatic resizing through underlying vector
-- Thin wrapper for clarity
-
-**Usage:**
-```c
-// Create stack of integers
-Stack* stk = stack_create(10, sizeof(int), NULL);
-
-// Push elements
-for (int i = 0; i < 5; i++) {
-    stack_push(stk, (u8*)&i);
-}
-
-// Pop element
-int val;
-stack_pop(stk, (u8*)&val);
-printf("Popped: %d\n", val);
-
-// Peek at top
-stack_peek(stk, (u8*)&val);
-printf("Top: %d\n", val);
-
-// Cleanup
-stack_destroy(stk);
-```
-
-### 8. Dynamic String
-A robust string implementation with automatic memory management.
-
-**Key Features:**
-- Built on top of `genVec`
-- Automatic null termination
-- Rich string manipulation API
-- Support for both heap and stack allocation
-- Substring extraction
-- Search operations
-
-**Usage:**
-```c
-// Create from C string
-String* str = string_from_cstr("Hello");
-
-// Append operations
-string_append_cstr(str, " World");
-string_append_char(str, '!');
-
-// Insert operations
-string_insert_char(str, 5, ',');
-string_insert_cstr(str, 6, " beautiful");
-
-// Access and modify
-char c = string_at(str, 0);
-string_set_char(str, 0, 'h');
-
-// Search
-int pos = string_find_cstr(str, "World");
-if (pos != -1) {
-    printf("Found at position %d\n", pos);
-}
-
-// Substring
-String* sub = string_substr(str, 0, 5);
-printf("Substring: %s\n", string_to_cstr(sub));
-string_destroy(sub);
-
-// Comparison
-String* other = string_from_cstr("hello, beautiful World!");
-if (string_equals(str, other)) {
-    printf("Strings are equal\n");
-}
-
-// Cleanup
-string_destroy(str);
-string_destroy(other);
-```
-
-### 9. Trie (Prefix Tree)
-A header-only trie implementation for efficient string storage and prefix matching.
-
-**Key Features:**
-- 29-character alphabet (a-z, apostrophe, hyphen, period)
-- Word normalization (lowercase, digit removal, smart apostrophe handling)
-- Space-efficient prefix sharing
-- Fast prefix-based queries
-
-**Usage:**
-```c
-// Create trie
-Trie* trie = trie_create();
-
-// Insert words
-trie_insert_cstr(trie, "hello");
-trie_insert_cstr(trie, "world");
-trie_insert_cstr(trie, "help");
-
-// Cleanup
-trie_destroy(trie);
-```
-
-## Example Application: Word Frequency Counter
-
-The library includes a Shakespeare text parser that demonstrates practical usage:
+### Memory Management
+- **Arena allocator** with scratch regions and automatic cleanup
+- **Dual allocation modes** - heap or stack-based containers
+- **Copy/Move semantics** - Fine-grained control over resource ownership
+- **Custom destructors** - Automatic cleanup of owned resources
+
+### Type Safety
+- **Generic containers** via callback functions (no unsafe macros)
+- **Generic matrix** via compile-time macros (optional)
+- **Compile-time type checking** for matrix operations
+
+### Performance
+- **Cache-optimized** layouts for vectors, matrices, and hash tables
+- **Blocked algorithms** for matrix operations
+- **Prime-number capacities** for hash tables to reduce collisions
+- **Dynamic resizing** with configurable growth/shrink factors
+
+### Error Handling
+- **Three-level diagnostics**: FATAL (exit), WARN (continue), LOG (info)
+- **Assertions** with formatted messages
+- **Null-pointer guards** throughout the API
+
+---
+
+## Quick Start
+
+### Basic Setup
 
 ```c
-int parse(void) {
-    // Create hashmap with String keys and int values
-    hashmap* map = hashmap_create(
-        sizeof(String), 
-        sizeof(int),
-        murmurhash3_string,
-        string_custom_delete,
-        NULL,
-        string_custom_compare
-    );
+#include "gen_vector.h"
+#include "String.h"
+#include "hashmap.h"
+#include "arena.h"
 
-    // Process file and count word frequencies
-    FILE* f = fopen("shakespeare.txt", "r");
-    char line[512];
-    char cleaned[256];
+int main(void) {
+    // Create a vector of integers
+    genVec* vec = genVec_init(10, sizeof(int), NULL, NULL, NULL);
     
-    while (fgets(line, sizeof(line), f)) {
-        char* token = strtok(line, " \n\t\r");
-        while (token) {
-            // Clean word (remove numbers, handle contractions)
-            if (clean_word(token, cleaned, sizeof(cleaned))) {
-                String str;
-                string_create_onstack(&str, cleaned);
-                
-                int count;
-                if (hashmap_get(map, (u8*)&str, (u8*)&count) == 0) {
-                    count++;
-                } else {
-                    count = 1;
-                }
-                hashmap_put(map, (u8*)&str, (u8*)&count);
-            }
-            token = strtok(NULL, " \n\t\r");
-        }
-    }
+    int x = 42;
+    genVec_push(vec, (u8*)&x);
     
-    // Query results
-    String query;
-    string_create_onstack(&query, "romeo");
-    int count;
-    if (hashmap_get(map, (u8*)&query, (u8*)&count) == 0) {
-        printf("Count of %s: %d\n", string_to_cstr(&query), count);
-    }
+    int result;
+    genVec_get(vec, 0, (u8*)&result);
+    printf("Value: %d\n", result);
     
-    // Cleanup
-    string_destroy_fromstk(&query);
-    hashmap_destroy(map);
-    fclose(f);
+    genVec_destroy(vec);
     return 0;
 }
 ```
 
-## Helper Functions
-
-The library includes convenient wrapper functions in `helper_functions.h`:
+### Arena-Based Allocation
 
 ```c
-// Vector helpers
-vec_push_int(vec, 42);
-int val = vec_get_int(vec, 0);
+// Create arena with 4KB
+Arena* arena = arena_create(nKB(4));
 
-// HashMap helpers
-map_put_strToInt(map, "key", 100);
-int value = map_get_strToInt(map, "key");
+// Allocate from arena
+int* nums = ARENA_ALLOC_N(arena, int, 100);
+String* str = ARENA_ALLOC(arena, String);
 
-// HashSet helpers
-set_insert_int(set, 42);
-if (set_has_int(set, 42)) { /* ... */ }
+// Use scratch region for temporary work
+ARENA_SCRATCH(scratch, arena) {
+    char* temp = ARENA_ALLOC_N(arena, char, 256);
+    // temp is automatically freed when scope exits
+}
 
-// Print functions
-int_print((u8*)&value);
-str_print((u8*)&string);
-
-// Comparison functions
-u8 cmp = int_cmp((u8*)&a, (u8*)&b);  // Returns 1, 0, or 255
-
-// Conversion functions
-String* str = int_to_str((u8*)&value);
+// Release all arena memory at once
+arena_release(arena);
 ```
 
-## Design Principles
+---
 
-### Memory Management
-- **Ownership**: Data structures take ownership of inserted data
-- **Custom Deleters**: Optional delete functions for cleanup of complex types
-- **RAII-style**: Destroy functions handle all cleanup automatically
-- **Stack Support**: Many structures support stack allocation with separate cleanup
+## Core Components
 
-### Type Safety
-- Uses `uint8_t*` (`u8*`) for generic byte manipulation
-- Size parameters ensure type safety at runtime
-- Function pointers for type-specific operations
+### Arena Allocator
 
-### Performance
-- Cache-friendly memory layout with alignment attributes
-- Prime number capacities for hash tables
-- Dynamic resizing with configurable load factors
+Fast, region-based memory allocator with automatic cleanup.
+
+#### Features
+- O(1) allocation with pointer bumping
+- Configurable alignment (default 8 bytes)
+- Scratch regions with automatic rollback
+- Stack or heap initialization
+
+#### API
+
+```c
+// Creation
+Arena* arena = arena_create(nKB(4));           // 4KB heap arena
+Arena stack_arena;
+ARENA_CREATE_STK_ARR(&stack_arena, 4);         // 4KB stack arena
+
+// Allocation
+void* ptr = arena_alloc(arena, 256);           // 256 bytes, default alignment
+void* aligned = arena_alloc_aligned(arena, 256, 16);  // 16-byte aligned
+
+// Typed allocation
+int* num = ARENA_ALLOC(arena, int);
+char* buf = ARENA_ALLOC_N(arena, char, 1024);
+struct Foo* foo = ARENA_ALLOC_ZERO(arena, struct Foo);
+
+// Scratch regions (manual)
+u64 mark = arena_get_mark(arena);
+// ... temporary work ...
+arena_clear_mark(arena, mark);
+
+// Scratch regions (automatic)
+ARENA_SCRATCH(scratch, arena) {
+    // Allocations here are automatically freed
+    char* temp = ARENA_ALLOC_N(arena, char, 512);
+}
+
+// Cleanup
+arena_clear(arena);      // Reset, keep memory
+arena_release(arena);    // Free all memory
+```
+
+#### Use Cases
+- Temporary computations
+- Per-frame allocations in game loops
+- Fast parser/compiler allocation
+- Batch processing
+
+---
+
+### Generic Vector
+
+Dynamic array with value semantics and customizable element management.
+
+#### Features
+- Automatic growth/shrink (configurable factors)
+- Copy, move, or POD semantics
+- Stack or heap allocation
+- O(1) amortized push/pop
+
+#### API
+
+```c
+// Callbacks for custom types
+void copy_string(u8* dest, const u8* src) {
+    String* d = (String*)dest;
+    String* s = (String*)src;
+    string_copy(d, s);
+}
+
+void delete_string(u8* elem) {
+    string_destroy_stk((String*)elem);
+}
+
+// Creation
+genVec* vec = genVec_init(10, sizeof(String), copy_string, NULL, delete_string);
+
+// Stack-based vector
+genVec stack_vec;
+genVec_init_stk(10, sizeof(int), NULL, NULL, NULL, &stack_vec);
+
+// Operations
+String s = string_from_cstr("hello");
+genVec_push(vec, (u8*)&s);                    // Copy
+genVec_push_move(vec, (u8**)&s);              // Move (nulls original)
+
+String result;
+genVec_get(vec, 0, (u8*)&result);             // Copy to result
+const String* ptr = (String*)genVec_get_ptr(vec, 0);  // Direct access
+
+genVec_insert(vec, 5, (u8*)&s);               // Insert at index
+genVec_remove(vec, 5, (u8*)&result);          // Remove, copy out
+
+// Batch operations
+String arr[10];
+genVec_insert_multi(vec, 0, (u8*)arr, 10);    // Insert array
+
+// Utilities
+if (!genVec_empty(vec)) {
+    u64 size = genVec_size(vec);
+    u64 cap = genVec_capacity(vec);
+}
+
+genVec_clear(vec);       // Remove all, keep capacity
+genVec_reset(vec);       // Remove all, free memory
+genVec_destroy(vec);     // Free everything
+```
+
+#### Configuration
+
+```c
+#define GENVEC_GROWTH 1.5F        // Capacity multiplier (default 1.5)
+#define GENVEC_SHRINK_AT 0.25F    // Load factor to trigger shrink
+#define GENVEC_SHRINK_BY 0.5F     // Shrink divisor
+```
+
+---
+
+### String
+
+Dynamic string with length tracking (not null-terminated internally).
+
+#### Features
+- Wrapper around `genVec` for `char` type
+- Efficient concatenation and insertion
+- Built-in search and substring operations
+- Conversion to/from C strings
+
+#### API
+
+```c
+// Creation
+String* str = string_create();
+String* str2 = string_from_cstr("Hello, World!");
+String* copy = string_from_string(str2);
+
+// Stack allocation
+String stack_str;
+string_create_stk(&stack_str, "Stack string");
+
+// Modification
+string_append_cstr(str, " more text");
+string_append_string(str, str2);
+string_append_char(str, '!');
+
+string_insert_cstr(str, 0, "Start: ");
+string_insert_char(str, 5, 'X');
+
+char c = string_pop_char(str);
+string_remove_char(str, 10);
+string_remove_range(str, 5, 10);    // Remove [5,10] inclusive
+
+// Access
+char ch = string_char_at(str, 0);
+string_set_char(str, 0, 'H');
+char* data = string_data_ptr(str);  // Not null-terminated!
+
+// Conversion
+char* cstr = string_to_cstr(str);   // Malloc'd, null-terminated
+// ... use cstr ...
+free(cstr);
+
+// Search
+u64 pos = string_find_char(str, 'e');
+u64 idx = string_find_cstr(str, "World");
+if (idx != (u64)-1) {
+    printf("Found at %lu\n", idx);
+}
+
+String* sub = string_substr(str, 0, 5);  // Extract substring
+
+// Comparison
+if (string_equals(str, str2)) { /*...*/ }
+if (string_equals_cstr(str, "test")) { /*...*/ }
+
+// Utilities
+u64 len = string_len(str);
+b8 empty = string_empty(str);
+
+string_print(str);  // Prints "content"
+string_destroy(str);
+```
+
+---
+
+### Stack
+
+LIFO container, implemented as a thin wrapper around `genVec`.
+
+#### API
+
+```c
+// Creation
+Stack* stk = stack_create(10, sizeof(int), NULL, NULL, NULL);
+
+// Operations
+int x = 42;
+stack_push(stk, (u8*)&x);
+stack_push_move(stk, (u8**)&ptr);  // Move semantics
+
+int result;
+stack_pop(stk, (u8*)&result);      // Pop and copy
+stack_peek(stk, (u8*)&result);     // Peek without removing
+
+const int* top = (int*)stack_peek_ptr(stk);
+
+// Utilities
+u64 size = stack_size(stk);
+if (!stack_empty(stk)) { /*...*/ }
+
+stack_clear(stk);
+stack_destroy(stk);
+```
+
+---
+
+### Queue
+
+Circular FIFO queue with automatic growth/shrink.
+
+#### Features
+- Circular buffer implementation
+- Dynamic resizing (grows at 150%, shrinks at 25% load)
+- O(1) enqueue/dequeue
+- Efficient memory usage
+
+#### API
+
+```c
+// Creation
+Queue* q = queue_create(10, sizeof(int), NULL, NULL, NULL);
+Queue* q2 = queue_create_val(10, (u8*)&init_val, sizeof(int), NULL, NULL, NULL);
+
+// Operations
+int x = 42;
+enqueue(q, (u8*)&x);
+enqueue_move(q, (u8**)&ptr);
+
+int result;
+dequeue(q, (u8*)&result);
+queue_peek(q, (u8*)&result);
+
+const int* front = (int*)queue_peek_ptr(q);
+
+// Utilities
+u64 size = queue_size(q);
+u64 cap = queue_capacity(q);
+if (queue_empty(q)) { /*...*/ }
+
+queue_shrink_to_fit(q);  // Manual shrink
+queue_clear(q);
+queue_destroy(q);
+```
+
+---
+
+### HashMap
+
+Hash table with linear probing, dynamic resizing, and custom hash/compare functions.
+
+#### Features
+- Open addressing with linear probing
+- Prime-number capacities for better distribution
+- Load factor triggers: 70% grow, 20% shrink
+- FNV-1a hash by default
+- Copy and move semantics for keys/values
+
+#### API
+
+```c
+// Custom hash function (optional)
+u64 my_hash(const u8* key, u64 size) {
+    // Custom hash implementation
+}
+
+// Custom compare (optional, default is memcmp)
+int my_compare(const u8* a, const u8* b, u64 size) {
+    // Return 0 if equal
+}
+
+// Creation
+hashmap* map = hashmap_create(
+    sizeof(int),           // key size
+    sizeof(String),        // value size
+    NULL,                  // hash_fn (NULL = use FNV-1a)
+    NULL,                  // compare_fn (NULL = memcmp)
+    NULL,                  // key_copy_fn
+    copy_string,           // val_copy_fn
+    NULL,                  // key_move_fn
+    NULL,                  // val_move_fn
+    NULL,                  // key_del_fn
+    delete_string          // val_del_fn
+);
+
+// Insertion (copy semantics)
+int key = 42;
+String val = string_from_cstr("value");
+b8 updated = hashmap_put(map, (u8*)&key, (u8*)&val);
+
+// Insertion (move semantics)
+String* val_ptr = string_from_cstr("moved value");
+hashmap_put_move(map, (u8**)&key_ptr, (u8**)&val_ptr);  // Both nulled
+
+// Mixed semantics
+hashmap_put_key_move(map, (u8**)&key_ptr, (u8*)&val);
+hashmap_put_val_move(map, (u8*)&key, (u8**)&val_ptr);
+
+// Retrieval
+String result;
+if (hashmap_get(map, (u8*)&key, (u8*)&result)) {
+    printf("Found!\n");
+}
+
+String* ptr = (String*)hashmap_get_ptr(map, (u8*)&key);  // Direct access
+
+// Deletion
+String deleted;
+if (hashmap_del(map, (u8*)&key, (u8*)&deleted)) {
+    // Key was found and removed, value copied to 'deleted'
+}
+
+// Utilities
+if (hashmap_has(map, (u8*)&key)) { /*...*/ }
+u64 size = hashmap_size(map);
+u64 cap = hashmap_capacity(map);
+
+hashmap_destroy(map);
+```
+
+#### For String Keys
+
+Use the `murmurhash3_str` function from `str_setup.h`:
+
+```c
+#include "str_setup.h"
+
+hashmap* map = hashmap_create(
+    sizeof(String), sizeof(int),
+    murmurhash3_str,  // String hash function
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+);
+
+String key = string_from_cstr("mykey");
+int val = 100;
+hashmap_put(map, (u8*)&key, (u8*)&val);
+```
+
+---
+
+### HashSet
+
+Hash set for unique elements with same implementation strategy as HashMap.
+
+#### API
+
+```c
+// Creation
+hashset* set = hashset_create(
+    sizeof(int),      // element size
+    NULL,             // hash_fn
+    NULL,             // compare_fn
+    NULL,             // copy_fn
+    NULL,             // move_fn
+    NULL              // del_fn
+);
+
+// Insertion
+int x = 42;
+b8 existed = hashset_insert(set, (u8*)&x);  // Returns 1 if already exists
+
+int* ptr = &x;
+hashset_insert_move(set, (u8**)&ptr);  // Move semantics, nulls ptr
+
+// Operations
+if (hashset_has(set, (u8*)&x)) {
+    printf("Set contains %d\n", x);
+}
+
+b8 removed = hashset_remove(set, (u8*)&x);
+
+// Utilities
+u64 size = hashset_size(set);
+hashset_clear(set);   // Remove all, keep capacity
+hashset_reset(set);   // Remove all, reset to initial capacity
+hashset_destroy(set);
+```
+
+---
+
+### Matrix
+
+Row-major 2D matrix with optimized operations for numerical computing.
+
+#### Features
+- Blocked matrix multiplication for cache efficiency
+- Two multiplication variants (standard and transpose-optimized)
+- LU decomposition and determinant calculation
+- Arena allocation support
+
+#### API
+
+```c
+// Creation
+Matrix* mat = matrix_create(3, 3);                    // 3x3 matrix
+Matrix* mat2 = matrix_create_arr(3, 3, (float[9]){   // With initial values
+    1, 2, 3,
+    4, 5, 6,
+    7, 8, 9
+});
+
+// Stack allocation
+Matrix stack_mat;
+float data[9];
+matrix_create_stk(&stack_mat, 3, 3, data);
+
+// Arena allocation
+Matrix* arena_mat = matrix_arena_alloc(arena, 3, 3);
+Matrix* arena_mat2 = matrix_arena_arr_alloc(arena, 3, 3, (float[9]){
+    1, 2, 3, 4, 5, 6, 7, 8, 9
+});
+
+// Setting values
+matrix_set_val_arr(mat, 9, (float*)(float[3][3]){
+    {1, 2, 3},
+    {4, 5, 6},
+    {7, 8, 9}
+});
+
+matrix_set_elm(mat, 3.14f, 0, 0);  // Set element at (0,0)
+
+// Direct access
+float val = MATRIX_AT(mat, 0, 0);  // Get element at (0,0)
+MATRIX_AT(mat, 1, 2) = 42.0f;      // Set element at (1,2)
+
+// Basic operations
+Matrix* sum = matrix_create(3, 3);
+matrix_add(sum, mat, mat2);        // sum = mat + mat2
+matrix_sub(sum, mat, mat2);        // sum = mat - mat2
+
+matrix_scale(mat, 2.0f);           // mat *= 2.0
+matrix_div(mat, 2.0f);             // mat /= 2.0
+
+Matrix* dest = matrix_create(3, 3);
+matrix_copy(dest, mat);            // Deep copy
+
+// Matrix multiplication
+Matrix* a = matrix_create(3, 4);   // 3x4
+Matrix* b = matrix_create(4, 5);   // 4x5
+Matrix* c = matrix_create(3, 5);   // 3x5 result
+
+matrix_xply(c, a, b);              // Blocked ikj multiplication
+matrix_xply_2(c, a, b);            // Transpose-optimized (for large matrices)
+
+// Transpose
+Matrix* t = matrix_create(3, 3);
+Matrix* mat_t = matrix_create(3, 3);
+matrix_T(mat_t, mat);              // mat_t = mat^T
+
+// LU Decomposition
+Matrix* L = matrix_create(3, 3);
+Matrix* U = matrix_create(3, 3);
+matrix_LU_Decomp(L, U, mat);       // mat = L * U
+
+// Determinant
+float det = matrix_det(mat);
+
+// Utilities
+matrix_print(mat);
+u64 total = MATRIX_TOTAL(mat);     // Total elements (m * n)
+
+matrix_destroy(mat);
+```
+
+#### Generic Matrix (Compile-Time)
+
+For type-generic matrices with compile-time safety:
+
+```c
+#include "matrix_generic.h"
+
+// Instantiate matrix type for int
+INSTANTIATE_MATRIX(int, "%d ");
+
+// Now you can use:
+Matrix_int* mat = matrix_create_int(3, 3);
+matrix_set_elm_int(mat, 42, 0, 0);
+matrix_print_int(mat);
+double det = matrix_det_int(mat);  // Returns double
+matrix_destroy_int(mat);
+```
+
+Supported operations for generic matrices:
+- `matrix_create_T`, `matrix_create_arr_T`, `matrix_create_stk_T`
+- `matrix_add_T`, `matrix_sub_T`, `matrix_scale_T`, `matrix_div_T`
+- `matrix_xply_T`, `matrix_xply_2_T`, `matrix_T_T`
+- `matrix_LU_Decomp_T`, `matrix_det_T`
+
+---
+
+### Bit Vector
+
+Compact bit storage with dynamic sizing.
+
+#### API
+
+```c
+// Creation
+bitVec* bv = bitVec_create();
+
+// Operations
+bitVec_set(bv, 42);        // Set bit 42 to 1
+bitVec_clear(bv, 42);      // Set bit 42 to 0
+bitVec_toggle(bv, 42);     // Flip bit 42
+
+u8 bit = bitVec_test(bv, 42);  // Get bit 42 (0 or 1)
+
+bitVec_push(bv);           // Append a bit (set to 1)
+bitVec_pop(bv);            // Remove last bit
+
+// Utilities
+u64 bits = bitVec_size_bits(bv);    // Number of bits
+u64 bytes = bitVec_size_bytes(bv);  // Number of bytes
+
+bitVec_print(bv, 0);       // Print byte 0
+bitVec_destroy(bv);
+```
+
+---
+
+## Design Philosophy
+
+### Value Semantics
+
+All containers store elements **by value** (inline), not by pointer. This:
+- Eliminates pointer-chasing overhead
+- Improves cache locality
+- Avoids ownership ambiguity
+- Reduces allocations
+
+### Copy vs Move
+
+The library distinguishes between:
+- **Copy operations** (`_push`, `_insert`, etc.) - Deep copy via callbacks
+- **Move operations** (`_push_move`, `_insert_move`) - Transfer ownership, null source
+
+Example:
+```c
+String* s = string_from_cstr("hello");
+
+// Copy: s remains valid
+genVec_push(vec, (u8*)&s);
+string_destroy(s);  // Still need to free
+
+// Move: s is nulled
+String* s2 = string_from_cstr("world");
+genVec_push_move(vec, (u8**)&s2);
+// s2 is now NULL, no need to destroy
+```
+
+### Memory Management Patterns
+
+#### POD Types (Plain Old Data)
+```c
+// No callbacks needed for simple types
+genVec* ints = genVec_init(10, sizeof(int), NULL, NULL, NULL);
+```
+
+#### Types with Resources
+```c
+// Provide copy and delete callbacks
+genVec* strings = genVec_init(10, sizeof(String), 
+    copy_string,    // Deep copy
+    move_string,    // Move (optional)
+    delete_string   // Cleanup
+);
+```
+
+#### Arena Pattern
+```c
+Arena* arena = arena_create(nMB(1));
+
+// All allocations from arena
+Matrix* matrices[100];
+for (int i = 0; i < 100; i++) {
+    matrices[i] = matrix_arena_alloc(arena, 10, 10);
+}
+
+// Single cleanup
+arena_release(arena);  // Frees all 100 matrices
+```
+
+---
+
+## Performance Considerations
+
+### Cache Optimization
+
+**Vectors and Queues**
+- Contiguous memory layout
+- Minimal pointer indirection
+- Cache-friendly iteration
+
+**Matrices**
+- Row-major storage for predictable access patterns
+- Blocked algorithms (16x16 tiles by default)
+- Two multiplication strategies:
+  - `matrix_xply`: In-place blocked ikj (small/medium matrices)
+  - `matrix_xply_2`: Transpose B first (large matrices, more memory)
+
+**Hash Tables**
+- Prime capacities reduce clustering
 - Linear probing for cache locality
-- Circular buffer for queue efficiency
+- Tombstone states for deletion
+
+### Growth Strategies
+
+**Vectors** (configurable):
+- Growth: Capacity × 1.5 when full
+- Shrink: Capacity × 0.5 when 25% full
+
+**Queues**:
+- Growth: Capacity × 1.5 when full
+- Shrink: Capacity × 0.5 when 25% full
+- Minimum capacity: 4
+
+**Hash Tables**:
+- Growth: Next prime when load > 70%
+- Shrink: Previous prime when load < 20%
+- Initial capacity: 17
+
+### Alignment
+
+Default alignment is 8 bytes (`sizeof(u64)`). Customize:
+
+```c
+#define ARENA_DEFAULT_ALIGNMENT 16  // Before including arena.h
+#include "arena.h"
+
+// Or use aligned allocation
+void* ptr = arena_alloc_aligned(arena, 256, 64);  // 64-byte aligned
+```
+
+---
+
+## Examples
+
+### Example 1: String Processing with Arena
+
+```c
+#include "arena.h"
+#include "String.h"
+
+void process_text(const char** lines, size_t count) {
+    Arena* arena = arena_create(nMB(1));
+    
+    // Build combined string
+    String* result = ARENA_ALLOC(arena, String);
+    string_create_stk(result, "");
+    
+    for (size_t i = 0; i < count; i++) {
+        string_append_cstr(result, lines[i]);
+        string_append_char(result, '\n');
+    }
+    
+    // Process result...
+    string_print(result);
+    
+    // Single cleanup
+    arena_release(arena);  // Frees String and all arena memory
+}
+```
+
+### Example 2: HashMap of Strings
+
+```c
+#include "hashmap.h"
+#include "String.h"
+#include "str_setup.h"
+
+void string_copy_fn(u8* dest, const u8* src) {
+    string_copy((String*)dest, (String*)src);
+}
+
+void string_delete_fn(u8* elem) {
+    string_destroy_stk((String*)elem);
+}
+
+int main(void) {
+    hashmap* map = hashmap_create(
+        sizeof(String), sizeof(int),
+        murmurhash3_str, NULL,
+        string_copy_fn, NULL,
+        NULL, NULL,
+        string_delete_fn, NULL
+    );
+    
+    // Insert key-value pairs
+    String key1 = string_from_cstr("one");
+    int val1 = 1;
+    hashmap_put(map, (u8*)&key1, (u8*)&val1);
+    
+    String key2 = string_from_cstr("two");
+    int val2 = 2;
+    hashmap_put(map, (u8*)&key2, (u8*)&val2);
+    
+    // Lookup
+    String lookup = string_from_cstr("one");
+    int result;
+    if (hashmap_get(map, (u8*)&lookup, (u8*)&result)) {
+        printf("one = %d\n", result);
+    }
+    
+    // Cleanup
+    string_destroy_stk(&key1);
+    string_destroy_stk(&key2);
+    string_destroy_stk(&lookup);
+    hashmap_destroy(map);
+    
+    return 0;
+}
+```
+
+### Example 3: Matrix Operations
+
+```c
+#include "matrix.h"
+#include "arena.h"
+
+void solve_system(void) {
+    Arena* arena = arena_create(nKB(64));
+    
+    // Create matrices using arena
+    Matrix* A = matrix_arena_arr_alloc(arena, 3, 3, (float[9]){
+        4, 3, 2,
+        1, 5, 3,
+        2, 1, 6
+    });
+    
+    Matrix* L = matrix_arena_alloc(arena, 3, 3);
+    Matrix* U = matrix_arena_alloc(arena, 3, 3);
+    
+    // LU decomposition
+    matrix_LU_Decomp(L, U, A);
+    
+    printf("L matrix:\n");
+    matrix_print(L);
+    
+    printf("U matrix:\n");
+    matrix_print(U);
+    
+    // Calculate determinant
+    float det = matrix_det(A);
+    printf("Determinant: %f\n", det);
+    
+    // Single cleanup
+    arena_release(arena);
+}
+```
+
+### Example 4: Generic Vector with Custom Types
+
+```c
+#include "gen_vector.h"
+
+typedef struct {
+    char name[32];
+    int age;
+    float* scores;  // Owned heap array
+    size_t score_count;
+} Person;
+
+void person_copy(u8* dest, const u8* src) {
+    Person* d = (Person*)dest;
+    Person* s = (Person*)src;
+    
+    *d = *s;  // Shallow copy POD fields
+    
+    // Deep copy heap array
+    if (s->scores) {
+        d->scores = malloc(s->score_count * sizeof(float));
+        memcpy(d->scores, s->scores, s->score_count * sizeof(float));
+    }
+}
+
+void person_delete(u8* elem) {
+    Person* p = (Person*)elem;
+    free(p->scores);
+    p->scores = NULL;
+}
+
+int main(void) {
+    genVec* people = genVec_init(10, sizeof(Person), 
+                                  person_copy, NULL, person_delete);
+    
+    // Create person with heap-allocated scores
+    Person john = {
+        .name = "John",
+        .age = 30,
+        .score_count = 3,
+        .scores = malloc(3 * sizeof(float))
+    };
+    john.scores[0] = 85.5f;
+    john.scores[1] = 92.0f;
+    john.scores[2] = 88.5f;
+    
+    // Push makes deep copy
+    genVec_push(people, (u8*)&john);
+    
+    // Original must still be freed
+    free(john.scores);
+    
+    // Cleanup
+    genVec_destroy(people);  // Calls person_delete on all elements
+    
+    return 0;
+}
+```
+
+### Example 5: Temporary Allocations with Scratch Arena
+
+```c
+#include "arena.h"
+
+void parse_file(const char* filename) {
+    Arena* arena = arena_create(nMB(10));
+    
+    // Main parsing structures from arena
+    ParseNode* root = ARENA_ALLOC(arena, ParseNode);
+    
+    // Temporary work in scratch region
+    ARENA_SCRATCH(scratch, arena) {
+        char* line_buffer = ARENA_ALLOC_N(arena, char, 1024);
+        Token* temp_tokens = ARENA_ALLOC_N(arena, Token, 100);
+        
+        // Parse file using temporary buffers
+        // ...
+        
+    }  // scratch automatically freed here
+    
+    // root still valid, temporary buffers gone
+    process_ast(root);
+    
+    arena_release(arena);
+}
+```
+
+---
+
+## Common Patterns
+
+### Error Handling
+
+```c
+// FATAL errors exit the program
+Arena* arena = arena_create(0);  // Exits if malloc fails
+
+// WARN errors continue execution
+u8* ptr = arena_alloc(arena, TOO_MUCH);  // Returns NULL, prints warning
+
+// Check warnings
+if (!ptr) {
+    // Handle error
+}
+
+// Custom checks
+CHECK_FATAL(ptr == NULL, "custom error message");
+CHECK_WARN(size > MAX, "size too large: %zu", size);
+```
+
+### Iteration
+
+```c
+// Vector iteration
+for (u64 i = 0; i < genVec_size(vec); i++) {
+    const MyType* elem = (MyType*)genVec_get_ptr(vec, i);
+    // Use elem
+}
+
+// HashMap iteration (requires accessing internals)
+void print_key(const u8* key) {
+    printf("%d ", *(int*)key);
+}
+
+void print_val(const u8* val) {
+    printf("%s\n", ((String*)val)->data);
+}
+
+hashmap_print(map, print_key, print_val);
+```
+
+### Resource Ownership
+
+```c
+// Owner: Vector manages element lifetime
+genVec* vec = genVec_init(10, sizeof(String), 
+                          string_copy_fn, NULL, string_delete_fn);
+
+String s = string_from_cstr("test");
+genVec_push(vec, (u8*)&s);  // Vector now owns a copy
+string_destroy_stk(&s);      // Free original
+
+genVec_destroy(vec);         // Frees all string copies
+
+// Non-owner: Vector doesn't manage lifetime
+genVec* ptrs = genVec_init(10, sizeof(String*), NULL, NULL, NULL);
+
+String* s_ptr = string_from_cstr("test");
+genVec_push(ptrs, (u8*)&s_ptr);  // Just stores pointer
+
+genVec_destroy(ptrs);            // Doesn't free strings
+string_destroy(s_ptr);           // Must free manually
+```
+
+---
 
 ## Building
 
+### Compilation
+
 ```bash
-gcc -O2 -Wall -Wextra \
-    main.c \
-    gen_vector.c \
-    hashmap.c \
-    hashset.c \
-    String.c \
-    BST.c \
-    bit_vector.c \
-    Queue.c \
-    Stack.c \
-    -o program
+# Compile library
+gcc -c arena.c gen_vector.c String.c hashmap.c matrix.c -O3 -Wall -Wextra
+
+# Link with your code
+gcc main.c arena.o gen_vector.o String.o hashmap.o matrix.o -lm -o myprogram
 ```
 
-## API Reference
+### Configuration Macros
 
-### Vector Operations
-- `genVec_init()` - Create vector
-- `genVec_init_stk()` - Initialize on stack
-- `genVec_push()` - Add element to end
-- `genVec_pop()` - Remove last element
-- `genVec_get()` / `genVec_get_ptr()` - Access element
-- `genVec_insert()` / `genVec_insert_multi()` - Insert operations
-- `genVec_remove()` - Remove at position
-- `genVec_replace()` - Replace element
-- `genVec_reserve()` / `genVec_reserve_val()` - Pre-allocate capacity
-- `genVec_copy()` - Shallow copy
-- `genVec_destroy()` / `genVec_destroy_stk()` - Cleanup
-
-### HashMap Operations
-- `hashmap_create()` - Create hashmap
-- `hashmap_put()` - Insert/update key-value pair
-- `hashmap_get()` - Retrieve value by key
-- `hashmap_del()` - Remove key-value pair
-- `hashmap_has()` - Check key existence
-- `hashmap_modify()` - Modify value in-place with callback
-- `hashmap_print()` - Print all key-value pairs
-- `hashmap_destroy()` - Free all memory
-
-### HashSet Operations
-- `hashset_create()` - Create hashset
-- `hashset_insert()` - Add element (returns 0 if already exists)
-- `hashset_has()` - Check element existence
-- `hashset_remove()` - Remove element
-- `hashset_print()` - Print all elements
-- `hashset_destroy()` - Free all memory
-
-### BST Operations
-- `bst_create()` - Create BST
-- `bst_insert()` - Insert element
-- `bst_remove()` - Remove element
-- `bst_search()` - Search for element
-- `bst_find_min()` / `bst_find_max()` - Find extrema
-- `bst_preorder()` / `bst_inorder()` / `bst_postorder()` - DFS traversals
-- `bst_bfs()` - Level-order traversal
-- `bst_balance()` - Balance tree (experimental)
-- `bst_destroy()` - Free all memory
-
-### Bit Vector Operations
-- `bitVec_create()` - Create bit vector
-- `bitVec_set()` - Set bit to 1
-- `bitVec_clear()` - Set bit to 0
-- `bitVec_test()` - Test if bit is set
-- `bitVec_toggle()` - Flip bit value
-- `bitVec_push()` - Add set bit
-- `bitVec_pop()` - Remove last bit
-- `bitVec_print()` - Print byte contents
-- `bitVec_destroy()` - Free memory
-
-### Queue Operations
-- `queue_create()` - Create queue
-- `enqueue()` - Add element to back
-- `dequeue()` - Remove element from front
-- `queue_peek()` - View front element
-- `queue_size()` / `queue_empty()` - Query state
-- `queue_print()` - Print contents
-- `queue_destroy()` - Free memory
-
-### Stack Operations
-- `stack_create()` - Create stack
-- `stack_push()` - Push element
-- `stack_pop()` - Pop element
-- `stack_peek()` - View top element
-- `stack_size()` - Get size
-- `stack_print()` - Print contents
-- `stack_destroy()` - Free memory
-
-### String Operations
-- `string_create()` / `string_from_cstr()` - Create string
-- `string_create_onstack()` - Initialize on stack
-- `string_append_*()` - Append operations
-- `string_insert_*()` - Insert operations
-- `string_remove_char()` - Remove character
-- `string_compare()` / `string_equals()` - Comparison
-- `string_find_*()` - Search operations
-- `string_substr()` - Extract substring
-- `string_at()` / `string_set_char()` - Character access
-- `string_len()` / `string_empty()` - Query state
-- `string_destroy()` / `string_destroy_fromstk()` - Cleanup
-
-## Configuration
-
-Key constants in `default_functions.h`:
 ```c
-#define LOAD_FACTOR_GROW 0.70    // Resize up threshold
-#define LOAD_FACTOR_SHRINK 0.20  // Resize down threshold
-#define HASHMAP_INIT_CAPACITY 17 // Initial capacity (prime)
+// Before including headers:
+
+// Arena
+#define ARENA_DEFAULT_ALIGNMENT 16
+#define ARENA_DEFAULT_SIZE nKB(8)
+
+// Vector
+#define GENVEC_GROWTH 2.0F
+#define GENVEC_SHRINK_AT 0.20F
+
+// HashMap
+#define LOAD_FACTOR_GROW 0.75
+#define LOAD_FACTOR_SHRINK 0.15
+#define HASHMAP_INIT_CAPACITY 17
+
+#include "arena.h"
+#include "gen_vector.h"
+#include "hashmap.h"
 ```
 
-Key constants for growth/shrink in `gen_vector.c`:
+---
+
+## API Reference Summary
+
+### Common Types
+
 ```c
-#define GROWTH 1.5              // Growth multiplier
-#define SHRINK_AT 0.25          // Shrink when 25% full
-#define SHRINK_BY 0.5           // Shrink to 50% capacity
+typedef uint8_t  u8;
+typedef uint8_t  b8;   // Boolean: false (0), true (1)
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 ```
 
-## Internal Structure
+### Error Macros
 
-### HashMap/HashSet States
 ```c
-typedef enum {
-    EMPTY = 0,      // Bucket never used
-    FILLED = 1,     // Bucket contains valid data
-    TOMBSTONE = 2   // Bucket previously used, now deleted
-} STATE;
+FATAL(fmt, ...)              // Print and exit
+WARN(fmt, ...)               // Print and continue
+LOG(fmt, ...)                // Print info
+
+CHECK_FATAL(cond, fmt, ...)  // Assert or exit
+CHECK_WARN(cond, fmt, ...)   // Warn if condition
+ASSERT_FATAL(cond, fmt, ...) // Assert or exit
 ```
 
-### BST Array Indexing
+### Callback Types
+
 ```c
-#define PARENT(i)  (((i) - 1) / 2)
-#define L_CHILD(i) ((2 * (i)) + 1)
-#define R_CHILD(i) ((2 * (i)) + 2)
+typedef void (*genVec_copy_fn)(u8* dest, const u8* src);
+typedef void (*genVec_move_fn)(u8* dest, u8** src);
+typedef void (*genVec_delete_fn)(u8* elem);
+typedef void (*genVec_print_fn)(const u8* elm);
+
+typedef u64 (*custom_hash_fn)(const u8* key, u64 size);
+typedef int (*compare_fn)(const u8* a, const u8* b, u64 size);
 ```
 
-### Word Cleaning Features
-The parser includes advanced word normalization:
-- Removes all digits
-- Handles contractions (keeps apostrophes in words like "don't")
-- Removes possessive forms (e.g., "Shakespeare's" → "shakespeare")
-- Handles UTF-8 curly quotes
-- Case-insensitive processing
+---
 
-## Known Issues
+## License
 
-- **BST Balance**: The `bst_balance()` function is marked as experimental and may have correctness issues
-- **Queue Shrinking**: Queue does not shrink to optimize for performance
-- **String Helper Functions**: Some string vector helpers in `helper_functions.h` have memory management issues (see WARN/TODO comments)
+[Your license here]
 
+---
+
+## Contributing
+
+Contributions welcome! Areas for improvement:
+- Additional container types (deque, priority queue, trie)
+- SIMD optimizations for matrix operations
+- More comprehensive test suite
+- Documentation improvements
+
+---
+
+## Notes
+
+### Implementation Details
+
+- **Hash tables** use open addressing with linear probing
+- **Queues** use circular buffer to avoid shifting elements
+- **Matrices** use blocked algorithms (16x16 default) for cache efficiency
+- **Arenas** align to 8 bytes by default (configurable)
+
+### Memory Layout
+
+```
+genVec:     | data* | size | capacity | data_size | fn_ptrs... |
+Arena:      | base* | idx  | size |
+Matrix:     | data* | m    | n    |
+```
+
+### Future Enhancements
+
+- Matrix adjugate and inverse
+- HashMap/HashSet iterators
+- String views (zero-copy slicing)
+- Small string optimization (SSO)
+- Generic tree structures
+- Thread-safe variants
+
+---
+
+## Credits
+
+Developed with modern C best practices, focusing on:
+- Zero-cost abstractions where possible
+- Explicit memory management
+- Cache-aware algorithms
+- Minimal dependencies (only stdlib)
+
+For questions or issues, please refer to the source code documentation in header files.
