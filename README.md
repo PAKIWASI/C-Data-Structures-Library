@@ -757,203 +757,642 @@ void* ptr = arena_alloc_aligned(arena, 256, 64);  // 64-byte aligned
 
 ## Examples
 
-### Example 1: String Processing with Arena
+### Example 1: Basic String Operations
 
 ```c
-#include "arena.h"
 #include "String.h"
 
-void process_text(const char** lines, size_t count) {
-    Arena* arena = arena_create(nMB(1));
+int main(void) {
+    // Heap-allocated string
+    String* s1 = string_create(); 
+    string_append_cstr(s1, "this is s1");
+    string_print(s1);  // Output: "this is s1"
+    printf("\n");
+    string_destroy(s1);
+
+    // Stack-allocated string with heap data
+    String s2;
+    string_create_stk(&s2, "this is s2");
+    string_print(&s2);  // Output: "this is s2"
+    printf("\n");
+    string_destroy_stk(&s2);
+
+    // Create from C string
+    String* s3 = string_from_cstr("this is s3");
+    string_print(s3);
+    printf("\n");
     
-    // Build combined string
-    String* result = ARENA_ALLOC(arena, String);
-    string_create_stk(result, "");
+    // Copy constructor
+    String* s4 = string_from_string(s3);
+    string_destroy(s3);
+
+    // Reserve with character fill
+    string_reserve_char(s4, 20, 'x');
+    string_print(s4);  // Output: "this is s3xxxxxxxxxx..."
+    printf("\n");
     
-    for (size_t i = 0; i < count; i++) {
-        string_append_cstr(result, lines[i]);
-        string_append_char(result, '\n');
-    }
-    
-    // Process result...
-    string_print(result);
-    
-    // Single cleanup
-    arena_release(arena);  // Frees String and all arena memory
+    // Deep copy to stack string
+    String s5;
+    string_copy(&s5, s4);
+    string_destroy(s4);
+
+    string_print(&s5);
+    printf("\n");
+    string_destroy_stk(&s5);
+
+    return 0;
 }
 ```
 
-### Example 2: HashMap of Strings
+### Example 2: Generic Vector - Copy vs Move Semantics
+
+```c
+#include "gen_vector.h"
+#include "String.h"
+
+// Helper callbacks (see helpers.h for implementation)
+void str_copy(u8* dest, const u8* src);
+void str_move(u8* dest, u8** src);
+void str_del(u8* elm);
+void str_print(const u8* elm);
+
+int main(void) {
+    // Vector storing String by value (not pointer)
+    genVec* vec = genVec_init(10, sizeof(String), str_copy, str_move, str_del);
+
+    // Copy semantics - original remains valid
+    String* str = string_from_cstr("hello");
+    genVec_push(vec, (u8*)str);
+    genVec_push(vec, (u8*)str);
+
+    string_append_cstr(str, " what is up");
+    genVec_push(vec, (u8*)str);
+    
+    string_print(str);      // Still valid
+    string_destroy(str);    // Must free original
+
+    // Deep copy entire vector
+    genVec v2;
+    genVec_copy(&v2, vec);
+
+    genVec_print(vec, str_print);
+    genVec_print(&v2, str_print);
+    
+    genVec_destroy(vec);
+    genVec_destroy_stk(&v2);
+
+    return 0;
+}
+
+// Move semantics example
+int move_example(void) {
+    genVec* vec = genVec_init(10, sizeof(String), str_copy, str_move, str_del);
+
+    String* str = string_from_cstr("hello");
+    string_print(str);
+    printf("\n");
+
+    // Move - transfers ownership, nulls original
+    genVec_push_move(vec, (u8**)&str);
+    // str is now NULL, no need to destroy
+
+    // Move entire vector to stack variable
+    genVec v2;
+    genVec_move(&v2, &vec);  // vec is now NULL
+
+    genVec_print(&v2, str_print);
+    genVec_destroy_stk(&v2);
+
+    return 0;
+}
+```
+
+### Example 3: HashMap with Integer Keys and String Values
 
 ```c
 #include "hashmap.h"
 #include "String.h"
-#include "str_setup.h"
 
-void string_copy_fn(u8* dest, const u8* src) {
-    string_copy((String*)dest, (String*)src);
+// Helper callbacks
+void str_copy(u8* dest, const u8* src);
+void str_move(u8* dest, u8** src);
+void str_del(u8* elm);
+void str_print(const u8* elm);
+void int_print(const u8* elm);
+
+int main(void) {
+    // Create map: int -> String
+    hashmap* map = hashmap_create(
+        sizeof(int), sizeof(String),
+        NULL, NULL,              // Use default hash and compare
+        NULL, str_copy,          // key copy, val copy
+        NULL, str_move,          // key move, val move
+        NULL, str_del            // key del, val del
+    );
+
+    // Insert with copy semantics
+    int a = 5;
+    String str;
+    string_create_stk(&str, "hello");
+
+    hashmap_put(map, (u8*)&a, (u8*)&str);
+    a++;
+    hashmap_put(map, (u8*)&a, (u8*)&str);
+    a++;
+    hashmap_put(map, (u8*)&a, (u8*)&str);
+
+    hashmap_print(map, int_print, str_print);
+
+    // Get pointer to value and modify in-place
+    String* s = (String*)hashmap_get_ptr(map, (u8*)&a);
+    string_append_cstr(s, " what is up");
+    string_print(s);
+    printf("\n");
+
+    hashmap_print(map, int_print, str_print);
+    
+    // Get copy of value
+    String s2 = {0};
+    hashmap_get(map, (u8*)&a, (u8*)&s2);
+    string_print(&s2);
+    printf("\n");
+
+    // Delete entry
+    hashmap_del(map, (u8*)&a, NULL);
+    printf("Has key %d: %d\n", a, hashmap_has(map, (u8*)&a));
+
+    string_destroy_stk(&str);
+    string_destroy_stk(&s2);
+    hashmap_destroy(map);
+    return 0;
+}
+```
+
+### Example 4: HashMap with Move Semantics
+
+```c
+#include "hashmap.h"
+#include "String.h"
+
+int main(void) {
+    hashmap* map = hashmap_create(
+        sizeof(int), sizeof(String),
+        NULL, NULL, NULL, str_copy, NULL, str_move, NULL, str_del
+    );
+
+    // Insert with move semantics (value)
+    int a = 7;
+    String* str = string_from_cstr("hello");
+    hashmap_put_val_move(map, (u8*)&a, (u8**)&str);  // str is now NULL
+
+    str = string_from_cstr("what is up");
+    a += 2;
+    hashmap_put_val_move(map, (u8*)&a, (u8**)&str);
+    
+    hashmap_print(map, int_print, str_print);
+
+    // Delete and retrieve value
+    String s;
+    hashmap_del(map, (u8*)&a, (u8*)&s);
+    string_print(&s);
+    printf("\n");
+
+    hashmap_print(map, int_print, str_print);
+    printf("Size: %lu\n", hashmap_size(map));
+    
+    string_destroy_stk(&s);
+    hashmap_destroy(map);
+    return 0;
+}
+```
+
+### Example 5: HashMap - String Keys to String Values
+
+```c
+#include "hashmap.h"
+#include "String.h"
+#include "str_setup.h"  // For murmurhash3_str
+
+// String comparison function
+int str_cmp(const u8* a, const u8* b, u64 size) {
+    (void)size;
+    return string_compare((const String*)a, (const String*)b);
 }
 
-void string_delete_fn(u8* elem) {
-    string_destroy_stk((String*)elem);
+// Helper to insert string pairs with move semantics
+void map_put(hashmap* map, const char* k, const char* v) {
+    String* s1 = string_from_cstr(k);
+    String* s2 = string_from_cstr(v);
+    hashmap_put_move(map, (u8**)&s1, (u8**)&s2);
+}
+
+int main(void) {
+    // Create map: String -> String
+    hashmap* map = hashmap_create(
+        sizeof(String), sizeof(String), 
+        murmurhash3_str,     // Custom hash for String keys
+        str_cmp,             // String comparison
+        str_copy, str_copy,  // Copy functions
+        str_move, str_move,  // Move functions
+        str_del, str_del     // Delete functions
+    );
+
+    map_put(map, "what", "up");
+
+    String s1;
+    string_create_stk(&s1, "what");
+
+    // Get pointer and modify in-place
+    String* val = (String*)hashmap_get_ptr(map, (u8*)&s1);
+    string_append_cstr(val, "__hi");
+    
+    // Update the map (rehashes with new value)
+    hashmap_put(map, (u8*)val, (u8*)val); 
+
+    hashmap_print(map, str_print, str_print);
+
+    string_destroy_stk(&s1);
+    hashmap_destroy(map);
+    return 0;
+}
+```
+
+### Example 6: HashMap - Storing Vectors as Values
+
+```c
+#include "hashmap.h"
+#include "gen_vector.h"
+
+// Vector callbacks for hashmap storage
+void vec_copy(u8* dest, const u8* src) {
+    genVec* s = (genVec*)src; 
+    genVec* d = (genVec*)dest; 
+
+    memcpy(d, s, sizeof(genVec));
+    d->data = malloc(s->capacity * (u64)s->data_size);
+
+    if (s->copy_fn) {
+        for (u64 i = 0; i < s->size; i++) {
+            s->copy_fn(d->data + (i * d->data_size), genVec_get_ptr(s, i));
+        }
+    } else {
+        memcpy(d->data, s->data, s->capacity * (u64)s->data_size);
+    }
+}
+
+void vec_del(u8* elm) {
+    genVec_destroy_stk((genVec*)elm); 
+}
+
+void vec_print(const u8* elm) {
+    genVec* v = (genVec*)elm;
+    printf("[");
+    for (u64 i = 0; i < v->size; i++) {
+        printf("%d ", *(int*)genVec_get_ptr(v, i));
+    }
+    printf("]");
 }
 
 int main(void) {
     hashmap* map = hashmap_create(
-        sizeof(String), sizeof(int),
-        murmurhash3_str, NULL,
-        string_copy_fn, NULL,
-        NULL, NULL,
-        string_delete_fn, NULL
+        sizeof(u32), sizeof(genVec), 
+        NULL, NULL, NULL, vec_copy, NULL, NULL, NULL, vec_del
     );
+
+    u32 a = 10;
+    genVec* vec = genVec_init_val(10, (u8*)&a, sizeof(u32), NULL, NULL, NULL);
+
+    // Copy vector into map
+    hashmap_put(map, (u8*)&a, (u8*)vec);
+    hashmap_print(map, int_print, vec_print);
+
+    // Create new vector with different values
+    a = 2;
+    genVec_reserve_val(vec, 100, (u8*)&a);
+
+    // Move vector into map
+    hashmap_put_val_move(map, (u8*)&a, (u8**)&vec);
+    hashmap_print(map, int_print, vec_print);
+
+    // Delete and retrieve
+    genVec* v = malloc(sizeof(genVec));
+    hashmap_del(map, (u8*)&a, (u8*)v);
     
-    // Insert key-value pairs
-    String key1 = string_from_cstr("one");
-    int val1 = 1;
-    hashmap_put(map, (u8*)&key1, (u8*)&val1);
-    
-    String key2 = string_from_cstr("two");
-    int val2 = 2;
-    hashmap_put(map, (u8*)&key2, (u8*)&val2);
-    
-    // Lookup
-    String lookup = string_from_cstr("one");
-    int result;
-    if (hashmap_get(map, (u8*)&lookup, (u8*)&result)) {
-        printf("one = %d\n", result);
-    }
-    
-    // Cleanup
-    string_destroy_stk(&key1);
-    string_destroy_stk(&key2);
-    string_destroy_stk(&lookup);
+    genVec_print(v, int_print);
+
+    genVec_destroy(v);
     hashmap_destroy(map);
-    
     return 0;
 }
 ```
 
-### Example 3: Matrix Operations
+### Example 7: HashSet with String Elements
 
 ```c
-#include "matrix.h"
-#include "arena.h"
+#include "hashset.h"
+#include "String.h"
+#include "str_setup.h"
 
-void solve_system(void) {
-    Arena* arena = arena_create(nKB(64));
-    
-    // Create matrices using arena
-    Matrix* A = matrix_arena_arr_alloc(arena, 3, 3, (float[9]){
-        4, 3, 2,
-        1, 5, 3,
-        2, 1, 6
-    });
-    
-    Matrix* L = matrix_arena_alloc(arena, 3, 3);
-    Matrix* U = matrix_arena_alloc(arena, 3, 3);
-    
-    // LU decomposition
-    matrix_LU_Decomp(L, U, A);
-    
-    printf("L matrix:\n");
-    matrix_print(L);
-    
-    printf("U matrix:\n");
-    matrix_print(U);
-    
-    // Calculate determinant
-    float det = matrix_det(A);
-    printf("Determinant: %f\n", det);
-    
-    // Single cleanup
-    arena_release(arena);
+int main(void) {
+    hashset* set = hashset_create(
+        sizeof(String), 
+        murmurhash3_str, str_cmp, 
+        str_copy, str_move, str_del
+    );
+
+    // Insert with move semantics
+    String* s1 = string_from_cstr("hello");
+    String* s2 = string_from_cstr("hollo");
+
+    hashset_insert_move(set, (u8**)&s1);  // s1 is now NULL
+    hashset_insert_move(set, (u8**)&s2);  // s2 is now NULL
+
+    hashset_print(set, str_print);
+
+    // Conditional insert/remove
+    String* s3 = string_from_cstr("helllo");
+    if (!hashset_remove(set, (u8*)s3)) {
+        hashset_insert(set, (u8*)s3);
+    } 
+    hashset_print(set, str_print);
+
+    // Try remove again
+    if (!hashset_remove(set, (u8*)s3)) {
+        hashset_insert_move(set, (u8**)&s3);
+    } else {
+        string_destroy(s3);
+    }
+
+    hashset_print(set, str_print);
+
+    hashset_destroy(set);
+    return 0;
 }
 ```
 
-### Example 4: Generic Vector with Custom Types
+### Example 8: Matrix Operations and LU Decomposition
+
+```c
+#include "matrix.h"
+
+int main(void) {
+    // Create matrix with initial values (preferred syntax)
+    Matrix* mat = matrix_create_arr(3, 3, (float*)(float[3][3]){
+        {3, 2, 4},
+        {2, 0, 2},
+        {4, 2, 3},
+    });
+
+    // Create stack matrices for decomposition
+    Matrix L, U;
+    matrix_create_stk(&L, 3, 3, (float*)ZEROS_2D(3, 3));
+    matrix_create_stk(&U, 3, 3, (float*)ZEROS_2D(3, 3));
+
+    // Perform LU decomposition
+    matrix_LU_Decomp(&L, &U, mat);
+
+    printf("L matrix:\n");
+    matrix_print(&L);
+    
+    printf("U matrix:\n");
+    matrix_print(&U);
+
+    // Calculate determinant
+    float det = matrix_det(mat);
+    printf("Det: %f\n", det);
+
+    // Copy matrix
+    Matrix copy;
+    matrix_create_stk(&copy, 3, 3, (float*)ZEROS_2D(3, 3));
+    matrix_copy(&copy, mat);
+    matrix_print(&copy);
+
+    matrix_destroy(mat);
+    return 0;
+}
+```
+
+### Example 9: Matrix Multiplication and Transpose
+
+```c
+#include "matrix.h"
+
+int main(void) {
+    Matrix* m1 = matrix_create_arr(4, 3, (float*)(float[4][3]){
+        {1, 2, 3},
+        {2, 2, 7},
+        {1, 0, 1},
+        {8, 9, 3},
+    });
+
+    Matrix m2;
+    matrix_create_stk(&m2, 3, 4, (float*)(float[3][4]){
+        {1, 2, 3, 4},
+        {1, 0, 9, 6},
+        {8, 4, 0, 4},
+    });
+
+    // Matrix multiplication: (4x3) × (3x4) = (4x4)
+    Matrix out;
+    matrix_create_stk(&out, 4, 4, (float*)ZEROS_2D(4, 4));
+    matrix_xply(&out, m1, &m2);
+    matrix_print(&out);
+
+    // Transpose
+    Matrix out_T;
+    matrix_create_stk(&out_T, 3, 4, (float*)ZEROS_2D(3, 4));
+    matrix_T(&out_T, m1);
+    
+    printf("Original:\n");
+    matrix_print(m1);
+    printf("Transposed:\n");
+    matrix_print(&out_T);
+
+    matrix_destroy(m1);
+    return 0;
+}
+```
+
+### Example 10: Arena with Matrix Scratch Space
+
+```c
+#include "arena.h"
+#include "matrix.h"
+
+int main(void) {
+    Arena* arena = arena_create(nKB(1));
+
+    // Result matrix from arena
+    Matrix* mat = matrix_arena_alloc(arena, 4, 4);
+
+    // Temporary matrices in scratch region
+    ARENA_SCRATCH(xplyy, arena) {
+        Matrix* t1 = matrix_arena_arr_alloc(arena, 4, 4, (float*)(float[4][4]){
+            {1, 2, 3, 4},
+            {1, 2, 3, 4},
+            {1, 2, 3, 4},
+            {1, 2, 3, 4}
+        });
+
+        Matrix* t2 = matrix_arena_arr_alloc(arena, 4, 4, (float*)(float[4][4]){
+            {1, 2, 3, 4},
+            {1, 2, 3, 4},
+            {1, 2, 3, 4},
+            {1, 2, 3, 4}
+        });
+
+        // Compute result
+        matrix_xply(mat, t1, t2);
+        
+    }  // t1 and t2 automatically freed here
+
+    // mat is still valid
+    matrix_print(mat);
+
+    printf("Used: %lu / Total: %lu\n", arena->idx, arena->size);
+    
+    // Single cleanup
+    arena_release(arena);
+    return 0;
+}
+```
+
+### Example 11: Arena Scratch Regions
+
+```c
+#include "arena.h"
+
+int main(void) {
+    Arena* arena = arena_create(nKB(4));
+
+    // Automatic scratch region (preferred)
+    ARENA_SCRATCH(temp, arena) {
+        u8* a = arena_alloc(arena, nKB(1));
+        // Use temporary allocation...
+    }  // Automatically freed here
+
+    // Manual scratch region
+    arena_scratch sc = arena_scratch_begin(arena);
+    u8* a = arena_alloc(arena, nKB(2));
+    // Use temporary allocation...
+    arena_scratch_end(&sc);
+
+    arena_release(arena);
+    return 0;
+}
+```
+
+### Example 12: Queue Operations
+
+```c
+#include "Queue.h"
+
+void int_print(const u8* elm) {
+    printf("%d", *(int*)elm);
+}
+
+int main(void) {
+    Queue* q = queue_create(100, sizeof(int), NULL, NULL, NULL);
+
+    // Enqueue elements
+    int a = 5;
+    enqueue(q, (u8*)&a);
+    a++;
+    enqueue(q, (u8*)&a);
+    a++;
+    enqueue(q, (u8*)&a);
+    a++;
+    enqueue(q, (u8*)&a);
+
+    queue_print(q, int_print);  // Output: [ 5 6 7 8 ]
+    putchar('\n');
+
+    // Dequeue elements
+    dequeue(q, NULL);
+    dequeue(q, NULL);
+    dequeue(q, NULL);
+    
+    queue_print(q, int_print);  // Output: [ 8 ]
+    putchar('\n');
+
+    // Reset queue
+    queue_reset(q);
+    queue_print(q, int_print);  // Output: [ ]
+    putchar('\n');
+
+    enqueue(q, (u8*)&a);
+    queue_print(q, int_print);  // Output: [ 8 ]
+    putchar('\n');
+
+    queue_destroy(q);
+    return 0;
+}
+```
+
+### Example 13: Stack Operations
+
+```c
+#include "Stack.h"
+
+void int_print(const u8* elm) {
+    printf("%d", *(int*)elm);
+}
+
+int main(void) {
+    Stack* stk = stack_create(10, sizeof(int), NULL, NULL, NULL);
+
+    // Push elements
+    int a = 5;
+    for (int i = 0; i < 9; i++) {
+        stack_push(stk, (u8*)&a);
+    }
+
+    // Peek at top
+    printf("Top: %d\n", *(int*)stack_peek_ptr(stk));
+
+    stack_print(stk, int_print);
+    putchar('\n');
+
+    // Pop elements
+    for (int i = 0; i < 9; i++) {
+        stack_pop(stk, NULL);
+    }
+
+    stack_print(stk, int_print);
+    putchar('\n');
+
+    printf("Empty: %d\n", stack_empty(stk));
+
+    stack_destroy(stk);
+    return 0;
+}
+```
+
+### Example 14: Generic Vector with Simple Macros
 
 ```c
 #include "gen_vector.h"
 
-typedef struct {
-    char name[32];
-    int age;
-    float* scores;  // Owned heap array
-    size_t score_count;
-} Person;
-
-void person_copy(u8* dest, const u8* src) {
-    Person* d = (Person*)dest;
-    Person* s = (Person*)src;
-    
-    *d = *s;  // Shallow copy POD fields
-    
-    // Deep copy heap array
-    if (s->scores) {
-        d->scores = malloc(s->score_count * sizeof(float));
-        memcpy(d->scores, s->scores, s->score_count * sizeof(float));
-    }
+void float_print(const u8* elm) {
+    printf("%f", *(float*)elm);
 }
 
-void person_delete(u8* elem) {
-    Person* p = (Person*)elem;
-    free(p->scores);
-    p->scores = NULL;
-}
+// Macro for simple push
+#define VEC_PUSH_SIMP(vec, type, val) genVec_push(vec, (u8*)&(type){val})
 
 int main(void) {
-    genVec* people = genVec_init(10, sizeof(Person), 
-                                  person_copy, NULL, person_delete);
-    
-    // Create person with heap-allocated scores
-    Person john = {
-        .name = "John",
-        .age = 30,
-        .score_count = 3,
-        .scores = malloc(3 * sizeof(float))
-    };
-    john.scores[0] = 85.5f;
-    john.scores[1] = 92.0f;
-    john.scores[2] = 88.5f;
-    
-    // Push makes deep copy
-    genVec_push(people, (u8*)&john);
-    
-    // Original must still be freed
-    free(john.scores);
-    
-    // Cleanup
-    genVec_destroy(people);  // Calls person_delete on all elements
-    
+    genVec vec;
+    genVec_init_stk(1000, sizeof(float), NULL, NULL, NULL, &vec);
+
+    // Push using macro
+    for (int i = 0; i < 1000; i++) {
+        VEC_PUSH_SIMP(&vec, float, (float)i + 0.1f);
+    }
+
+    genVec_print(&vec, float_print);
+
+    genVec_destroy_stk(&vec);
     return 0;
-}
-```
-
-### Example 5: Temporary Allocations with Scratch Arena
-
-```c
-#include "arena.h"
-
-void parse_file(const char* filename) {
-    Arena* arena = arena_create(nMB(10));
-    
-    // Main parsing structures from arena
-    ParseNode* root = ARENA_ALLOC(arena, ParseNode);
-    
-    // Temporary work in scratch region
-    ARENA_SCRATCH(scratch, arena) {
-        char* line_buffer = ARENA_ALLOC_N(arena, char, 1024);
-        Token* temp_tokens = ARENA_ALLOC_N(arena, Token, 100);
-        
-        // Parse file using temporary buffers
-        // ...
-        
-    }  // scratch automatically freed here
-    
-    // root still valid, temporary buffers gone
-    process_ast(root);
-    
-    arena_release(arena);
 }
 ```
 
@@ -1103,7 +1542,7 @@ typedef int (*compare_fn)(const u8* a, const u8* b, u64 size);
 
 ## License
 
-[Your license here]
+MIT
 
 ---
 
