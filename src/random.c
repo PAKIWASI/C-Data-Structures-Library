@@ -67,8 +67,6 @@ u32 pcg32_rand_r(pcg32_random_t* rng)
     return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
 
-// this one calls the one that takes the global state
-// global state is hidden from user
 u32 pcg32_rand(void)
 {
     return pcg32_rand_r(&global_rng);
@@ -109,17 +107,12 @@ u32 pcg32_rand_bounded_r(pcg32_random_t* rng, u32 bound)
     }
 }
 
-// Generate a uniformly distributed number, r, where 0 <= r < bound
 u32 pcg32_rand_bounded(u32 bound)
 {
     return pcg32_rand_bounded_r(&global_rng, bound);
 }
 
 
-// Time-based seeding functions
-// ============================================================================
-
-// Seeds using current time in seconds (standard precision)
 void pcg32_rand_seed_time(void)
 {
     // Get current time in seconds since epoch
@@ -134,7 +127,6 @@ void pcg32_rand_seed_time(void)
     pcg32_rand_seed(seed, seq);
 }
 
-// Seeds using high-precision time (nanoseconds when available)
 void pcg32_rand_seed_time_hp(void)
 {
     // Use high-resolution clock (nanosecond precision)
@@ -151,10 +143,6 @@ void pcg32_rand_seed_time_hp(void)
     pcg32_rand_seed(seed, seq);
 }
 
-// Floating point random number generation
-// ============================================================================
-
-// Generate a float in [0, 1) using the full 32-bit random value
 float pcg32_rand_float(void)
 {
     // Method 1: Divide by 2^32
@@ -163,10 +151,9 @@ float pcg32_rand_float(void)
     return (float)pcg32_rand() * 0x1.0p-32f;
 }
 
-// Generate a double in [0, 1) using two 32-bit random values for better precision
 double pcg32_rand_double(void)
 {
-    // Method: Combine two 32-bit random numbers for 53 bits of precision
+    // Combine two 32-bit random numbers for 53 bits of precision
     // (double has 53 bits of mantissa precision)
     
     // Get upper 27 bits from first random number
@@ -193,22 +180,20 @@ double pcg32_rand_double_range(double min, double max)
     return min + (pcg32_rand_double() * (max - min));
 }
 
-// Gaussian (Normal) Distribution
-// ============================================================================
+
 
 // Box-Muller transform to generate Gaussian random numbers
 // This generates TWO independent Gaussian values from TWO uniform randoms
 // We cache one value for the next call to avoid wasting computation
 
 static float gaussian_spare_float = 0.0f;
-static b8 has_spare_float = 0;
+static b8 has_spare_float = false;
 
-// Generate standard normal (mean=0, stddev=1) - float version
 float pcg32_rand_gaussian(void)
 {
     // If we have a cached value from previous call, use it
     if (has_spare_float) {
-        has_spare_float = 0;
+        has_spare_float = false;
         return gaussian_spare_float;
     }
     
@@ -241,18 +226,18 @@ float pcg32_rand_gaussian(void)
     
     // Save one for next call
     gaussian_spare_float = z1;
-    has_spare_float = 1;
+    has_spare_float = true;
     
     // Return the other
     return z0;
 }
 
-// Generate normal distribution with custom mean and standard deviation - float
 float pcg32_rand_gaussian_custom(float mean, float stddev)
 {
     // Standard normal * stddev + mean
     return (pcg32_rand_gaussian() * stddev) + mean;
 }
+
 
 // Private Math Fuctions
 

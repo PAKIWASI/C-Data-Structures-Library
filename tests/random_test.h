@@ -59,7 +59,7 @@ int random_test_2(void)
 
     printf("Normal rand double[0, 1]\n");
     for (u64 i = 0; i < 10; i++) {
-        printf("%f\n", pcg32_rand_double());
+        printf("%.15f\n", pcg32_rand_double());
     }
 
     printf("rand float range\n");
@@ -70,6 +70,70 @@ int random_test_2(void)
 
     return 0;
 }
+
+
+// testing gaussian
+int random_test_3(void)
+{
+    pcg32_rand_seed(1, 1);
+    
+    printf("normal gaussian\n");
+    for (u64 i = 0; i < 10; i++) {
+        printf("%f\n", pcg32_rand_gaussian());
+    }
+
+    printf("gaussian custom [-1, 1]\n");
+    for (u64 i = 0; i < 10; i++) {
+        printf("%f\n", pcg32_rand_gaussian_custom(0, 1));
+    }
+
+
+    return 0;
+}
+
+int random_test_4(void)
+{
+    pcg32_rand_seed(1, 1);
+
+
+    // Visualize gaussian distribution by counting values in buckets
+    u32 range[200] = {0};   // buckets for range [-1, 1]
+
+    for (u64 i = 0; i < 100000; i++) {  // Need many samples to see distribution
+        float g = pcg32_rand_gaussian_custom(0, 1);
+        
+        // Map [-1, 1] to bucket indices [0, 199]
+        // -1.0 maps to bucket 0
+        //  0.0 maps to bucket 100
+        // +1.0 maps to bucket 199
+        int index = (int)((g + 1.0f) * 100.0f);
+        
+        // Clamp to valid range (values outside [-1, 1] do occur)
+        if (index < 0) { index = 0; }
+        if (index >= 200) { index = 199; }
+        
+        range[index]++;
+    }
+
+    // Print the distribution
+    printf("Gaussian Distribution Visualization\n");
+    printf("Range [-1.0, 1.0] divided into 200 buckets\n\n");
+
+    for (int i = 0; i < 200; i++) {
+        float bucket_center = -1.0f + ((float)i / 100.0f);
+        printf("%+.2f: ", bucket_center);
+        
+        // Print bar (scale down for display)
+        int bar_length = (int)range[i] / 50;  // Adjust scaling as needed
+        for (int j = 0; j < bar_length; j++) {
+            printf("█");
+        }
+        printf(" (%u)\n", range[i]);
+    }
+
+    return 0;
+}
+
 
 
 #endif // RANDOM_TEST_H
