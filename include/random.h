@@ -55,7 +55,7 @@ u32 pcg32_rand_bounded(u32 bound);
 
 float pcg32_rand_float(void);
 
-
+// TODO: prints decimal places only till floats?
 double pcg32_rand_double(void);
 
 
@@ -65,6 +65,9 @@ float pcg32_rand_float_range(float min, float max);
 double pcg32_rand_double_range(double min, double max);
 
 
+float pcg32_rand_gaussian(void);
+
+float pcg32_rand_gaussian_custom(float mean, float stddev);
 
 // TODO: add gaussian distribution
 

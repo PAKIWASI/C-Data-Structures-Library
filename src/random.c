@@ -201,10 +201,7 @@ double pcg32_rand_double_range(double min, double max)
 // We cache one value for the next call to avoid wasting computation
 
 static float gaussian_spare_float = 0.0f;
-static int has_spare_float = 0;
-
-static double gaussian_spare_double = 0.0;  // TODO: 
-static int has_spare_double = 0;
+static b8 has_spare_float = 0;
 
 // Generate standard normal (mean=0, stddev=1) - float version
 float pcg32_rand_gaussian(void)
