@@ -5,7 +5,6 @@
 #include "gen_vector.h"
 
 
-
 // ===== STRING =====
 // the string is just a genVec of char type (length based string - not cstr)
 typedef genVec String;
@@ -159,7 +158,6 @@ static inline b8 string_empty(const String* str)
 
 
 // TODO: string view?
-// TODO: sso ?
 // TODO:
 /*
 // Split string by delimiter
