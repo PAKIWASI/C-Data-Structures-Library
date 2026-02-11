@@ -2,13 +2,13 @@
 
 
 
-Stack* stack_create(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
+Stack* stack_create(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn)
 {
     return genVec_init(n, data_size, copy_fn, move_fn, del_fn);
 }
 
-Stack* stack_create_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                        genVec_delete_fn del_fn)
+Stack* stack_create_val(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                        delete_fn del_fn)
 {
     return genVec_init_val(n, val, data_size, copy_fn, move_fn, del_fn);
 }
@@ -54,7 +54,7 @@ const u8* stack_peek_ptr(Stack* stk)
     return genVec_get_ptr(stk, genVec_size(stk) - 1);
 }
 
-void stack_print(Stack* stk, genVec_print_fn print_fn)
+void stack_print(Stack* stk, print_fn print_fn)
 {
     genVec_print(stk, print_fn);
 }

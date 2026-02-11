@@ -45,7 +45,7 @@ static void queue_shrink(Queue* q);
 static void queue_compact(Queue* q, u64 new_capacity);
 
 
-Queue* queue_create(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
+Queue* queue_create(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn)
 {
     CHECK_FATAL(n == 0, "n can't be 0");
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
@@ -62,8 +62,8 @@ Queue* queue_create(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn
     return q;
 }
 
-Queue* queue_create_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                        genVec_delete_fn del_fn)
+Queue* queue_create_val(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                        delete_fn del_fn)
 {
     CHECK_FATAL(n == 0, "n can't be 0");
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
@@ -204,7 +204,7 @@ const u8* queue_peek_ptr(Queue* q)
     return genVec_get_ptr(q->arr, q->head);
 }
 
-void queue_print(Queue* q, genVec_print_fn print_fn)
+void queue_print(Queue* q, print_fn print_fn)
 {
     CHECK_FATAL(!q, "queue is empty");
     CHECK_FATAL(!print_fn, "print_fn is empty");

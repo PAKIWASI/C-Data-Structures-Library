@@ -1529,10 +1529,10 @@ ASSERT_FATAL(cond, fmt, ...) // Assert or exit
 ### Callback Types
 
 ```c
-typedef void (*genVec_copy_fn)(u8* dest, const u8* src);
-typedef void (*genVec_move_fn)(u8* dest, u8** src);
-typedef void (*genVec_delete_fn)(u8* elem);
-typedef void (*genVec_print_fn)(const u8* elm);
+typedef void (*copy_fn)(u8* dest, const u8* src);
+typedef void (*move_fn)(u8* dest, u8** src);
+typedef void (*delete_fn)(u8* elem);
+typedef void (*print_fn)(const u8* elm);
 
 typedef u64 (*custom_hash_fn)(const u8* key, u64 size);
 typedef int (*compare_fn)(const u8* a, const u8* b, u64 size);

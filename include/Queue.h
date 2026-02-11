@@ -12,8 +12,8 @@ typedef struct { // Circular Queue
 } Queue;
 
 
-Queue* queue_create(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
-Queue* queue_create_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
+Queue* queue_create(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn);
+Queue* queue_create_val(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn);
 void queue_destroy(Queue* q);
 void queue_clear(Queue* q);
 void queue_reset(Queue* q);
@@ -42,6 +42,6 @@ static inline u64 queue_capacity(Queue* q) {
     return genVec_capacity(q->arr);
 }
 
-void queue_print(Queue* q, genVec_print_fn print_fn);
+void queue_print(Queue* q, print_fn print_fn);
 
 #endif // QUEUE_H

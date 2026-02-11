@@ -93,6 +93,15 @@ typedef uint64_t u64;
 #define true  ((b8)1)
 
 
+// GENERIC FUNCTIONS
+typedef void (*copy_fn)(u8* dest, const u8* src);
+typedef void (*move_fn)(u8* dest, u8** src);
+typedef void (*delete_fn)(u8* key);
+typedef void (*print_fn)(const u8* elm);
+typedef int  (*compare_fn)(const u8* a, const u8* b, u64 size);
+typedef void (*for_each_fn)(u8* elm); 
+
+
 // CASTING
 
 #define cast(x)    ((u8*)(&(x)))

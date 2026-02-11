@@ -4,12 +4,13 @@
 #include "gen_vector.h"
 
 
+// Stack is just a thin wrapper around genVec
 typedef genVec Stack;
 
 
-Stack* stack_create(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
-Stack* stack_create_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                        genVec_delete_fn del_fn);
+Stack* stack_create(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn);
+Stack* stack_create_val(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                        delete_fn del_fn);
 
 void stack_destroy(Stack* stk);
 void stack_clear(Stack* stk);
@@ -36,7 +37,7 @@ static inline u64 stack_capacity(Stack* stk)
     return genVec_capacity(stk);
 }
 
-void stack_print(Stack* stk, genVec_print_fn print_fn);
+void stack_print(Stack* stk, print_fn print_fn);
 
 
 #endif // STACK_H
