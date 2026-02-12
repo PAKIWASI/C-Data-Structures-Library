@@ -58,10 +58,6 @@ typedef struct {
 
 
 
-// TODO: global state eats up memory ! maybe pass it around ?
-// maybe macro to turn it on?
-
-
 // SEEDING FUNCTIONS
 // ============================================================================
 

@@ -90,12 +90,13 @@ void matrix_xply(Matrix* out, const Matrix* a, const Matrix* b);
 void matrix_xply_2(Matrix* out, const Matrix* a, const Matrix* b);
 
 
-/*
+/* TODO: 
     vec * mat => (1 x n) * (m * n)T => (1 x n) * (n x m) => (1 x m)
 OR  vec * mat => (1 x m) * (m * n) => (1 x n)
-OR  vec * mat => (m x 1) * (1 x n) => (m x n)
+OR  vec * mat => (m x 1) * (1 x n) => (m x n) - this doesnot fit here ?
 */
 u8* matrix_xply_vec(const Matrix* a, const u8* arr, u32 data_size, u64 size);
+
 
 
 // ADVANCED OPERATIONS
@@ -113,11 +114,11 @@ void matrix_LU_Decomp(Matrix* L, Matrix* U, const Matrix* mat);
 float matrix_det(const Matrix* mat);
 
 // Calculate adjugate (adjoint) matrix
-// TODO: NOT IMPLEMENTED - placeholder for future implementation
+// TODO: NOT IMPLEMENTED
 void matrix_adj(Matrix* out, const Matrix* mat);
 
 // Calculate matrix inverse: out = mat^(-1)
-// TODO: NOT IMPLEMENTED - placeholder for future implementation
+// TODO: NOT IMPLEMENTED
 void matrix_inv(Matrix* out, const Matrix* mat);
 
 
@@ -126,6 +127,7 @@ void matrix_inv(Matrix* out, const Matrix* mat);
 
 // print the formatted, aligned matrix to stdout
 void matrix_print(const Matrix* mat);
+
 
 #define MATRIX_TOTAL(mat)    ((u64)((mat)->n * (mat)->m))
 #define IDX(mat, i, j)       (((i) * (mat)->n) + (j))

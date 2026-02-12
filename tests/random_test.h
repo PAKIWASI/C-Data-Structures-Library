@@ -2,6 +2,7 @@
 #define RANDOM_TEST_H
 
 #include "random.h"
+#include <math.h>
 
 
 int random_test_1(void)
@@ -131,6 +132,34 @@ int random_test_4(void)
         printf(" (%u)\n", range[i]);
     }
 
+    return 0;
+}
+
+int random_test_5(void)
+{
+    /* -lm
+    const int N = 100000;
+    float sum = 0, sum_sq = 0;
+    int in_1sigma = 0, in_2sigma = 0;
+    
+    for (int i = 0; i < N; i++) {
+        float x = pcg32_rand_gaussian();
+        sum += x;
+        sum_sq += x * x;
+        if (fabsf(x) <= 1.0f) in_1sigma++;
+        if (fabsf(x) <= 2.0f) in_2sigma++;
+    }
+    
+    float mean = sum / N;
+    float variance = (sum_sq / N) - (mean * mean);
+    float stddev = sqrtf(variance);
+    
+    printf("Mean: %f (should be ~0)\n", mean);
+    printf("StdDev: %f (should be ~1)\n", stddev);
+    printf("Within 1σ: %.1f%% (should be ~68%%)\n", 100.0f * in_1sigma / N);
+    printf("Within 2σ: %.1f%% (should be ~95%%)\n", 100.0f * in_2sigma / N);
+
+    */
     return 0;
 }
 
