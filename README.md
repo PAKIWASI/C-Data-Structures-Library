@@ -1,6 +1,6 @@
-# C Data Structures Library
+# WCtoolkit
 
-A comprehensive, type-safe C library providing modern data structures with value semantics, memory management flexibility, and performance optimizations.
+A comprehensive, type-safe C toolkit providing data structures with value semantics, memory management flexibility, and performance optimizations.
 
 ## Table of Contents
 
