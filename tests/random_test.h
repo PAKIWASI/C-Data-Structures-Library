@@ -2,7 +2,6 @@
 #define RANDOM_TEST_H
 
 #include "random.h"
-#include <math.h>
 
 
 int random_test_1(void)

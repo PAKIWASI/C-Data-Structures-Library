@@ -75,5 +75,6 @@ float fast_cos(float x)
 float fast_exp(float x)
 {
 
+    return 0.0f;
 }
 
