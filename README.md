@@ -1,6 +1,7 @@
 # WCtoolkit
 
 A comprehensive, type-safe C toolkit providing data structures with value semantics, memory management flexibility, and performance optimizations.
+
 This library is built around explicit ownership, predictable performance, and modularity. All containers provide clear control over element lifetime through copy, move, and delete semantics, making ownership explicit and reducing hidden memory bugs. Value semantics are preferred where possible, but pointers can be managed safely with the same ownership patterns. The library favors cache-friendly layouts, minimal pointer indirection, and configurable growth/shrink strategies. Ultimately, it is designed to give C developers a safe and composable toolkit without sacrificing the low-level control and predictability that C code demands.
 
 ## Table of Contents
