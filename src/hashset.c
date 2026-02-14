@@ -333,7 +333,7 @@ b8 hashset_has(const hashset* set, const u8* elm)
     return found;
 }
 
-void hashset_print(const hashset* set, map_print_fn print_fn)
+void hashset_print(const hashset* set, print_fn print_fn)
 {
     CHECK_FATAL(!set, "set is null");
     CHECK_FATAL(!print_fn, "print_fn is null");

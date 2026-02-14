@@ -67,7 +67,7 @@ b8 hashset_remove(hashset* set, const u8* elm);
 /**
  * Print all elements using print_fn
  */
-void hashset_print(const hashset* set, map_print_fn print_fn);
+void hashset_print(const hashset* set, print_fn print_fn);
 
 /**
  * Clear all elements from set but keep capacity

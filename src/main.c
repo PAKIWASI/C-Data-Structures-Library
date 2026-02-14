@@ -1,6 +1,7 @@
 #include "arena_test.h"
 #include "genVec_test.h"
 #include "matrix_test.h"
+#include "random_test.h"
 #include "string_test.h"
 #include "hashmap_test.h"
 #include "hashset_test.h"
@@ -17,5 +18,6 @@ int main(void)
     // return stack_test_1();
     // return queue_test_2();
     // return arena_test_3();
-    matrix_test_7();
+    // matrix_test_7();
+    return random_test_5();
 }

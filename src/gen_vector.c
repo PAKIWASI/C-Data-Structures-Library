@@ -37,7 +37,7 @@ void genVec_shrink(genVec* vec);
 
 // API Implementation
 
-genVec* genVec_init(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
+genVec* genVec_init(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn)
 {
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
 
@@ -64,7 +64,7 @@ genVec* genVec_init(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn
 }
 
 
-void genVec_init_stk(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn,
+void genVec_init_stk(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn,
                      genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -82,8 +82,8 @@ void genVec_init_stk(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_f
     vec->del_fn    = del_fn;
 }
 
-genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                        genVec_delete_fn del_fn)
+genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                        delete_fn del_fn)
 {
     CHECK_FATAL(!val, "val can't be null");
     CHECK_FATAL(n == 0, "cant init with val if n = 0");
@@ -103,8 +103,8 @@ genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy
     return vec;
 }
 
-void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                         genVec_delete_fn del_fn, genVec* vec)
+void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                         delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!val, "val can't be null");
     CHECK_FATAL(n == 0, "cant init with val if n = 0");
@@ -122,8 +122,8 @@ void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, genVec_copy_fn cop
     }
 }
 
-void genVec_init_arr(u64 n, u8* arr, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                     genVec_delete_fn del_fn, genVec* vec)
+void genVec_init_arr(u64 n, u8* arr, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                     delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!arr, "arr is null");
     CHECK_FATAL(!vec, "vec is null");
@@ -332,6 +332,14 @@ void genVec_get(const genVec* vec, u64 i, u8* out)
 }
 
 const u8* genVec_get_ptr(const genVec* vec, u64 i)
+{
+    CHECK_FATAL(!vec, "vec is null");
+    CHECK_FATAL(i >= vec->size, "index out of bounds");
+
+    return GET_PTR(vec, i);
+}
+
+u8* genVec_get_ptr_mut(const genVec* vec, u64 i)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(i >= vec->size, "index out of bounds");
@@ -602,7 +610,7 @@ const u8* genVec_back(const genVec* vec)
 }
 
 
-void genVec_print(const genVec* vec, genVec_print_fn print_fn)
+void genVec_print(const genVec* vec, print_fn print_fn)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!print_fn, "print func is null");

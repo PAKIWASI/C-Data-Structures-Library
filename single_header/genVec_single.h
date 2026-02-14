@@ -136,11 +136,11 @@ void print_hex(const u8* ptr, u64 size, u32 bytes_per_line)
 
 
 // User-provided callback functions
-typedef void (*genVec_print_fn)(const u8* elm);
-typedef b8   (*genVec_compare_fn)(const u8* a, const u8* b);
-typedef void (*genVec_delete_fn)(u8* elm);               // Cleanup owned resources
-typedef void (*genVec_copy_fn)(u8* dest, const u8* src); // Deep copy resources
-typedef void (*genVec_move_fn)(u8* dest, u8** src);      // Move src into dest, null src
+typedef void (*print_fn)(const u8* elm);
+typedef b8   (*compare_fn)(const u8* a, const u8* b);
+typedef void (*delete_fn)(u8* elm);               // Cleanup owned resources
+typedef void (*copy_fn)(u8* dest, const u8* src); // Deep copy resources
+typedef void (*move_fn)(u8* dest, u8** src);      // Move src into dest, null src
 
 
 
@@ -164,9 +164,9 @@ typedef struct {
     u64 capacity;  // Total allocated capacity
     u32 data_size; // Size of each element in bytes
 
-    genVec_copy_fn   copy_fn; // Deep copy function for owned resources (or NULL)
-    genVec_move_fn   move_fn; // Get a double pointer, transfer ownership and null original
-    genVec_delete_fn del_fn;  // Cleanup function for owned resources (or NULL)
+    copy_fn   copy_fn; // Deep copy function for owned resources (or NULL)
+    move_fn   move_fn; // Get a double pointer, transfer ownership and null original
+    delete_fn del_fn;  // Cleanup function for owned resources (or NULL)
 } genVec;
 
 
@@ -178,25 +178,25 @@ typedef struct {
 
 // Initialize vector with capacity n. If elements own heap resources,
 // provide copy_fn (deep copy) and del_fn (cleanup). Otherwise pass NULL.
-genVec* genVec_init(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn);
+genVec* genVec_init(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn);
 
 // Initialize vector on stack with data on heap
 // SVO works best here as it is on the stack***
-void genVec_init_stk(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn,
+void genVec_init_stk(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn,
                      genVec* vec);
 
 // Initialize vector of size n, all elements set to val
-genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                        genVec_delete_fn del_fn);
+genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                        delete_fn del_fn);
 
-void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                         genVec_delete_fn del_fn, genVec* vec);
+void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                         delete_fn del_fn, genVec* vec);
 
 // vector COMPLETELY on stack (can't grow in size)
 // you provide a stack inited array which becomes internal array of vector
 // WARNING - This crashes when size = capacity and you try to push
-void genVec_init_arr(u64 n, u8* arr, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                         genVec_delete_fn del_fn, genVec* vec);
+void genVec_init_arr(u64 n, u8* arr, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                         delete_fn del_fn, genVec* vec);
 
 // Destroy heap-allocated vector and clean up all elements
 void genVec_destroy(genVec* vec);
@@ -279,7 +279,7 @@ const u8* genVec_back(const genVec* vec);
 // ===========================
 
 // Print all elements using provided print function
-void genVec_print(const genVec* vec, genVec_print_fn fn);
+void genVec_print(const genVec* vec, print_fn fn);
 
 // Deep copy src vector into dest
 // Note: cleans up dest (if already inited)
@@ -349,7 +349,7 @@ void genVec_shrink(genVec* vec);
 
 // API Implementation
 
-genVec* genVec_init(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn)
+genVec* genVec_init(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn)
 {
     CHECK_FATAL(data_size == 0, "data_size can't be 0");
 
@@ -376,7 +376,7 @@ genVec* genVec_init(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn
 }
 
 
-void genVec_init_stk(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn, genVec_delete_fn del_fn,
+void genVec_init_stk(u64 n, u32 data_size, copy_fn copy_fn, move_fn move_fn, delete_fn del_fn,
                      genVec* vec)
 {
     CHECK_FATAL(!vec, "vec is null");
@@ -394,8 +394,8 @@ void genVec_init_stk(u64 n, u32 data_size, genVec_copy_fn copy_fn, genVec_move_f
     vec->del_fn    = del_fn;
 }
 
-genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                        genVec_delete_fn del_fn)
+genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                        delete_fn del_fn)
 {
     CHECK_FATAL(!val, "val can't be null");
     CHECK_FATAL(n == 0, "cant init with val if n = 0");
@@ -415,8 +415,8 @@ genVec* genVec_init_val(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy
     return vec;
 }
 
-void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                         genVec_delete_fn del_fn, genVec* vec)
+void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                         delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!val, "val can't be null");
     CHECK_FATAL(n == 0, "cant init with val if n = 0");
@@ -434,8 +434,8 @@ void genVec_init_val_stk(u64 n, const u8* val, u32 data_size, genVec_copy_fn cop
     }
 }
 
-void genVec_init_arr(u64 n, u8* arr, u32 data_size, genVec_copy_fn copy_fn, genVec_move_fn move_fn,
-                     genVec_delete_fn del_fn, genVec* vec)
+void genVec_init_arr(u64 n, u8* arr, u32 data_size, copy_fn copy_fn, move_fn move_fn,
+                     delete_fn del_fn, genVec* vec)
 {
     CHECK_FATAL(!arr, "arr is null");
     CHECK_FATAL(!vec, "vec is null");
@@ -914,7 +914,7 @@ const u8* genVec_back(const genVec* vec)
 }
 
 
-void genVec_print(const genVec* vec, genVec_print_fn print_fn)
+void genVec_print(const genVec* vec, print_fn print_fn)
 {
     CHECK_FATAL(!vec, "vec is null");
     CHECK_FATAL(!print_fn, "print func is null");

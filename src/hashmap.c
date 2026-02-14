@@ -564,7 +564,7 @@ b8 hashmap_has(const hashmap* map, const u8* key)
     return found;
 }
 
-void hashmap_print(const hashmap* map, map_print_fn key_print, map_print_fn val_print)
+void hashmap_print(const hashmap* map, print_fn key_print, print_fn val_print)
 {
     CHECK_FATAL(!map, "map is null");
     CHECK_FATAL(!key_print, "key_print is null");

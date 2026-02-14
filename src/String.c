@@ -12,7 +12,7 @@ u64 cstr_len(const char* cstr);
 
 String* string_create(void)
 {
-    return genVec_init(0, sizeof(char), NULL, NULL, NULL);
+    return (String*)genVec_init(0, sizeof(char), NULL, NULL, NULL);
 }
 
 

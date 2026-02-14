@@ -5,7 +5,6 @@
 #include "gen_vector.h"
 
 
-
 // ===== STRING =====
 // the string is just a genVec of char type (length based string - not cstr)
 typedef genVec String;
@@ -157,11 +156,25 @@ static inline b8 string_empty(const String* str)
     return string_len(str) == 0;
 }
 
-
-// TODO: string view?
-// TODO: sso ?
-// TODO:
+// TODO: test
 /*
+ macro to create a temporary cstr for read ops
+ Note: Must not break or return in the block
+ Usage:
+
+TEMP_CSTR_READ(s)
+{
+    printf("%s\n", string_data_ptr(s));
+}
+*/
+#define TEMP_CSTR_READ(str) \
+    for (u8 _once = 0; (_once == 0) && (string_append_char((str), '\0'), 1); _once++, string_pop_char((str)))
+
+
+// TODO: Remove genVec dependency ?
+// TODO: string view?
+/* TODO: 
+ 
 // Split string by delimiter
 String** string_split(const String* str, char delim, u32* out_count);
 
