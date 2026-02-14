@@ -8,13 +8,18 @@ float fast_sqrt(float x)
 {
     if (x <= 0.0f) { return 0.0f; }
     
-    // Initial guess using bit hack (speeds convergence)
+    /* Initial guess using bit hack (speeds convergence)
+        - Treats the float as an integer, shifts right by 1 (approximate division by 2)
+        - The magic constant `0x1fbd1df5` adjusts the exponent bias
+        - Gives a surprisingly good initial guess, making convergence faster
+    */
     union { float f; u32 i; } conv = { .f = x };
     conv.i = 0x1fbd1df5 + (conv.i >> 1);
     float guess = conv.f;
     
     // Newton-Raphson: next = 0.5 * (guess + x/guess)
     // 3-4 iterations gives good precision
+    guess = 0.5f * (guess + x / guess);
     guess = 0.5f * (guess + x / guess);
     guess = 0.5f * (guess + x / guess);
     guess = 0.5f * (guess + x / guess);
@@ -26,7 +31,11 @@ float fast_log(float x)
 {
     if (x <= 0.0f) { return -1e10f; }  // Error value
     
-    // Reduce x to range [0.5, 1.5] for better convergence
+    /* Reduce x to range [0.5, 1.5] for better convergence
+        - Brings x into [0.5, 1.5] range where t = x-1 is small
+        - Uses logarithm property: `ln(x × 2ⁿ) = ln(x) + n×ln(2)`
+        - After computing ln(x) in reduced range, adds back `n × 0.693147...` (ln(2))
+    */
     int exp_adjust = 0;
     while (x > 1.5f) { x *= 0.5f; exp_adjust++; }
     while (x < 0.5f) { x *= 2.0f; exp_adjust--; }
@@ -49,10 +58,12 @@ float fast_log(float x)
 float fast_sin(float x)
 {
     // Reduce to [-π, π]
-    const float PI = 3.14159265359f;
-    const float TWO_PI = 6.28318530718f;
+    // const float PI = 3.14159265359f;
+    // const float TWO_PI = 6.28318530718f;
     
     // Normalize to [-π, π]
+    //- Reduces angle to [-π, π] where Taylor series converges well
+    //- Sine is periodic with period 2π
     while (x > PI) { x -= TWO_PI; }
     while (x < -PI) { x += TWO_PI; }
     
@@ -72,9 +83,88 @@ float fast_cos(float x)
 }
 
 
+/*
+e^x = e^(n+r) = e^n × e^r
+where n is an integer and r ∈ [0, 1)
+This splits the problem into two easier parts:
+
+e^r (fractional part) - use Taylor series
+e^n (integer part) - use repeated squaring
+
+Part 1: Fractional Component (e^r)
+For r ∈ [0, 1), the Taylor series converges rapidly:
+e^r = 1 + r + r²/2! + r³/3! + r⁴/4! + r⁵/5! + r⁶/6! + ...
+Why range reduction helps:
+
+When r is small, higher-order terms become negligible quickly
+With r < 1, just 7 terms gives good accuracy
+Without reduction, large x would need many more terms
+
+
+Part 2: Integer Component (e^n)
+Uses exponentiation by squaring - a clever algorithm:
+For positive n (e.g., e^5):
+e^5 = e^(101 in binary)
+    = e^(4+1)
+    = e^4 × e^1
+    = (e^2)^2 × e
+This reduces multiplications from O(n) to O(log n).
+*/
 float fast_exp(float x)
 {
-
-    return 0.0f;
+    // Clamp extreme values to prevent overflow
+    if (x > 88.0f) { return 1e38f; }  // e^88 ≈ 1.65e38 (near float max)
+    if (x < -87.0f) { return 0.0f; }  // e^-87 ≈ 0
+    
+    // Range reduction: e^x = e^(n) * e^(r)
+    // where x = n + r, n is integer, r in [0, 1)
+    int n = (int)x;
+    float r = x - (float)n;
+    
+    // Handle negative n
+    if (x < 0.0f && r != 0.0f) {
+        n -= 1;
+        r = x - (float)n;  // Now r is positive in [0, 1)
+    }
+    
+    // Compute e^r using Taylor series: e^r = 1 + r + r²/2! + r³/3! + ...
+    // Since r ∈ [0, 1), series converges quickly
+    float r2 = r * r;
+    float r3 = r2 * r;
+    float r4 = r3 * r;
+    float r5 = r4 * r;
+    float r6 = r5 * r;
+    
+    float exp_r = 1.0f + r + (r2/2.0f) + (r3/6.0f) + (r4/24.0f) + (r5/120.0f) + (r6/720.0f);
+    
+    // Compute e^n using repeated squaring
+    // e^n = (e^1)^n, where e ≈ 2.718281828
+    const float E = 2.718281828f;
+    float exp_n = 1.0f;
+    
+    if (n > 0) {
+        // Positive exponent: multiply by e^1 n times (optimized with squaring)
+        float base = E;
+        int exp = n;
+        while (exp > 0) {
+            if (exp & 1) { exp_n *= base; }
+            base *= base;
+            exp >>= 1;
+        }
+    } else if (n < 0) {
+        // Negative exponent: divide by e^1 |n| times
+        float base = E;
+        int exp = -n;
+        while (exp > 0) {
+            if (exp & 1) { exp_n *= base; }
+            base *= base;
+            exp >>= 1;
+        }
+        exp_n = 1.0f / exp_n;
+    }
+    // if n == 0, exp_n remains 1.0
+    
+    return exp_n * exp_r;
 }
+
 

@@ -215,7 +215,7 @@ float pcg32_rand_gaussian(void)
     float mag = fast_sqrt(-2.0f * fast_log(u1));
     
     // 2π * u2
-    const float TWO_PI = 6.28318530718f;
+    // const float TWO_PI = 6.28318530718f;
     float angle = TWO_PI * u2;
     
     // Generate two independent Gaussian values
