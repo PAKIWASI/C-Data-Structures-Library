@@ -1,5 +1,3 @@
-#define _POSIX_C_SOURCE 199309L // timespec, clock_gettime 
-
 #include "random.h"
 #include <time.h>
 #include "fast_math.h"
@@ -124,21 +122,6 @@ void pcg32_rand_seed_time(void)
     pcg32_rand_seed(seed, seq);
 }
 
-void pcg32_rand_seed_time_hp(void)
-{
-    // Use high-resolution clock (nanosecond precision)
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    
-    // Combine seconds and nanoseconds for maximum entropy
-    // Seconds in upper bits, nanoseconds in lower bits
-    u64 seed = ((u64)ts.tv_sec << 32) | (u64)ts.tv_nsec;
-    
-    // Create a different sequence by mixing the values differently
-    u64 seq = ((u64)ts.tv_nsec << 32) | ((u64)ts.tv_sec & 0xFFFFFFFF);
-    
-    pcg32_rand_seed(seed, seq);
-}
 
 float pcg32_rand_float(void)
 {

@@ -86,20 +86,6 @@ void pcg32_rand_seed(u64 seed, u64 seq);
 void pcg32_rand_seed_time(void);
 
 
-/*
-   Seed using high-precision time (nanosecond precision)
-   
-   Uses clock_gettime(CLOCK_MONOTONIC) for nanosecond precision.
-   Better than pcg32_rand_seed_time() when you need truly unique seeds
-   even when called in rapid succession.
-   
-   Implementation:
-     - Combines tv_sec and tv_nsec into seed and sequence
-     - Provides maximum entropy from system clock
-*/
-void pcg32_rand_seed_time_hp(void);
-
-
 // INTEGER RANDOM GENERATION
 // ============================================================================
 
